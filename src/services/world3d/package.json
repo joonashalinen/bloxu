@@ -1,0 +1,16 @@
+{
+  "name": "world3d",
+  "version": "1.0.0",
+  "description": "Service for managing a 3D world with objects.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@babylonjs/core": "^6.35.0",
+    "@babylonjs/inspector": "^6.35.0",
+    "typescript": "^5.3.3"
+  }
+}

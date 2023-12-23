@@ -1,0 +1,33 @@
+{
+  "name": "bloxu",
+  "version": "1.0.0",
+  "description": "A shooting game with blocks.",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "build": "npx webpack",
+    "start": "npx webpack-dev-server --port 8080"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/joonashalinen/bloxu.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/joonashalinen/bloxu/issues"
+  },
+  "homepage": "https://github.com/joonashalinen/bloxu#readme",
+  "devDependencies": {
+    "@babylonjs/core": "^6.35.0",
+    "@babylonjs/inspector": "^6.35.0",
+    "html-webpack-plugin": "^5.6.0",
+    "ts-loader": "^9.5.1",
+    "typescript": "^5.3.3",
+    "webpack": "^5.89.0",
+    "webpack-cli": "^5.1.4",
+    "webpack-dev-server": "^4.15.1"
+  }
+}
