@@ -3,20 +3,23 @@ import "@babylonjs/inspector";
 import "@babylonjs/loaders/glTF";
 import { Engine, Scene, ArcRotateCamera, Vector3, HemisphericLight, Mesh, MeshBuilder } from "@babylonjs/core";
 import Movable from "./components/objects3d/pub/Movable";
+import MessengerClass from "./components/messaging/pub/MessengerClass";
+import Mediator from "./components/messaging/pub/Mediator";
+import World3D from "./services/world3d/pub/World3D";
 
 class App {
     constructor() {
 
-        const worker = new Worker(new URL('./worker.ts', import.meta.url));
+        /* const worker = new Worker(new URL('./worker.ts', import.meta.url));
 
         worker.postMessage({
             question:
               'The Answer to the Ultimate Question of Life, The Universe, and Everything.',
           });
-          
+
           worker.onmessage = ({ data: { answer } }) => {
             console.log(answer);
-          };
+          }; */
 
         // create the canvas html element and attach it to the webpage
         var canvas = document.createElement("canvas");
@@ -46,11 +49,29 @@ class App {
             }
         });
 
-        var movable = new Movable();
+        var world3d = new World3D();
+        var messengers = {
+            "world3d": new MessengerClass(world3d, world3d.emitter)
+        };
+        var mediator = new Mediator(messengers);
 
-        // run the main render loop
+        mediator.postMessage({
+            recipient: "world3d",
+            message: {
+                method: "createObject",
+                args: ["movable1", "Movable"]
+            }
+        });
+
+        // Run the main render loop.
         engine.runRenderLoop(() => {
-            movable.move(new Vector3(0, 0, 0))
+            mediator.postMessage({
+                recipient: "world3d",
+                message: {
+                    method: "modifyObject",
+                    args: ["movable1", (obj: Movable) => obj.move(new Vector3(0, 0, 0))]
+                }
+            })
             scene.render();
         });
     }
