@@ -7,6 +7,12 @@ import "@babylonjs/loaders/glTF";
 import { HavokPlugin } from "@babylonjs/core/Physics";
 import HavokPhysics from "@babylonjs/havok";
 import { Engine, Scene, ArcRotateCamera, Vector3, HemisphericLight, Mesh, MeshBuilder } from "@babylonjs/core";
+import IObject from "../../../components/objects3d/pub/IObject";
+
+type FunctionWrapper = {
+    boundArgs: Array<unknown>;
+    f: Function;
+};
 
 /**
  * Class containing the state and operations of the world3d service.
@@ -52,15 +58,16 @@ export default class World3D {
     /**
      * Create new object of given type with given id and args in the world.
      */
-    createObject(id: string, type: string, args: Array<unknown> | Function = []): World3D {
+    createObject(id: string, type: string, args: Array<unknown> | FunctionWrapper = []): World3D {
         if (!(type in this.constructors)) {
             throw new Error("No object of type '" + type + "' exists");
         }
         if (id in this.objects) {
             throw new Error("Object with given id '" + id + "' already exists");
         }
-        if (typeof args === "function") {
-            args = args.bind(this)();
+        if (!Array.isArray(args)) {
+            const { boundArgs, f: getArgs } = args;
+            args = getArgs.bind(this)(...boundArgs);
         }
         try {
             this.objects[id] = (this.constructors[type])(...args as Array<unknown>);
@@ -73,32 +80,39 @@ export default class World3D {
     /**
      * Register a custom constructor for a new object type.
      * @param type - The type name for the object.
-     * @param constructor - The constructor function for creating objects of the specified type.
+     * @param wrapper - The object containing boundArgs and the constructor function for creating objects of the specified type.
      */
-    registerObjectType(type: string, constructor: Function): World3D {
+    registerObjectType(type: string, wrapper: FunctionWrapper): World3D {
+        const { boundArgs, f: constructor } = wrapper;
         if (type in this.constructors) {
             throw new Error("Constructor for type '" + type + "' already exists");
         }
-        this.constructors[type] = constructor.bind(this);
+        this.constructors[type] = constructor.bind(this, ...boundArgs);
         return this;
     }
 
     /**
      * Create an object into the world via a given constructor function.
+     * @param id - The identifier for the object.
+     * @param wrapper - The object containing boundArgs and the create function.
      */
-    createCustomObject(id: string, create: () => unknown): void {
+    createCustomObject(id: string, wrapper: FunctionWrapper): void {
+        const { boundArgs, f: create } = wrapper;
         if (id in this.objects) {
             throw new Error("Object with given id '" + id + "' already exists");
         }
-        this.objects[id] = create.bind(this)();
+        this.objects[id] = create.bind(this)(...boundArgs);
     }
 
     /**
      * Modify an object in the world via a given function.
+     * @param id - The identifier for the object.
+     * @param wrapper - The object containing boundArgs and the modifier function.
      */
-    modifyObject(id: string, modifier: (obj) => unknown): World3D {
+    modifyObject(id: string, wrapper: FunctionWrapper): World3D {
+        const { boundArgs, f: modifier } = wrapper;
         var obj = this.getObject(id);
-        this.objects[id] = modifier.bind(this)(obj);
+        this.objects[id] = modifier.bind(this, ...boundArgs)(obj);
         return this;
     }
 
@@ -136,16 +150,12 @@ export default class World3D {
         // ### Begin main render loop. ###
 
         this.engine.runRenderLoop(() => {
-            this.emitter.trigger("message", [{
-                recipient: "player1",
-                message: {
-                    type: "event",
-                    message: {
-                        type: "keyPress",
-                        args: [{direction: "up"}]
-                    }
+            for (let id in this.objects) {
+                let obj = this.objects[id];
+                if ("doOnTick" in obj) {
+                    (obj as IObject).doOnTick(0);
                 }
-            }]);
+            }
             this.scene.render();
         });
 

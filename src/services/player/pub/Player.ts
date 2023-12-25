@@ -15,16 +15,16 @@ export default class Player implements IPlayer {
     constructor() {
         this.emitter = new EventEmitter();
         this.eventHandlers = {
-            "keyPress": this.onKeyPress.bind(this)
+            "controllerDirectionChange": this.onControllerDirectionChange.bind(this)
         };
         this.initialized = false;
     }
 
     /**
-     * Does what Player wants to do when a key press event 
-     * has been noticed.
+     * Does what Player wants to do when the controller's 
+     * direction control has changed (for example, the thumb joystick of WASD keys).
      */
-    onKeyPress(msg): Player {
+    onControllerDirectionChange(event): Player {
         if (this.initialized) {
             this.emitter.trigger("message", [{
                 recipient: "world3d",
@@ -32,8 +32,11 @@ export default class Player implements IPlayer {
                     type: "request",
                     message: {
                         type: "modifyObject",
-                        args: ["player1Body", function(this: World3D, obj: Movable) {
-                            return obj.move(new this.babylonjs.Vector3(0, 0, 0))
+                        args: ["player1Body", {
+                            boundArgs: [event.direction],
+                            f: function(this: World3D, direction: {x: number, y:number}, obj: Movable) {
+                                return obj.move(new this.babylonjs.Vector3(direction.x, 0, direction.y * (-1)));
+                            }
                         }]
                     }
                 }
@@ -60,15 +63,18 @@ export default class Player implements IPlayer {
                 type: "request",
                 message: {
                     type: "createCustomObject",
-                    args: ["nativePlayer1Body", function(this: World3D) {
-                        var box = this.babylonjs.MeshBuilder.CreateBox("nativePlayer1Body", {size: 0.7}, this.scene);
-                        box.position.y = 4;
-                        return new this.babylonjs.PhysicsAggregate(
-                            box, 
-                            this.babylonjs.PhysicsShapeType.BOX, 
-                            { mass: 1 }, 
-                            this.scene
-                        );
+                    args: ["nativePlayer1Body", {
+                        boundArgs: [],
+                        f: function(this: World3D) {
+                            var box = this.babylonjs.MeshBuilder.CreateBox("nativePlayer1Body", {size: 0.7}, this.scene);
+                            box.position.y = 4;
+                            return new this.babylonjs.PhysicsAggregate(
+                                box, 
+                                this.babylonjs.PhysicsShapeType.BOX, 
+                                { mass: 0.1 }, 
+                                this.scene
+                            );
+                        }
                     }]
                 }
             }
@@ -81,8 +87,11 @@ export default class Player implements IPlayer {
                 type: "request",
                 message: {
                     type: "createObject",
-                    args: ["player1Body", "Movable", function(this: World3D) {
-                        return [this.getObject("nativePlayer1Body")];
+                    args: ["player1Body", "Movable", {
+                        boundArgs: [],
+                        f: function(this: World3D) {
+                            return [this.getObject("nativePlayer1Body")];
+                        }
                     }]
                 }
             }

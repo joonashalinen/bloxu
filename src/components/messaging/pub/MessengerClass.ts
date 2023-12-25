@@ -20,14 +20,19 @@ export default class MessagerClass<C> implements IMessenger<DMessage, unknown> {
     }
 
     postMessage(msg: DMessage): IMessenger<DMessage, unknown> {
-        if (msg.type === "request") {
+        if (
+            msg.type === "request" && 
+            typeof this.wrappee === "object" && 
+            msg.message.type in this.wrappee
+        ) {
             this.wrappee[msg.message.type](...msg.message.args);
         }
         if (msg.type === "event") {
             if (
                 typeof this.wrappee === "object" && 
                 "eventHandlers" in this.wrappee && 
-                typeof this.wrappee.eventHandlers === "object"
+                typeof this.wrappee.eventHandlers === "object" && 
+                msg.message.type in this.wrappee.eventHandlers
             ) {
                 this.wrappee.eventHandlers[msg.message.type](...msg.message.args)
             }

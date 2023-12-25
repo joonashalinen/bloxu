@@ -31,14 +31,17 @@ export default class GameMaster {
                 type: "request",
                 message: {
                     type: "registerObjectType",
-                    args: ["GameMaster.CubeIsland", function(this: World3D, position: babylonjs.Vector3) {
-                        var box = this.babylonjs.MeshBuilder.CreateBox("nativePlayer1Body", {size: 3}, this.scene);
-                        return new this.babylonjs.PhysicsAggregate(
-                            box, 
-                            this.babylonjs.PhysicsShapeType.BOX, 
-                            { mass: 0 }, 
-                            this.scene
-                        );
+                    args: ["GameMaster.CubeIsland", {
+                        boundArgs: [],
+                        f: function(this: World3D, position: babylonjs.Vector3) {
+                            var box = this.babylonjs.MeshBuilder.CreateBox("nativePlayer1Body", {size: 3}, this.scene);
+                            return new this.babylonjs.PhysicsAggregate(
+                                box, 
+                                this.babylonjs.PhysicsShapeType.BOX, 
+                                { mass: 0 }, 
+                                this.scene
+                            );
+                        }
                     }]
                 }
             }
@@ -51,8 +54,11 @@ export default class GameMaster {
                 type: "request",
                 message: {
                     type: "createObject",
-                    args: ["cubeIsland1", "GameMaster.CubeIsland", function(this: World3D) {
-                        return [new this.babylonjs.Vector3(0, 0, 0)];
+                    args: ["cubeIsland1", "GameMaster.CubeIsland", {
+                        boundArgs: [],
+                        f: function(this: World3D) {
+                            return [new this.babylonjs.Vector3(0, 0, 0)];
+                        }
                     }]
                 }
             }

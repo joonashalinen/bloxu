@@ -8,6 +8,8 @@ import MessengerClass from "./components/messaging/pub/MessengerClass";
 import Mediator from "./components/messaging/pub/Mediator";
 import World3D from "./services/world3d/pub/World3D";
 import WebWorker from "./components/browser/pub/WebWorker";
+import IOService from "./services/io/pub/IOService";
+import KeyboardController from "./components/controls/pub/KeyboardController";
 
 class App {
 
@@ -25,6 +27,9 @@ class App {
         // Create World3D service.
         var world3d = new World3D(document);
         
+        // Create IOService.
+        var ioService = new IOService(new KeyboardController(document));
+
         // Create LocalPlayer service.
         var playerNativeWorker = new Worker(new URL('./services/player/pub/index.ts', import.meta.url))
         var playerWorker = new WebWorker(playerNativeWorker);
@@ -37,7 +42,8 @@ class App {
         var messengers = {
             "world3d": new MessengerClass(world3d, world3d.emitter),
             "player1": playerWorker,
-            "gameMaster": gameMasterWorker
+            "gameMaster": gameMasterWorker,
+            "ioService": new MessengerClass(ioService, ioService.emitter)
         };
         this.mediator = new Mediator(messengers);
 
@@ -45,6 +51,7 @@ class App {
         // we can initialize them. World3D must be initialized first, since 
         // other services need it for their initialization procedures.
         await world3d.initialize();
+        ioService.initialize();
         playerWorker.postMessage({
             type: "request",
             message: {

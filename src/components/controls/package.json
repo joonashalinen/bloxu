@@ -1,0 +1,16 @@
+{
+  "name": "controls",
+  "version": "1.0.0",
+  "description": "Library of classes related to controls (e.g keyboards, mouses or joystick controllers).",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@babylonjs/core": "^6.35.0",
+    "@babylonjs/inspector": "^6.35.0",
+    "typescript": "^5.3.3"
+  }
+}
