@@ -1,4 +1,4 @@
-import DMessage from "./DMessage";
+import DMediatorMessage from "./DMediatorMessage";
 import {IMediator} from "./IMediator";
 import IMessenger from "./IMessenger";
 import EventEmitter from "../../events/pub/EventEmitter";
@@ -19,7 +19,7 @@ export default class Mediator implements IMediator<unknown, unknown> {
      * emits a message, it is posted to the actors it is directed to.
      */
     _listenToActor(name: string, actor: Actor): void {
-        actor.onMessage((msg: DMessage<unknown>) => this.postMessage(msg, name));
+        actor.onMessage((msg: DMediatorMessage<unknown>) => this.postMessage(msg, name));
     }
 
     /**
@@ -27,7 +27,7 @@ export default class Mediator implements IMediator<unknown, unknown> {
      * to signal that the message has been sent to all that may be 
      * interested in this fact.
      */
-    _postActorMessage(name: string, actor: Actor, msg: DMessage<unknown>): void {
+    _postActorMessage(name: string, actor: Actor, msg: DMediatorMessage<unknown>): void {
         actor.postMessage(msg.message);
         this.emitter.trigger(name, [msg]);
     }
@@ -48,7 +48,7 @@ export default class Mediator implements IMediator<unknown, unknown> {
       * messages sent to them via .postMessage() simply by being a part of the Mediator's actors.
       * Consequently, only listen to messages for '*' (all actors) if you are not an actor.
       */
-    onMessageFor(actor: string, handler: (msg: DMessage<unknown>) => void): IMediator<unknown, unknown> {
+    onMessageFor(actor: string, handler: (msg: DMediatorMessage<unknown>) => void): IMediator<unknown, unknown> {
         if (!(actor in this.actors)) {
             throw new Error("No actor '" + actor + "' found");
         }
@@ -56,7 +56,7 @@ export default class Mediator implements IMediator<unknown, unknown> {
         return this;
     }
 
-    postMessage(msg: DMessage<unknown>, callerActor?: string): IMediator<unknown, unknown> {
+    postMessage(msg: DMediatorMessage<unknown>, callerActor?: string): IMediator<unknown, unknown> {
         if (msg.recipient === "*") {
             for (let actorName in this.actors) {
                 if (actorName !== callerActor) {
@@ -74,7 +74,7 @@ export default class Mediator implements IMediator<unknown, unknown> {
         return this;
     }
 
-    onMessage(handler: (msg: DMessage<unknown>) => void): IMediator<unknown, unknown> {
+    onMessage(handler: (msg: DMediatorMessage<unknown>) => void): IMediator<unknown, unknown> {
         return this.onMessageFor("*", handler);
     }
 }

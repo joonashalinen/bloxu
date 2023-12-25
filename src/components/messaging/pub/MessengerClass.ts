@@ -1,5 +1,5 @@
 import IMessenger from "./IMessenger";
-import DClassInMessage from "./DClassInMessage";
+import {DMessage, DMessageData} from "./DMessage";
 import EventEmitter from "../../events/pub/EventEmitter";
 
 /**
@@ -8,7 +8,7 @@ import EventEmitter from "../../events/pub/EventEmitter";
  * The EventEmitter is assumed to be such that the wrappee class 
  * has access to it and can thus use it to trigger message events.
  */
-export default class MessagerClass<C> implements IMessenger<DClassInMessage, unknown> {
+export default class MessagerClass<C> implements IMessenger<DMessage, unknown> {
     wrappee: C;
     wrappeeEmitter: EventEmitter;
     messageEvent: string;
@@ -19,12 +19,23 @@ export default class MessagerClass<C> implements IMessenger<DClassInMessage, unk
         this.messageEvent = messageEvent;
     }
 
-    postMessage(msg: DClassInMessage): IMessenger<DClassInMessage, unknown> {
-        this.wrappee[msg.method](...msg.args);
+    postMessage(msg: DMessage): IMessenger<DMessage, unknown> {
+        if (msg.type === "request") {
+            this.wrappee[msg.message.type](...msg.message.args);
+        }
+        if (msg.type === "event") {
+            if (
+                typeof this.wrappee === "object" && 
+                "eventHandlers" in this.wrappee && 
+                typeof this.wrappee.eventHandlers === "object"
+            ) {
+                this.wrappee.eventHandlers[msg.message.type](...msg.message.args)
+            }
+        }
         return this;
     }
 
-    onMessage(handler: (msg: unknown) => void): IMessenger<DClassInMessage, unknown> {
+    onMessage(handler: (msg: unknown) => void): IMessenger<DMessage, unknown> {
         this.wrappeeEmitter.on(this.messageEvent, handler);
         return this;
     }

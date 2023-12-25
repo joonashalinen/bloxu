@@ -1,5 +1,10 @@
 
-export default interface DMessage<T> {
-    recipient: string;
-    message: T;
+export interface DMessageData {
+    type: string,
+    args: [unknown]
 }
+
+export interface DMessage {
+    type: "request" | "event";
+    message: DMessageData
+};

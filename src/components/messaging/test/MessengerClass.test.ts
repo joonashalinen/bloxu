@@ -1,9 +1,9 @@
 import {describe, expect, test, jest} from '@jest/globals';
-import {createMessenger} from "./types";
+import {createMessenger, testMessages} from "./MessengerClassTesting";
 
 test("postMessage", () => {
     var [messenger, emitter, obj] = createMessenger();
-    messenger.postMessage({method: "test", args: ["test"]})
+    messenger.postMessage(testMessages.type1)
     expect(obj.test.mock.calls).toEqual([["test"]]);
 });
 

@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.createMessenger = void 0;
+exports.testMessages = exports.createMessenger = void 0;
 var globals_1 = require("@jest/globals");
 var MessengerClass_1 = require("../pub/MessengerClass");
 var EventEmitter_1 = require("../../events/pub/EventEmitter");
@@ -11,3 +11,6 @@ function createMessenger() {
     return [messenger, emitter, obj];
 }
 exports.createMessenger = createMessenger;
+exports.testMessages = {
+    "type1": { type: "request", message: { type: "test", args: ["test"] } }
+};

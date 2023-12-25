@@ -14,8 +14,17 @@ var MessagerClass = /** @class */ (function () {
         this.messageEvent = messageEvent;
     }
     MessagerClass.prototype.postMessage = function (msg) {
-        var _a;
-        (_a = this.wrappee)[msg.method].apply(_a, msg.args);
+        var _a, _b;
+        if (msg.type === "request") {
+            (_a = this.wrappee)[msg.message.type].apply(_a, msg.message.args);
+        }
+        if (msg.type === "event") {
+            if (typeof this.wrappee === "object" &&
+                "eventHandlers" in this.wrappee &&
+                typeof this.wrappee.eventHandlers === "object") {
+                (_b = this.wrappee.eventHandlers)[msg.message.type].apply(_b, msg.message.args);
+            }
+        }
         return this;
     };
     MessagerClass.prototype.onMessage = function (handler) {
