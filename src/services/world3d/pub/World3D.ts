@@ -1,6 +1,12 @@
 import EventEmitter from "../../../components/events/pub/EventEmitter";
 import Movable from "../../../components/objects3d/pub/Movable";
 import * as babylonjs from "@babylonjs/core";
+import "@babylonjs/core/Debug/debugLayer";
+import "@babylonjs/inspector";
+import "@babylonjs/loaders/glTF";
+import { HavokPlugin } from "@babylonjs/core/Physics";
+import HavokPhysics from "@babylonjs/havok";
+import { Engine, Scene, ArcRotateCamera, Vector3, HemisphericLight, Mesh, MeshBuilder } from "@babylonjs/core";
 
 /**
  * Class containing the state and operations of the world3d service.
@@ -11,15 +17,26 @@ export default class World3D {
     emitter: EventEmitter;
     babylonjs: typeof babylonjs;
     scene: babylonjs.Scene;
+    engine: babylonjs.Engine;
+    canvas: HTMLCanvasElement;
 
-    constructor(scene: babylonjs.Scene) {
-        this.emitter = new EventEmitter();
+    constructor(document: Document) {
         this.constructors = {
             "Movable": (aggregate: babylonjs.PhysicsAggregate) => new Movable(aggregate)
         };
+        
+        this.emitter = new EventEmitter();
         this.objects = {};
         this.babylonjs = babylonjs;
-        this.scene = scene;
+
+        this.canvas = document.createElement("canvas");
+        this.canvas.style.width = "90%";
+        this.canvas.style.height = "90%";
+        this.canvas.id = "gameCanvas";
+        document.body.appendChild(this.canvas);
+
+        this.engine = new Engine(this.canvas, true);
+        this.scene = new Scene(this.engine);
     }
 
     /**
@@ -54,6 +71,19 @@ export default class World3D {
     }
 
     /**
+     * Register a custom constructor for a new object type.
+     * @param type - The type name for the object.
+     * @param constructor - The constructor function for creating objects of the specified type.
+     */
+    registerObjectType(type: string, constructor: Function): World3D {
+        if (type in this.constructors) {
+            throw new Error("Constructor for type '" + type + "' already exists");
+        }
+        this.constructors[type] = constructor.bind(this);
+        return this;
+    }
+
+    /**
      * Create an object into the world via a given constructor function.
      */
     createCustomObject(id: string, create: () => unknown): void {
@@ -72,4 +102,53 @@ export default class World3D {
         return this;
     }
 
+    /**
+     * Initialization procedure for the World3D service.
+     */
+    async initialize(): Promise<World3D> {
+        
+        // ### Initialize BabylonJS. ###
+
+        var camera = new babylonjs.FreeCamera("camera1", new babylonjs.Vector3(0, 3, -10), this.scene);
+        camera.attachControl(this.canvas, true);
+        var light1: HemisphericLight = new HemisphericLight("light1", new Vector3(1, 1, 0), this.scene);
+        // var sphere: Mesh = MeshBuilder.CreateSphere("sphere", { diameter: 1 }, this.scene);
+
+        // hide/show the Inspector
+        window.addEventListener("keydown", (ev) => {
+            // Shift+Ctrl+Alt+I
+            if (ev.shiftKey && ev.ctrlKey && ev.altKey && ev.key === 'i') {
+                if (this.scene.debugLayer.isVisible()) {
+                    this.scene.debugLayer.hide();
+                } else {
+                    this.scene.debugLayer.show();
+                }
+            }
+        });
+
+        // Enable physics.
+        const havokInstance = await HavokPhysics();
+        this.scene.enablePhysics(
+            new Vector3(0, -9.81, 0),
+            new HavokPlugin(true, havokInstance)
+        );
+
+        // ### Begin main render loop. ###
+
+        this.engine.runRenderLoop(() => {
+            this.emitter.trigger("message", [{
+                recipient: "player1",
+                message: {
+                    type: "event",
+                    message: {
+                        type: "keyPress",
+                        args: [{direction: "up"}]
+                    }
+                }
+            }]);
+            this.scene.render();
+        });
+
+        return this;
+    }
 }
