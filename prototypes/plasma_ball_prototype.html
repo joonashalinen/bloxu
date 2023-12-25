@@ -112,6 +112,7 @@
     BABYLON.Effect.ShadersStore['customFragmentShader'] = `
         precision highp float;
         uniform vec2 screenSize;
+        uniform float time;
         varying vec2 vUV;
         varying vec3 vPosition;
         varying vec4 vGlPosition;
@@ -121,18 +122,26 @@
             float screenRatio = screenSize.x / screenSize.y;
             vec4 standardizedGlPosition = abs(vGlPosition - vZeroGlPosition);
             standardizedGlPosition.x = standardizedGlPosition.x * screenRatio;
+
             float factor = 1. - sqrt(pow(standardizedGlPosition.x, 2.) + pow(standardizedGlPosition.y, 2.));
-            vec4 betweenColor = vec4(1., 0., 0., 1.);
+            float timeFactor = sin(time  / 2.);
+
+            vec4 betweenColor = vec4(0., 0.8, 1, 0.2 + 0.2 * (1. - timeFactor));
             vec4 centerColor = vec4(1., 1., 1., 1.);
-            vec4 outerColor = vec4(1., 0., 0., 0.);
-            if (factor > 0.8) {
+            vec4 outerColor = vec4(0., 0.8, 1., 0.);
+
+            float centerThreshold = 0.71 + (0.05 * timeFactor);
+            float betweenThreshold = 0.6;
+            float outerThreshold = 0.5;
+
+            if (factor > centerThreshold) {
                 gl_FragColor = centerColor;
-            } else if (factor > 0.7) {
-                gl_FragColor = mix(betweenColor, centerColor, (factor - 0.7) / 0.1);
-            } else if (factor > 0.6) {
+            } else if (factor > betweenThreshold) {
+                gl_FragColor = mix(betweenColor, centerColor, (factor - betweenThreshold) / (centerThreshold - betweenThreshold));
+            } else if (factor > outerThreshold) {
                 gl_FragColor = betweenColor;
             } else {
-                gl_FragColor = mix(outerColor, betweenColor, factor / 0.6);
+                gl_FragColor = mix(outerColor, betweenColor, factor / outerThreshold);
             }
             
         }
@@ -140,8 +149,15 @@
 
     var shaderMaterial = new BABYLON.ShaderMaterial('custom', scene, 'custom', {
         attributes: ["position", "normal", "uv"],
-        uniforms: ["world", "worldView", "worldViewProjection", "view", "projection"],
+        uniforms: ["time", "world", "worldView", "worldViewProjection", "view", "projection"],
         needAlphaBlending: true
+    });
+
+    var time = 0;
+    scene.onBeforeRenderObservable.add(function () {
+        shaderMaterial.setFloat("time", time);
+        time = time + 0.1;
+        // box.position.z = box.position.z + 0.2;
     });
 
     // Use a setter
