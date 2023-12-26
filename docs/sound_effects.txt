@@ -1,5 +1,17 @@
-Plasma pistol
+Plasma gun shot 1
 https://freesound.org/people/bolkmar/sounds/420365/
 
-Incineration
+Plasma gun shot 2
+https://freesound.org/people/bubaproducer/sounds/151015/
+
+Plasma gun charging
+https://freesound.org/people/StavSounds/sounds/701702/
+
+Death sound 1
 https://freesound.org/people/magnuswaker/sounds/697738/
+
+Death sound 2
+https://freesound.org/people/hz37/sounds/396447/
+
+Place block
+https://freesound.org/people/89o/sounds/434130/
