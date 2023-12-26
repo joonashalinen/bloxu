@@ -41,6 +41,15 @@ export default class Mediator implements IMediator<unknown, unknown> {
         }
     }
 
+    addActor(id: string, actor: Actor) {
+        if (id in this.actors) {
+            throw new Error("Actor with given id '" + "' already exists.");
+        }
+        this.actors[id] = actor;
+        this._listenToActor(id, actor);
+        return this;
+    }
+
      /**
       * Listen to messages sent to given actor. Note: use this method only to listen 
       * to actors other than yourself. An actor does not need to explicitly 

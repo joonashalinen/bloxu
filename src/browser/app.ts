@@ -77,7 +77,18 @@ class App {
         // Connection opened
         socket.addEventListener("open", (event) => {
             console.log("sending via websocket");
-            socket.send("Hello Server!");
+            setTimeout(() => {
+                socket.send(JSON.stringify({
+                    recipient: "onlineSynchronizerServer",
+                    message: {
+                        type: "request",
+                        message: {
+                            type: "joinGame",
+                            args: ["ABC", "1"]
+                        }
+                    }
+                }));
+            }, 1000);
         });
 
         // Listen for messages

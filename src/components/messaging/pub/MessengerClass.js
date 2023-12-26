@@ -15,13 +15,16 @@ var MessagerClass = /** @class */ (function () {
     }
     MessagerClass.prototype.postMessage = function (msg) {
         var _a, _b;
-        if (msg.type === "request") {
+        if (msg.type === "request" &&
+            typeof this.wrappee === "object" &&
+            msg.message.type in this.wrappee) {
             (_a = this.wrappee)[msg.message.type].apply(_a, msg.message.args);
         }
         if (msg.type === "event") {
             if (typeof this.wrappee === "object" &&
                 "eventHandlers" in this.wrappee &&
-                typeof this.wrappee.eventHandlers === "object") {
+                typeof this.wrappee.eventHandlers === "object" &&
+                msg.message.type in this.wrappee.eventHandlers) {
                 (_b = this.wrappee.eventHandlers)[msg.message.type].apply(_b, msg.message.args);
             }
         }
