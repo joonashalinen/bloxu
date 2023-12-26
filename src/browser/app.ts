@@ -1,9 +1,6 @@
 import "@babylonjs/core/Debug/debugLayer";
 import "@babylonjs/inspector";
 import "@babylonjs/loaders/glTF";
-import { HavokPlugin } from "@babylonjs/core/Physics";
-import HavokPhysics from "@babylonjs/havok";
-import { Engine, Scene, ArcRotateCamera, Vector3, HemisphericLight, Mesh, MeshBuilder } from "@babylonjs/core";
 import MessengerClass from "../components/messaging/pub/MessengerClass";
 import Mediator from "../components/messaging/pub/Mediator";
 import World3D from "../services/world3d/pub/World3D";
@@ -66,7 +63,28 @@ class App {
                 args: []
             }
         });
-    }
+
+        // ### Test websocket (temporary). ###
+    
+        // Create WebSocket connection.
+        var socket = new WebSocket("ws://localhost:3000");
+
+        socket.addEventListener("error", (event) => {
+            console.log("Error occurred when trying to open websocket.");
+            console.log(event);
+        })
+
+        // Connection opened
+        socket.addEventListener("open", (event) => {
+            console.log("sending via websocket");
+            socket.send("Hello Server!");
+        });
+
+        // Listen for messages
+        socket.addEventListener("message", (event) => {
+            console.log("Message from server ", event.data);
+        });
+    }    
 
     constructor() {
         this.initialize();
