@@ -1,2 +1,5 @@
-skybox
+Skybox 1
 https://www.cgtrader.com/free-3d-models/exterior/cityscape/skybox-light-blue-sky
+
+Skybox 2
+https://www.cleanpng.com/png-skybox-texture-mapping-cube-mapping-sky-cloud-920475/
