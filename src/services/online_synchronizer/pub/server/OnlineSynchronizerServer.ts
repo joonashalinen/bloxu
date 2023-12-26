@@ -1,5 +1,5 @@
-import EventEmitter from "../../../components/events/pub/EventEmitter";
-import MessageHotel from "../../../components/messaging/pub/MessageHotel";
+import EventEmitter from "../../../../components/events/pub/EventEmitter";
+import MessageHotel from "../../../../components/messaging/pub/MessageHotel";
 
 /**
  * Contains the operations and state of the 

@@ -1,6 +1,6 @@
-import WebWorker from "../../../components/browser/pub/WebWorker";
-import MessagePipe from "../../../components/messaging/pub/MessagePipe";
-import MessengerClass from "../../../components/messaging/pub/MessengerClass";
+import WebWorker from "../../../../components/browser/pub/WebWorker";
+import MessagePipe from "../../../../components/messaging/pub/MessagePipe";
+import MessengerClass from "../../../../components/messaging/pub/MessengerClass";
 import OnlineSynchronizerClient from "./OnlineSynchronizerClient";
 
 function main() {

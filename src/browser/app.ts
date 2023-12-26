@@ -36,7 +36,7 @@ class App {
         var gameMasterWorker = new WebWorker(gameMasterNativeWorker);
 
         // Create OnlineSynchronizer service.
-        var onlineSynchronizerNativeWorker = new Worker(new URL('../services/online_synchronizer_client/pub/index.ts', import.meta.url))
+        var onlineSynchronizerNativeWorker = new Worker(new URL('../services/online_synchronizer/pub/client/index.ts', import.meta.url))
         var onlineSynchronizerWorker = new WebWorker(onlineSynchronizerNativeWorker);
 
         // Setup communications between services.

@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-var EventEmitter_1 = require("../../../components/events/pub/EventEmitter");
-var MessageHotel_1 = require("../../../components/messaging/pub/MessageHotel");
+var EventEmitter_1 = require("../../../../components/events/pub/EventEmitter");
+var MessageHotel_1 = require("../../../../components/messaging/pub/MessageHotel");
 /**
  * Contains the operations and state of the
  * OnlineSynchronizerServer service.

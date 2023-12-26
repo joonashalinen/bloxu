@@ -1,4 +1,4 @@
-import EventEmitter from "../../../components/events/pub/EventEmitter";
+import EventEmitter from "../../../../components/events/pub/EventEmitter";
 
 /**
  * Contains the operations and state of the 
