@@ -4,12 +4,12 @@ import "@babylonjs/loaders/glTF";
 import { HavokPlugin } from "@babylonjs/core/Physics";
 import HavokPhysics from "@babylonjs/havok";
 import { Engine, Scene, ArcRotateCamera, Vector3, HemisphericLight, Mesh, MeshBuilder } from "@babylonjs/core";
-import MessengerClass from "./components/messaging/pub/MessengerClass";
-import Mediator from "./components/messaging/pub/Mediator";
-import World3D from "./services/world3d/pub/World3D";
-import WebWorker from "./components/browser/pub/WebWorker";
-import IOService from "./services/io/pub/IOService";
-import KeyboardController from "./components/controls/pub/KeyboardController";
+import MessengerClass from "../components/messaging/pub/MessengerClass";
+import Mediator from "../components/messaging/pub/Mediator";
+import World3D from "../services/world3d/pub/World3D";
+import WebWorker from "../components/browser/pub/WebWorker";
+import IOService from "../services/io/pub/IOService";
+import KeyboardController from "../components/controls/pub/KeyboardController";
 
 class App {
 
@@ -31,11 +31,11 @@ class App {
         var ioService = new IOService(new KeyboardController(document));
 
         // Create LocalPlayer service.
-        var playerNativeWorker = new Worker(new URL('./services/player/pub/index.ts', import.meta.url))
+        var playerNativeWorker = new Worker(new URL('../services/player/pub/index.ts', import.meta.url))
         var playerWorker = new WebWorker(playerNativeWorker);
 
         // Create GameMaster service.
-        var gameMasterNativeWorker = new Worker(new URL('./services/game_master/pub/index.ts', import.meta.url))
+        var gameMasterNativeWorker = new Worker(new URL('../services/game_master/pub/index.ts', import.meta.url))
         var gameMasterWorker = new WebWorker(gameMasterNativeWorker);
 
         // Setup communications between services.
