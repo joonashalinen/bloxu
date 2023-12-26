@@ -35,12 +35,17 @@ class App {
         var gameMasterNativeWorker = new Worker(new URL('../services/game_master/pub/index.ts', import.meta.url))
         var gameMasterWorker = new WebWorker(gameMasterNativeWorker);
 
+        // Create OnlineSynchronizer service.
+        var onlineSynchronizerNativeWorker = new Worker(new URL('../services/online_synchronizer_client/pub/index.ts', import.meta.url))
+        var onlineSynchronizerWorker = new WebWorker(onlineSynchronizerNativeWorker);
+
         // Setup communications between services.
         var messengers = {
             "world3d": new MessengerClass(world3d, world3d.emitter),
             "player1": playerWorker,
             "gameMaster": gameMasterWorker,
-            "ioService": new MessengerClass(ioService, ioService.emitter)
+            "ioService": new MessengerClass(ioService, ioService.emitter),
+            "onlineSynchronizer": onlineSynchronizerWorker
         };
         this.mediator = new Mediator(messengers);
 
@@ -62,38 +67,6 @@ class App {
                 type: "initialize",
                 args: []
             }
-        });
-
-        // ### Test websocket (temporary). ###
-    
-        // Create WebSocket connection.
-        var socket = new WebSocket("ws://localhost:3000");
-
-        socket.addEventListener("error", (event) => {
-            console.log("Error occurred when trying to open websocket.");
-            console.log(event);
-        })
-
-        // Connection opened
-        socket.addEventListener("open", (event) => {
-            console.log("sending via websocket");
-            setTimeout(() => {
-                socket.send(JSON.stringify({
-                    recipient: "onlineSynchronizerServer",
-                    message: {
-                        type: "request",
-                        message: {
-                            type: "joinGame",
-                            args: ["ABC", "1"]
-                        }
-                    }
-                }));
-            }, 1000);
-        });
-
-        // Listen for messages
-        socket.addEventListener("message", (event) => {
-            console.log("Message from server ", event.data);
         });
     }    
 
