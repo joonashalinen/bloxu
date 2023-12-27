@@ -1,7 +1,7 @@
-import EventEmitter from "../../../components/events/pub/EventEmitter";
-import IPlayer from "./IPlayer";
-import Movable from "../../../components/objects3d/pub/Movable";
-import World3D from "../../world3d/pub/World3D";
+import EventEmitter from "../../../../components/events/pub/EventEmitter";
+import IPlayer from "../IPlayer";
+import Movable from "../../../../components/objects3d/pub/Movable";
+import World3D from "../../../world3d/pub/World3D";
 
 /**
  * Class that contains the operations and state 

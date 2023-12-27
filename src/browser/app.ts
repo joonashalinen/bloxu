@@ -28,8 +28,8 @@ class App {
         var ioService = new IOService(new KeyboardController(document));
 
         // Create LocalPlayer service.
-        var playerNativeWorker = new Worker(new URL('../services/player/pub/index.ts', import.meta.url))
-        var playerWorker = new WebWorker(playerNativeWorker);
+        var localPlayerNativeWorker = new Worker(new URL('../services/player/pub/local/index.ts', import.meta.url))
+        var localPlayerWorker = new WebWorker(localPlayerNativeWorker);
 
         // Create GameMaster service.
         var gameMasterNativeWorker = new Worker(new URL('../services/game_master/pub/index.ts', import.meta.url))
@@ -42,7 +42,7 @@ class App {
         // Setup communications between services.
         var messengers = {
             "world3d": new MessengerClass(world3d, world3d.emitter),
-            "player1": playerWorker,
+            "player1": localPlayerWorker,
             "gameMaster": gameMasterWorker,
             "ioService": new MessengerClass(ioService, ioService.emitter),
             "onlineSynchronizer": onlineSynchronizerWorker
@@ -54,7 +54,7 @@ class App {
         // other services need it for their initialization procedures.
         await world3d.initialize();
         ioService.initialize();
-        playerWorker.postMessage({
+        localPlayerWorker.postMessage({
             type: "request",
             message: {
                 type: "initialize",
