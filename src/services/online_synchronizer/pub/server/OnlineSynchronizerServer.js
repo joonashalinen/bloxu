@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-var EventEmitter_1 = require("../../../../components/events/pub/EventEmitter");
 var MessageHotel_1 = require("../../../../components/messaging/pub/MessageHotel");
+var ProxyMessenger_1 = require("../../../../components/messaging/pub/ProxyMessenger");
 /**
  * Contains the operations and state of the
  * OnlineSynchronizerServer service.
@@ -10,7 +10,7 @@ var OnlineSynchronizerServer = /** @class */ (function () {
     function OnlineSynchronizerServer() {
         this._runningPlayerId = 1;
         this.messageHotel = new MessageHotel_1.default();
-        this.emitter = new EventEmitter_1.default();
+        this.proxyMessenger = new ProxyMessenger_1.default();
     }
     /**
      * Generates a new player id.

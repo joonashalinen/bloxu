@@ -6,7 +6,11 @@ import OnlineSynchronizerClient from "./OnlineSynchronizerClient";
 function main() {
     var synchronizerClient = new OnlineSynchronizerClient();
     var worker = new WebWorker(self);
-    var synchronizerClientMessenger = new MessengerClass(synchronizerClient, synchronizerClient.emitter);
+    var synchronizerClientMessenger = new MessengerClass(
+        synchronizerClient, 
+        synchronizerClient.proxyMessenger, 
+        "onlineSynchronizerClient"
+    );
     var pipe = new MessagePipe(worker, synchronizerClientMessenger);
     pipe.join();
 }

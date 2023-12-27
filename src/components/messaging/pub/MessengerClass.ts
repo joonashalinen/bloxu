@@ -1,24 +1,25 @@
 import IMessenger from "./IMessenger";
 import {DMessage} from "./DMessage";
 import EventEmitter from "../../events/pub/EventEmitter";
+import ProxyMessenger from "./ProxyMessenger";
+
+type Messenger = IMessenger<DMessage, DMessage>;
 
 /**
  * A wrapper for a given class that implements IMessenger
- * by simply calling the class's methods and using an EventEmitter. 
- * The EventEmitter is assumed to be such that the wrappee class 
- * has access to it and can thus use it to trigger message events.
+ * by simply calling the class's methods and using a ProxyMessenger. 
+ * The ProxyMessenger is assumed to be such that the wrappee class 
+ * has access to it and can thus use it to send and receive messages to and from MessengerClass.
  */
 export default class MessengerClass<C> implements IMessenger<DMessage, DMessage> {
-    wrappee: C;
-    wrappeeEmitter: EventEmitter;
-    messageEvent: string;
-    id: string;
+    emitter: EventEmitter = new EventEmitter();
 
-    constructor(wrappee: C, wrappeeEmitter: EventEmitter, id: string = "") {
-        this.wrappee = wrappee;
-        this.wrappeeEmitter = wrappeeEmitter;
-        this.messageEvent = "message";
-        this.id = id;
+    constructor(
+        public wrappee: C, 
+        public proxyMessenger: ProxyMessenger<DMessage, DMessage>, 
+        public id: string = ""
+    ) {
+        proxyMessenger.onPostMessage((msg) => this.emitter.trigger("message", [msg]));
     }
 
     /**
@@ -43,24 +44,22 @@ export default class MessengerClass<C> implements IMessenger<DMessage, DMessage>
                     args: [result]
                 }
             };
-            this.wrappeeEmitter.trigger(this.messageEvent, [responseMsg]);
+            this.emitter.trigger("message", [responseMsg]);
         }
     }
 
-    postMessage(msg: DMessage): IMessenger<DMessage, DMessage> {
+    postMessage(msg: DMessage): Messenger {
         if (
             msg.type === "request" && 
             typeof this.wrappee === "object" && 
             msg.message.type in this.wrappee
         ) {
             this._callMethod(msg);
-        }
-        // Transform response message into event.
-        if (msg.type === "response") {
-            msg.type = "event";
-            msg.message.type = "response:" + msg.message.type;
-        }
-        if (msg.type === "event") {
+
+        } else if (msg.type === "response") {
+            this.proxyMessenger.message(msg);
+
+        } else if (msg.type === "event") {
             if (
                 typeof this.wrappee === "object" && 
                 "eventHandlers" in this.wrappee && 
@@ -69,12 +68,13 @@ export default class MessengerClass<C> implements IMessenger<DMessage, DMessage>
             ) {
                 this.wrappee.eventHandlers[msg.message.type](...msg.message.args)
             }
+            
         }
         return this;
     }
 
-    onMessage(handler: (msg: DMessage) => void): IMessenger<DMessage, DMessage> {
-        this.wrappeeEmitter.on(this.messageEvent, handler);
+    onMessage(handler: (msg: DMessage) => void): Messenger {
+        this.emitter.on("message", handler);
         return this;
     }
 }

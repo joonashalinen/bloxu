@@ -8,6 +8,8 @@ import { HavokPlugin } from "@babylonjs/core/Physics";
 import HavokPhysics from "@babylonjs/havok";
 import { Engine, Scene, ArcRotateCamera, Vector3, HemisphericLight, Mesh, MeshBuilder } from "@babylonjs/core";
 import IObject from "../../../components/objects3d/pub/IObject";
+import ProxyMessenger from "../../../components/messaging/pub/ProxyMessenger";
+import { DMessage } from "../../../components/messaging/pub/DMessage";
 
 type FunctionWrapper = {
     boundArgs: Array<unknown>;
@@ -20,7 +22,7 @@ type FunctionWrapper = {
 export default class World3D {
     objects: {[name: string]: Object};
     constructors: {[type: string]: Function};
-    emitter: EventEmitter;
+    proxyMessenger: ProxyMessenger<DMessage, DMessage>;
     babylonjs: typeof babylonjs;
     scene: babylonjs.Scene;
     engine: babylonjs.Engine;
@@ -31,7 +33,7 @@ export default class World3D {
             "Movable": (aggregate: babylonjs.PhysicsAggregate) => new Movable(aggregate)
         };
         
-        this.emitter = new EventEmitter();
+        this.proxyMessenger = new ProxyMessenger<DMessage, DMessage>();
         this.objects = {};
         this.babylonjs = babylonjs;
 

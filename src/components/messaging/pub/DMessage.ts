@@ -1,7 +1,7 @@
 
 export interface DMessageData {
     type: string,
-    args: [unknown]
+    args: Array<unknown>
 }
 
 export interface DMessage {

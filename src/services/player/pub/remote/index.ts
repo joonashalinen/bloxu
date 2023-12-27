@@ -4,11 +4,11 @@ import MessengerClass from "../../../../components/messaging/pub/MessengerClass"
 import RemotePlayer from "./RemotePlayer";
 
 function main() {
-    var player = new RemotePlayer();
+    /* var player = new RemotePlayer();
     var worker = new WebWorker(self);
-    var playerMessenger = new MessengerClass(player, player.emitter);
+    var playerMessenger = new MessengerClass(player, player.proxyMessenger, "remotePlayer");
     var pipe = new MessagePipe(worker, playerMessenger);
-    pipe.join();
+    pipe.join(); */
 }
 
 main();

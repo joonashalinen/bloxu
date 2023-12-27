@@ -1,19 +1,19 @@
 import EventEmitter from "../../../components/events/pub/EventEmitter";
 import IDirectionController from "../../../components/controls/pub/IDirectionController";
+import ProxyMessenger from "../../../components/messaging/pub/ProxyMessenger";
+import { DMessage } from "../../../components/messaging/pub/DMessage";
 
 /**
  * Class responsible for managing keyboard events and other input/output operations.
  */
 export default class IOService {
-    emitter: EventEmitter;
+    proxyMessenger: ProxyMessenger<DMessage, DMessage>;
     directionController: IDirectionController;
 
     constructor(directionController: IDirectionController) {
-        this.emitter = new EventEmitter();
         this.directionController = directionController;
-
-        // Bind the methods to retain the correct 'this' context
         this.handleDirectionChange = this.handleDirectionChange.bind(this);
+        this.proxyMessenger = new ProxyMessenger<DMessage, DMessage>();
     }
 
     /**
@@ -29,13 +29,14 @@ export default class IOService {
      */
     handleDirectionChange(direction: { x: number; y: number }): void {
         // Trigger an event with the direction information
-        this.emitter.trigger("message", [{
+        this.proxyMessenger.postMessage({
+            sender: "ioService",
             recipient: "*",
             type: "event",
             message: {
                 type: "controllerDirectionChange",
                 args: [direction]
             }
-        }]);
+        });
     }
 }

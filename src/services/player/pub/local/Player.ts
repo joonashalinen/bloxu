@@ -2,22 +2,24 @@ import EventEmitter from "../../../../components/events/pub/EventEmitter";
 import IPlayer from "../IPlayer";
 import Movable from "../../../../components/objects3d/pub/Movable";
 import World3D from "../../../world3d/pub/World3D";
+import { DMessage } from "../../../../components/messaging/pub/DMessage";
+import ProxyMessenger from "../../../../components/messaging/pub/ProxyMessenger";
 
 /**
  * Class that contains the operations and state 
  * of the LocalPlayer service.
  */
 export default class Player implements IPlayer {
-    emitter: EventEmitter
     eventHandlers: {[name: string]: Function}
     initialized: boolean;
+    proxyMessenger: ProxyMessenger<DMessage, DMessage>;
     
     constructor() {
-        this.emitter = new EventEmitter();
         this.eventHandlers = {
             "controllerDirectionChange": this.onControllerDirectionChange.bind(this)
         };
         this.initialized = false;
+        this.proxyMessenger = new ProxyMessenger<DMessage, DMessage>();
     }
 
     /**
@@ -26,7 +28,8 @@ export default class Player implements IPlayer {
      */
     onControllerDirectionChange(event): Player {
         if (this.initialized) {
-            this.emitter.trigger("message", [{
+            this.proxyMessenger.postMessage({
+                sender: "localPlayer",
                 recipient: "world3d",
                 type: "request",
                 message: {
@@ -38,7 +41,7 @@ export default class Player implements IPlayer {
                         }
                     }]
                 }
-            }]);
+            });
             return this;
         } else {
             return this;
@@ -55,7 +58,8 @@ export default class Player implements IPlayer {
         // until a proper player character has been developed.
         
         // Create box with physics.
-        this.emitter.trigger("message", [{
+        this.proxyMessenger.postMessage({
+            sender: "localPlayer",
             recipient: "world3d",
             type: "request",
             message: {
@@ -74,10 +78,11 @@ export default class Player implements IPlayer {
                     }
                 }]
             }
-        }]);        
+        });        
 
         // Make a movable box using the created box.
-        this.emitter.trigger("message", [{
+        this.proxyMessenger.postMessage({
+            sender: "localPlayer",
             recipient: "world3d",
             type: "request",
             message: {
@@ -89,7 +94,7 @@ export default class Player implements IPlayer {
                     }
                 }]
             }
-        }]);
+        });
 
         this.initialized = true;
 

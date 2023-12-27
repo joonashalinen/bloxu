@@ -1,11 +1,13 @@
 import EventEmitter from "../../../../components/events/pub/EventEmitter";
+import { DMessage } from "../../../../components/messaging/pub/DMessage";
+import ProxyMessenger from "../../../../components/messaging/pub/ProxyMessenger";
 
 /**
  * Contains the operations and state of the 
  * OnlineSynchronizerClient service.
  */
 export default class OnlineSynchronizerClient {
-    emitter: EventEmitter;
+    proxyMessenger = new ProxyMessenger<DMessage, DMessage>();
     socketToServer: WebSocket;
 
     constructor() {
@@ -41,7 +43,6 @@ export default class OnlineSynchronizerClient {
 
         // vvv Set properties. vvv
 
-        this.emitter = new EventEmitter();
         this.socketToServer = socket;
     }
 }

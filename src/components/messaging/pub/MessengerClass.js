@@ -36,19 +36,22 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     }
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+var EventEmitter_1 = require("../../events/pub/EventEmitter");
 /**
  * A wrapper for a given class that implements IMessenger
- * by simply calling the class's methods and using an EventEmitter.
- * The EventEmitter is assumed to be such that the wrappee class
- * has access to it and can thus use it to trigger message events.
+ * by simply calling the class's methods and using a ProxyMessenger.
+ * The ProxyMessenger is assumed to be such that the wrappee class
+ * has access to it and can thus use it to send and receive messages to and from MessengerClass.
  */
 var MessengerClass = /** @class */ (function () {
-    function MessengerClass(wrappee, wrappeeEmitter, id) {
+    function MessengerClass(wrappee, proxyMessenger, id) {
         if (id === void 0) { id = ""; }
+        var _this = this;
         this.wrappee = wrappee;
-        this.wrappeeEmitter = wrappeeEmitter;
-        this.messageEvent = "message";
+        this.proxyMessenger = proxyMessenger;
         this.id = id;
+        this.emitter = new EventEmitter_1.default();
+        proxyMessenger.onPostMessage(function (msg) { return _this.emitter.trigger("message", [msg]); });
     }
     /**
      * Call a method on the wrapped class. If the class
@@ -77,7 +80,7 @@ var MessengerClass = /** @class */ (function () {
                                     args: [result]
                                 }
                             };
-                            this.wrappeeEmitter.trigger(this.messageEvent, [responseMsg]);
+                            this.emitter.trigger("message", [responseMsg]);
                         }
                         return [2 /*return*/];
                 }
@@ -91,12 +94,10 @@ var MessengerClass = /** @class */ (function () {
             msg.message.type in this.wrappee) {
             this._callMethod(msg);
         }
-        // Transform response message into event.
-        if (msg.type === "response") {
-            msg.type = "event";
-            msg.message.type = "response:" + msg.message.type;
+        else if (msg.type === "response") {
+            this.proxyMessenger.message(msg);
         }
-        if (msg.type === "event") {
+        else if (msg.type === "event") {
             if (typeof this.wrappee === "object" &&
                 "eventHandlers" in this.wrappee &&
                 typeof this.wrappee.eventHandlers === "object" &&
@@ -107,7 +108,7 @@ var MessengerClass = /** @class */ (function () {
         return this;
     };
     MessengerClass.prototype.onMessage = function (handler) {
-        this.wrappeeEmitter.on(this.messageEvent, handler);
+        this.emitter.on("message", handler);
         return this;
     };
     return MessengerClass;

@@ -1,4 +1,6 @@
 import EventEmitter from "../../../components/events/pub/EventEmitter";
+import { DMessage } from "../../../components/messaging/pub/DMessage";
+import ProxyMessenger from "../../../components/messaging/pub/ProxyMessenger";
 import World3D from "../../world3d/pub/World3D";
 import * as babylonjs from "@babylonjs/core";
 
@@ -13,12 +15,11 @@ interface Vector3D {
  * of the LocalGameMaster service.
  */
 export default class GameMaster {
-    emitter: EventEmitter
+    proxyMessenger = new ProxyMessenger<DMessage, DMessage>();
     eventHandlers: {[name: string]: Function}
     initialized: boolean;
     
     constructor() {
-        this.emitter = new EventEmitter();
         this.eventHandlers = {};
         this.initialized = false;
     }
@@ -28,7 +29,8 @@ export default class GameMaster {
      * at the given position.
      */
     createCubeIsland(id: string, position: Vector3D) {
-        this.emitter.trigger("message", [{
+        this.proxyMessenger.postMessage({
+            sender: "gameMaster",
             recipient: "world3d",
             type: "request",
             message: {
@@ -40,7 +42,7 @@ export default class GameMaster {
                     }
                 }]
             }
-        }]);
+        });
     }
 
     /**
@@ -51,7 +53,8 @@ export default class GameMaster {
         // ### Create initial cube islands the players will stand on. ### 
         
         // Register the constructor for a standard floating cube island.
-        this.emitter.trigger("message", [{
+        this.proxyMessenger.postMessage({
+            sender: "gameMaster",
             recipient: "world3d",
             type: "request",
             message: {
@@ -72,7 +75,7 @@ export default class GameMaster {
                     }
                 }]
             }
-        }]);
+        });
 
         // Create the cube islands the players will spawn on.
         this.createCubeIsland("cubeIsland1", {x: 0, y: 0, z: 0});

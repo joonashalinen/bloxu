@@ -6,7 +6,11 @@ import GameMaster from "./GameMaster";
 function main() {
     var gameMaster = new GameMaster();
     var worker = new WebWorker(self);
-    var gameMasterMessenger = new MessengerClass(gameMaster, gameMaster.emitter);
+    var gameMasterMessenger = new MessengerClass(
+        gameMaster, 
+        gameMaster.proxyMessenger,
+        "gameMaster"
+    );
     var pipe = new MessagePipe(worker, gameMasterMessenger);
     pipe.join();
 }

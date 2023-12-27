@@ -1,3 +1,4 @@
+import ArithmeticSequence from "../../math/pub/ArithmeticSequence";
 import StringSequence from "../../strings/pub/StringSequence";
 import { DMessage } from "./DMessage";
 import IMessenger from "./IMessenger";
@@ -8,27 +9,30 @@ import IMessenger from "./IMessenger";
  */
 export default class SyncMessenger {
     messenger: IMessenger<DMessage, DMessage>;
-    idGenerator: StringSequence;
+    idGenerator = new StringSequence(new ArithmeticSequence());
 
-    constructor(messenger: IMessenger<DMessage, DMessage>, idGenerator: StringSequence) {
+    constructor(messenger: IMessenger<DMessage, DMessage>) {
         this.messenger = messenger;
-        this.idGenerator = idGenerator;
     }
 
     /**
      * Posts a synchronous message that will yield 
      * a response as a result.
      */
-    async postSyncMessage(req: DMessage): Promise<DMessage> {
+    async postSyncMessage(req: DMessage): Promise<Array<unknown>> {
         if (req.id === undefined) {
-            req.id = this.idGenerator.next();
+            req.id = req.sender + ":" + this.idGenerator.next();
         }
-        return new Promise((resolve) => {
+
+        const waitForResponse = new Promise<Array<unknown>>((resolve) => {
             this.messenger.onMessage((res: DMessage) => {
                 if (res.type === "response" && res.id === req.id) {
-                    resolve(res);
+                    resolve(res.message.args);
                 }
             });
         });
+        
+        this.messenger.postMessage(req);
+        return await waitForResponse;
     }
 }

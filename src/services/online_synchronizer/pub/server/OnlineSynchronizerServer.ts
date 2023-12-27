@@ -1,5 +1,7 @@
 import EventEmitter from "../../../../components/events/pub/EventEmitter";
+import { DMessage } from "../../../../components/messaging/pub/DMessage";
 import MessageHotel from "../../../../components/messaging/pub/MessageHotel";
+import ProxyMessenger from "../../../../components/messaging/pub/ProxyMessenger";
 
 /**
  * Contains the operations and state of the 
@@ -7,12 +9,10 @@ import MessageHotel from "../../../../components/messaging/pub/MessageHotel";
  */
 export default class OnlineSynchronizerServer {
     private _runningPlayerId = 1;
-    messageHotel: MessageHotel;
-    emitter: EventEmitter;
+    messageHotel = new MessageHotel();
+    proxyMessenger = new ProxyMessenger<DMessage, DMessage>();
 
     constructor() {
-        this.messageHotel = new MessageHotel();
-        this.emitter = new EventEmitter();
     }
     
     /**

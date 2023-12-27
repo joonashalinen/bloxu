@@ -6,7 +6,7 @@ import Player from "./Player";
 function main() {
     var player = new Player();
     var worker = new WebWorker(self);
-    var playerMessenger = new MessengerClass(player, player.emitter);
+    var playerMessenger = new MessengerClass(player, player.proxyMessenger, "localPlayer");
     var pipe = new MessagePipe(worker, playerMessenger);
     pipe.join();
 }

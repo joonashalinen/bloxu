@@ -41,10 +41,10 @@ class App {
 
         // Setup communications between services.
         var messengers = {
-            "world3d": new MessengerClass(world3d, world3d.emitter),
+            "world3d": new MessengerClass(world3d, world3d.proxyMessenger, "world3d"),
             "player1": localPlayerWorker,
             "gameMaster": gameMasterWorker,
-            "ioService": new MessengerClass(ioService, ioService.emitter),
+            "ioService": new MessengerClass(ioService, ioService.proxyMessenger, "ioService"),
             "onlineSynchronizer": onlineSynchronizerWorker
         };
         this.mediator = new Mediator(messengers);
