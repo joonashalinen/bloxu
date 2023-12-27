@@ -1,28 +1,25 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-var DeepMappableObject_1 = require("./DeepMappableObject");
-var VariableType_1 = require("../../types/VariableType");
+import DeepMappableObject from "./DeepMappableObject";
+import VariableType from "../../types/VariableType";
 /**
  * Provides deep mapping for plain javascript arrays.
  */
-var DeepMappableArray = /** @class */ (function () {
-    function DeepMappableArray(wrappee) {
+export default class DeepMappableArray {
+    constructor(wrappee) {
         this.wrappee = wrappee;
     }
-    DeepMappableArray.prototype.map = function (transformer) {
-        this.wrappee = this.wrappee.map(function (value) {
+    map(transformer) {
+        this.wrappee = this.wrappee.map((value) => {
             if (Array.isArray(value)) {
                 return (new DeepMappableArray(value)).map(transformer).wrappee;
             }
-            else if ((new VariableType_1.default(value)).isRealObject()) {
-                return (new DeepMappableObject_1.default(value)).map(transformer).wrappee;
+            else if ((new VariableType(value)).isRealObject()) {
+                return (new DeepMappableObject(value)).map(transformer).wrappee;
             }
             else {
                 return transformer(value);
             }
         });
         return this;
-    };
-    return DeepMappableArray;
-}());
-exports.default = DeepMappableArray;
+    }
+}
+//# sourceMappingURL=DeepMappableArray.js.map

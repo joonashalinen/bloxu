@@ -1,39 +1,36 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
 /**
  * Provides utilities for testing the type of a variable.
  */
-var VariableType = /** @class */ (function () {
-    function VariableType(variable) {
+export default class VariableType {
+    constructor(variable) {
         this.variable = variable;
     }
-    VariableType.prototype.isNothing = function () {
+    isNothing() {
         return (this.variable === null || this.variable === undefined);
-    };
-    VariableType.prototype.isRealPrimitive = function () {
+    }
+    isRealPrimitive() {
         return !this.isNothing() && !this.isObject() && !this.isFunction();
-    };
-    VariableType.prototype.isPrimitive = function () {
+    }
+    isPrimitive() {
         return !this.isObject() && !this.isFunction();
-    };
-    VariableType.prototype.isFunction = function () {
+    }
+    isFunction() {
         return typeof this.variable === "function";
-    };
-    VariableType.prototype.isObject = function () {
+    }
+    isObject() {
         return typeof this.variable === "object";
-    };
-    VariableType.prototype.isDataStructure = function () {
+    }
+    isDataStructure() {
         return this.isRealObject() || this.isArray();
-    };
-    VariableType.prototype.isRealObject = function () {
+    }
+    isRealObject() {
         return this.isObject() && !this.isNothing() && !this.isFunction() && !this.isArray();
-    };
-    VariableType.prototype.isArray = function () {
+    }
+    isArray() {
         return Array.isArray(this.variable);
-    };
-    VariableType.prototype.isInstanceOf = function (classType) {
+    }
+    isInstanceOf(classType) {
         return (this.variable instanceof classType);
-    };
-    return VariableType;
-}());
-exports.default = VariableType;
+    }
+}
+//# sourceMappingURL=VariableType.js.map

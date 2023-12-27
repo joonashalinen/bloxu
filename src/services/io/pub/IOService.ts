@@ -31,12 +31,10 @@ export default class IOService {
         // Trigger an event with the direction information
         this.emitter.trigger("message", [{
             recipient: "*",
+            type: "event",
             message: {
-                type: "event",
-                message: {
-                    type: "controllerDirectionChange",
-                    args: [direction]
-                }
+                type: "controllerDirectionChange",
+                args: [direction]
             }
         }]);
     }

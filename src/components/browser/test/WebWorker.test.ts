@@ -9,7 +9,7 @@ class MockWorker implements BrowserWebWorker {
 
 describe('WebWorker', () => {
     let mockWorker: MockWorker;
-    let webWorker: WebWorker;
+    let webWorker: WebWorker<unknown, unknown>;
 
     beforeEach(() => {
         mockWorker = new MockWorker();

@@ -5,6 +5,9 @@ export interface DMessageData {
 }
 
 export interface DMessage {
-    type: "request" | "event";
-    message: DMessageData
+    sender: string;
+    recipient: string;
+    type: "request" | "event" | "response";
+    id?: string;
+    message: DMessageData;
 };

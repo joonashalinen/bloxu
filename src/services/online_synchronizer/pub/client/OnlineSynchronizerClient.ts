@@ -25,12 +25,10 @@ export default class OnlineSynchronizerClient {
             setTimeout(() => {
                 socket.send(JSON.stringify({
                     recipient: "onlineSynchronizerServer",
+                    type: "request",
                     message: {
-                        type: "request",
-                        message: {
-                            type: "joinGame",
-                            args: ["ABC", "1"]
-                        }
+                        type: "joinGame",
+                        args: ["ABC", "1"]
                     }
                 }));
             }, 1000);

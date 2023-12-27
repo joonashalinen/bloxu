@@ -13,5 +13,13 @@ export function createMessenger(): [MessengerClass<TestObj>, EventEmitter, TestO
 }
 
 export var testMessages = {
-    "type1": {type: "request", message: {type: "test", args: ["test"]}} as DMessage
+    "type1": {
+        sender: "sender1",
+        recipient: "recipient1",
+        type: "request", 
+        message: {
+            type: "test", 
+            args: ["test"]
+        }
+    } as DMessage
 };

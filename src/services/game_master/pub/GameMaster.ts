@@ -30,17 +30,15 @@ export default class GameMaster {
     createCubeIsland(id: string, position: Vector3D) {
         this.emitter.trigger("message", [{
             recipient: "world3d",
+            type: "request",
             message: {
-                type: "request",
-                message: {
-                    type: "createObject",
-                    args: [id, "GameMaster.CubeIsland", {
-                        boundArgs: [id, position],
-                        f: function(this: World3D, id:string, position: Vector3D) {
-                            return [id, new this.babylonjs.Vector3(position.x, position.y, position.z)];
-                        }
-                    }]
-                }
+                type: "createObject",
+                args: [id, "GameMaster.CubeIsland", {
+                    boundArgs: [id, position],
+                    f: function(this: World3D, id:string, position: Vector3D) {
+                        return [id, new this.babylonjs.Vector3(position.x, position.y, position.z)];
+                    }
+                }]
             }
         }]);
     }
@@ -55,26 +53,24 @@ export default class GameMaster {
         // Register the constructor for a standard floating cube island.
         this.emitter.trigger("message", [{
             recipient: "world3d",
+            type: "request",
             message: {
-                type: "request",
-                message: {
-                    type: "registerObjectType",
-                    args: ["GameMaster.CubeIsland", {
-                        boundArgs: [],
-                        f: function(this: World3D, id:string, position: babylonjs.Vector3) {
-                            var box = this.babylonjs.MeshBuilder.CreateBox(id, {size: 3}, this.scene);
-                            box.position.x = position.x;
-                            box.position.y = position.y;
-                            box.position.z = position.z;
-                            return new this.babylonjs.PhysicsAggregate(
-                                box, 
-                                this.babylonjs.PhysicsShapeType.BOX, 
-                                { mass: 0 }, 
-                                this.scene
-                            );
-                        }
-                    }]
-                }
+                type: "registerObjectType",
+                args: ["GameMaster.CubeIsland", {
+                    boundArgs: [],
+                    f: function(this: World3D, id:string, position: babylonjs.Vector3) {
+                        var box = this.babylonjs.MeshBuilder.CreateBox(id, {size: 3}, this.scene);
+                        box.position.x = position.x;
+                        box.position.y = position.y;
+                        box.position.z = position.z;
+                        return new this.babylonjs.PhysicsAggregate(
+                            box, 
+                            this.babylonjs.PhysicsShapeType.BOX, 
+                            { mass: 0 }, 
+                            this.scene
+                        );
+                    }
+                }]
             }
         }]);
 

@@ -21,7 +21,9 @@ var Mediator = /** @class */ (function () {
      */
     Mediator.prototype._listenToActor = function (name, actor) {
         var _this = this;
-        actor.onMessage(function (msg) { return _this.postMessage(msg, name); });
+        actor.onMessage(function (msg) {
+            _this.postMessage(msg, name);
+        });
     };
     /**
      * Post message to actor and trigger our own event
@@ -29,7 +31,7 @@ var Mediator = /** @class */ (function () {
      * interested in this fact.
      */
     Mediator.prototype._postActorMessage = function (name, actor, msg) {
-        actor.postMessage(msg.message);
+        actor.postMessage(msg);
         this.emitter.trigger(name, [msg]);
     };
     Mediator.prototype.addActor = function (id, actor) {

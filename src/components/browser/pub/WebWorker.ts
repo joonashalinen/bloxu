@@ -13,7 +13,7 @@ export interface BrowserWebWorker {
  * A web worker running on a browser. Implements the IMessenger interface 
  * and provides support for sending functions between workers.
  */
-export default class WebWorker implements IMessenger<unknown, unknown> {
+export default class WebWorker<I, R> implements IMessenger<I, R> {
     worker: BrowserWebWorker;
     encodedFunctionPrefix: string;
 
@@ -48,7 +48,7 @@ export default class WebWorker implements IMessenger<unknown, unknown> {
         return (new EncodeableFunction(f.slice(this.encodedFunctionPrefix.length))).decode();
     }
     
-    postMessage(msg: unknown): IMessenger<unknown, unknown> {
+    postMessage(msg: unknown): WebWorker<I, R> {
         // Transform functions into a form where they can be
         // sent via the worker.
         if (typeof msg === "function") {
@@ -60,7 +60,7 @@ export default class WebWorker implements IMessenger<unknown, unknown> {
         return this;
     }
 
-    onMessage(handler: Function): IMessenger<unknown, unknown> {
+    onMessage(handler: Function): WebWorker<I, R> {
         this.worker.onmessage = (msg: {data: unknown}) => {
             // If msg.data is an object.
             if ((new VariableType(msg.data)).isRealObject()) {

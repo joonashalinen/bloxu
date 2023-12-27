@@ -12,5 +12,13 @@ function createMessenger() {
 }
 exports.createMessenger = createMessenger;
 exports.testMessages = {
-    "type1": { type: "request", message: { type: "test", args: ["test"] } }
+    "type1": {
+        sender: "sender1",
+        recipient: "recipient1",
+        type: "request",
+        message: {
+            type: "test",
+            args: ["test"]
+        }
+    }
 };
