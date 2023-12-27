@@ -4,6 +4,7 @@ import Movable from "../../../../components/objects3d/pub/Movable";
 import World3D from "../../../world3d/pub/World3D";
 import { DMessage } from "../../../../components/messaging/pub/DMessage";
 import ProxyMessenger from "../../../../components/messaging/pub/ProxyMessenger";
+import DVector3 from "../../../../components/graphics3d/pub/DVector3";
 
 /**
  * Class that contains the operations and state 
@@ -13,13 +14,30 @@ export default class Player implements IPlayer {
     eventHandlers: {[name: string]: Function}
     initialized: boolean;
     proxyMessenger: ProxyMessenger<DMessage, DMessage>;
-    
-    constructor() {
+    startingPosition: DVector3;
+
+    constructor(public playerId: string) {
         this.eventHandlers = {
             "controllerDirectionChange": this.onControllerDirectionChange.bind(this)
         };
         this.initialized = false;
         this.proxyMessenger = new ProxyMessenger<DMessage, DMessage>();
+        this.startingPosition = {x: 0, y: 4, z: 0};
+    }
+
+    /**
+     * Id of the player body object in the world.
+     */
+    playerBodyId() {
+        return "playerBody:" + this.playerId;
+    }
+
+    /**
+     * Id of the library native object of the player body in the world. 
+     * For BabylonJS this is the PhysicsAggregate object.
+     */
+    nativePlayerBodyId() {
+        return "nativePlayerBody:" + this.playerId;
     }
 
     /**
@@ -34,7 +52,7 @@ export default class Player implements IPlayer {
                 type: "request",
                 message: {
                     type: "modifyObject",
-                    args: ["player1Body", {
+                    args: [this.playerBodyId(), {
                         boundArgs: [event.direction],
                         f: function(this: World3D, direction: {x: number, y:number}, obj: Movable) {
                             return obj.move(new this.babylonjs.Vector3(direction.x, 0, direction.y * (-1)));
@@ -64,11 +82,15 @@ export default class Player implements IPlayer {
             type: "request",
             message: {
                 type: "createCustomObject",
-                args: ["nativePlayer1Body", {
-                    boundArgs: [],
-                    f: function(this: World3D) {
-                        var box = this.babylonjs.MeshBuilder.CreateBox("nativePlayer1Body", {size: 0.7}, this.scene);
-                        box.position.y = 4;
+                args: [this.nativePlayerBodyId(), {
+                    boundArgs: [this.nativePlayerBodyId(), this.startingPosition],
+                    f: function(this: World3D, nativePlayerBodyId: string, startingPosition: DVector3) {
+                        var box = this.babylonjs.MeshBuilder.CreateBox(nativePlayerBodyId, {size: 0.7}, this.scene);
+                        
+                        box.position.x = startingPosition.x;
+                        box.position.y = startingPosition.y;
+                        box.position.z = startingPosition.z;
+
                         return new this.babylonjs.PhysicsAggregate(
                             box, 
                             this.babylonjs.PhysicsShapeType.BOX, 
@@ -87,10 +109,10 @@ export default class Player implements IPlayer {
             type: "request",
             message: {
                 type: "createObject",
-                args: ["player1Body", "Movable", {
-                    boundArgs: [],
-                    f: function(this: World3D) {
-                        return [this.getObject("nativePlayer1Body")];
+                args: [this.playerBodyId(), "Movable", {
+                    boundArgs: [this.nativePlayerBodyId()],
+                    f: function(this: World3D, nativePlayerBodyId: string) {
+                        return [this.getObject(nativePlayerBodyId)];
                     }
                 }]
             }

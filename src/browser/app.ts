@@ -31,6 +31,10 @@ class App {
         var localPlayerNativeWorker = new Worker(new URL('../services/player/pub/local/index.ts', import.meta.url))
         var localPlayerWorker = new WebWorker(localPlayerNativeWorker);
 
+        // Create RemotePlayer service.
+        var remotePlayerNativeWorker = new Worker(new URL('../services/player/pub/remote/index.ts', import.meta.url))
+        var remotePlayerWorker = new WebWorker(remotePlayerNativeWorker);
+
         // Create GameMaster service.
         var gameMasterNativeWorker = new Worker(new URL('../services/game_master/pub/index.ts', import.meta.url))
         var gameMasterWorker = new WebWorker(gameMasterNativeWorker);
@@ -42,7 +46,8 @@ class App {
         // Setup communications between services.
         var messengers = {
             "world3d": new MessengerClass(world3d, world3d.proxyMessenger, "world3d"),
-            "player1": localPlayerWorker,
+            "localPlayer": localPlayerWorker,
+            "remotePlayer": remotePlayerWorker,
             "gameMaster": gameMasterWorker,
             "ioService": new MessengerClass(ioService, ioService.proxyMessenger, "ioService"),
             "onlineSynchronizer": onlineSynchronizerWorker
@@ -54,6 +59,13 @@ class App {
         // other services need it for their initialization procedures.
         await world3d.initialize();
         ioService.initialize();
+        gameMasterWorker.postMessage({
+            type: "request",
+            message: {
+                type: "initialize",
+                args: []
+            }
+        });
         localPlayerWorker.postMessage({
             type: "request",
             message: {
@@ -61,7 +73,7 @@ class App {
                 args: []
             }
         });
-        gameMasterWorker.postMessage({
+        remotePlayerWorker.postMessage({
             type: "request",
             message: {
                 type: "initialize",
