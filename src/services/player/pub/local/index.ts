@@ -4,9 +4,9 @@ import MessengerClass from "../../../../components/messaging/pub/MessengerClass"
 import Player from "./Player";
 
 function main() {
-    var player = new Player("local");
+    var player = new Player("player-1");
     var worker = new WebWorker(self);
-    var playerMessenger = new MessengerClass(player, player.proxyMessenger, "localPlayer");
+    var playerMessenger = new MessengerClass(player, player.proxyMessenger, "player-1");
     var pipe = new MessagePipe(worker, playerMessenger);
     pipe.join();
 }

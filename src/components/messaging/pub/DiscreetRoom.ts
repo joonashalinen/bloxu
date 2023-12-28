@@ -14,7 +14,7 @@ import Room from "./Room";
 export default class DiscreetRoom implements IRoom {
     room: Room;
     aliasGenerator = new StringSequence(new ArithmeticSequence());
-    aliases: {[messengerId: string]: string};
+    aliases: {[messengerId: string]: string} = {};
 
     constructor(
         public code: string,

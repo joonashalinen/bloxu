@@ -111,7 +111,7 @@ export default class GameMaster {
         );
 
         this.proxyMessenger.postMessage(
-            this.messageFactory.createRequest("localPlayer", "spawn", [{x: 0, y: 4, z: 0}])
+            this.messageFactory.createRequest("player-1", "spawn", [{x: 0, y: 4, z: 0}])
         );
 
         return code;
@@ -137,7 +137,7 @@ export default class GameMaster {
         );
 
         this.proxyMessenger.postMessage(
-            this.messageFactory.createRequest("localPlayer", "spawn", [{x: 0, y: 4, z: 20}])
+            this.messageFactory.createRequest("player-2", "spawn", [{x: 0, y: 4, z: 20}])
         );
 
         return true;

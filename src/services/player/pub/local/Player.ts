@@ -49,7 +49,7 @@ export default class Player implements IPlayer {
     onControllerDirectionChange(event): Player {
         if (this.initialized && this.spawned) {
             this.proxyMessenger.postMessage({
-                sender: "localPlayer",
+                sender: this.playerId,
                 recipient: "world3d",
                 type: "request",
                 message: {
@@ -86,7 +86,7 @@ export default class Player implements IPlayer {
         
         // Create box with physics.
         this.proxyMessenger.postMessage({
-            sender: "localPlayer",
+            sender: this.playerId,
             recipient: "world3d",
             type: "request",
             message: {
@@ -113,7 +113,7 @@ export default class Player implements IPlayer {
 
         // Make a movable box using the created box.
         this.proxyMessenger.postMessage({
-            sender: "localPlayer",
+            sender: this.playerId,
             recipient: "world3d",
             type: "request",
             message: {

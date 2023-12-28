@@ -6,7 +6,7 @@ import RemotePlayer from "./RemotePlayer";
 function main() {
     var player = new RemotePlayer();
     var worker = new WebWorker(self);
-    var playerMessenger = new MessengerClass(player, player.player.proxyMessenger, "remotePlayer");
+    var playerMessenger = new MessengerClass(player, player.player.proxyMessenger, "player-2");
     var pipe = new MessagePipe(worker, playerMessenger);
     pipe.join();
 }

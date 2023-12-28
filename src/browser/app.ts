@@ -69,8 +69,8 @@ class App {
         var messengers = {
             "ui": new MessengerClass(ui, ui.proxyMessenger, "ui"),
             "world3d": new MessengerClass(world3d, world3d.proxyMessenger, "world3d"),
-            "localPlayer": localPlayerWorker,
-            "remotePlayer": remotePlayerWorker,
+            "player-1": localPlayerWorker,
+            "player-2": remotePlayerWorker,
             "gameMaster": gameMasterWorker,
             "ioService": new MessengerClass(ioService, ioService.proxyMessenger, "ioService"),
             "onlineSynchronizer": onlineSynchronizerWorker
@@ -83,8 +83,8 @@ class App {
         await world3d.initialize();
         ioService.initialize();
         this.initializeService(gameMasterWorker, "gameMaster");
-        this.initializeService(localPlayerWorker, "localPlayer");
-        this.initializeService(remotePlayerWorker, "remotePlayer");
+        this.initializeService(localPlayerWorker, "player-1");
+        this.initializeService(remotePlayerWorker, "player-2");
         this.initializeService(onlineSynchronizerWorker, "onlineSynchronizer");
     }    
 

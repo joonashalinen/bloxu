@@ -23,6 +23,7 @@ var Mediator = /** @class */ (function () {
     Mediator.prototype._listenToActor = function (name, actor) {
         var _this = this;
         var listener = function (msg) {
+            console.log(msg);
             _this.postMessage(msg, name);
         };
         this.actorListeners[name] = listener;

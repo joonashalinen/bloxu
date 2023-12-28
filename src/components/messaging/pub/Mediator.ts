@@ -32,6 +32,7 @@ export default class Mediator implements IMediator {
      */
     _listenToActor(name: string, actor: Actor): void {
         const listener = (msg: DMessage) => {
+            console.log(msg);
             this.postMessage(msg, name)
         };
         this.actorListeners[name] = listener;
