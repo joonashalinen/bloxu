@@ -18,7 +18,7 @@ var MessageHotel = /** @class */ (function () {
         var code = this.generateRoomCode();
         var newRoom = {
             code: code,
-            users: []
+            users: new Set()
         };
         this.rooms.push(newRoom);
         return code;
@@ -29,8 +29,8 @@ var MessageHotel = /** @class */ (function () {
      */
     MessageHotel.prototype.joinRoom = function (code, user) {
         var room = this.rooms.find(function (r) { return r.code === code; });
-        if (room) {
-            room.users.push(user);
+        if (room && !room.users.has(user)) {
+            room.users.add(user);
             return true;
         }
         else {
@@ -38,11 +38,23 @@ var MessageHotel = /** @class */ (function () {
         }
     };
     /**
+     * Removes user from all rooms they are in if they are in any.
+     */
+    MessageHotel.prototype.leaveAllRooms = function (user) {
+        var rooms = this.rooms.filter(function (r) { return r.users.has(user); });
+        rooms.forEach(function (room) {
+            if (room) {
+                room.users.delete(user);
+            }
+        });
+        return true;
+    };
+    /**
      * Send a message from one user to another within the same room.
      */
     MessageHotel.prototype.sendMessage = function (sender, roomCode, content) {
         var room = this.rooms.find(function (room) { return room.code === roomCode; });
-        if (room && room.users.includes(sender)) {
+        if (room && room.users.has(sender)) {
             var message = {
                 sender: sender,
                 content: content

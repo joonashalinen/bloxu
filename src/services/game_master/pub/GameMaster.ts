@@ -82,16 +82,6 @@ export default class GameMaster {
         this.createCubeIsland("cubeIsland1", {x: 0, y: 0, z: 0});
         this.createCubeIsland("cubeIsland2", {x: 0, y: 0, z: 20});
 
-        const code = await (new SyncMessenger(this.proxyMessenger)).postSyncMessage({
-            recipient: "onlineSynchronizer",
-            sender: "gameMaster",
-            type: "request",
-            message: {
-                type: "hostGame",
-                args: []
-            }
-        });
-
         this.initialized = true;
 
         return this;

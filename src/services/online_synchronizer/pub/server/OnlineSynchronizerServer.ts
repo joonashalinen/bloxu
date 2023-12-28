@@ -28,6 +28,7 @@ export default class OnlineSynchronizerServer {
      */
     joinGame(code: string, user: string) {
         this.messageHotel.joinRoom(code, user);
+        console.log(this.messageHotel.rooms);
         return true;
     }
 
@@ -37,5 +38,12 @@ export default class OnlineSynchronizerServer {
      */
     hostGame() {
         return this.messageHotel.hostRoom();
+    }
+
+    /**
+     * Causes user to leave the game they are in if they are in one.
+     */
+    leaveGame(user: string) {
+        this.messageHotel.leaveAllRooms(user);
     }
 }

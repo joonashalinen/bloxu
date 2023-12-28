@@ -9,6 +9,7 @@ import IOService from "../services/io/pub/IOService";
 import KeyboardController from "../components/controls/pub/KeyboardController";
 import IMessenger from "../components/messaging/pub/IMessenger";
 import { DMessage } from "../components/messaging/pub/DMessage";
+import UI from "../services/ui/pub/UI";
 
 class App {
 
@@ -45,6 +46,9 @@ class App {
         // Create IOService.
         var ioService = new IOService(new KeyboardController(document));
 
+        // Create UI service.
+        var ui = new UI(document);
+
         // Create LocalPlayer service.
         var localPlayerNativeWorker = new Worker(new URL('../services/player/pub/local/index.ts', import.meta.url))
         var localPlayerWorker = new WebWorker(localPlayerNativeWorker);
@@ -63,6 +67,7 @@ class App {
 
         // Setup communications between services.
         var messengers = {
+            "ui": new MessengerClass(ui, ui.proxyMessenger, "ui"),
             "world3d": new MessengerClass(world3d, world3d.proxyMessenger, "world3d"),
             "localPlayer": localPlayerWorker,
             "remotePlayer": remotePlayerWorker,

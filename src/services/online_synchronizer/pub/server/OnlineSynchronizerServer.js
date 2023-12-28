@@ -35,6 +35,12 @@ var OnlineSynchronizerServer = /** @class */ (function () {
     OnlineSynchronizerServer.prototype.hostGame = function () {
         return this.messageHotel.hostRoom();
     };
+    /**
+     * Causes user to leave the game they are in if they are in one.
+     */
+    OnlineSynchronizerServer.prototype.leaveGame = function (user) {
+        this.messageHotel.leaveAllRooms(user);
+    };
     return OnlineSynchronizerServer;
 }());
 exports.default = OnlineSynchronizerServer;

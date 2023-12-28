@@ -13,8 +13,9 @@ export default class OnlineSynchronizerClient {
     socketToServer: WebSocket;
     messengerToServer: WebSocketMessenger<DMessage, DMessage>;
     syncMessengerToServer: SyncMessenger;
-    serverEventHandlers: {[name: string]: Function}
+    serverEventHandlers: {[name: string]: Function};
     playerId: string;
+    eventHandlers: {[name: string]: Function};
 
     constructor() {
 
@@ -25,6 +26,7 @@ export default class OnlineSynchronizerClient {
         this.socketToServer = new WebSocket("ws://localhost:3000");
         this.messengerToServer = new WebSocketMessenger(this.socketToServer);
         this.syncMessengerToServer = new SyncMessenger(this.messengerToServer);
+        this.eventHandlers = {};
     }
 
     /**
@@ -103,5 +105,12 @@ export default class OnlineSynchronizerClient {
         const code = (await this.makeSyncRequestToServer("hostGame"))[0];
         (await this.makeSyncRequestToServer("joinGame", [code, this.playerId]));
         return code;
+    }
+
+    /**
+     * Join an existing game by using a code.
+     */
+    async joinGame(code: string) {
+        return (await this.makeSyncRequestToServer("joinGame", [code, this.playerId]));
     }
 }

@@ -2,7 +2,7 @@ import EventEmitter from "../../../components/events/pub/EventEmitter";
 
 interface Room {
     code: string;
-    users: string[];
+    users: Set<string>;
 }
 
 interface Message {
@@ -31,7 +31,7 @@ export default class MessageHotel {
         const code = this.generateRoomCode();
         const newRoom: Room = {
             code,
-            users: []
+            users: new Set()
         };
         this.rooms.push(newRoom);
         return code;
@@ -43,12 +43,25 @@ export default class MessageHotel {
      */
     joinRoom(code: string, user: string): boolean {
         const room = this.rooms.find((r) => r.code === code);
-        if (room) {
-            room.users.push(user);
+        if (room && !room.users.has(user)) {
+            room.users.add(user);
             return true;
         } else {
             return false;
         }
+    }
+
+    /**
+     * Removes user from all rooms they are in if they are in any.
+     */
+    leaveAllRooms(user: string): boolean {
+        const rooms = this.rooms.filter((r) => r.users.has(user));
+        rooms.forEach((room) => {
+            if (room) {
+                room.users.delete(user);
+            }
+        });
+        return true;
     }
 
     /**
@@ -57,7 +70,7 @@ export default class MessageHotel {
     sendMessage(sender: string, roomCode: string, content: string): void {
         const room = this.rooms.find((room) => room.code === roomCode);
         
-        if (room && room.users.includes(sender)) {
+        if (room && room.users.has(sender)) {
             const message: Message = {
                 sender,
                 content
