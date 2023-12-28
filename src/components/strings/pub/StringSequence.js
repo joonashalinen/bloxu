@@ -1,17 +1,20 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
 /**
  * A sequence of string values.
  */
-export default class StringSequence {
-    constructor(wrappee) {
+var StringSequence = /** @class */ (function () {
+    function StringSequence(wrappee) {
         this.wrappee = wrappee;
         this.prefix = "";
         this.suffix = "";
     }
-    current() {
+    StringSequence.prototype.current = function () {
         return this.prefix + this.wrappee.current().toString() + this.suffix;
-    }
-    next() {
+    };
+    StringSequence.prototype.next = function () {
         return this.prefix + this.wrappee.next().toString() + this.suffix;
-    }
-}
-//# sourceMappingURL=StringSequence.js.map
+    };
+    return StringSequence;
+}());
+exports.default = StringSequence;

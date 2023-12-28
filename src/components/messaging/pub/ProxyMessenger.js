@@ -13,6 +13,10 @@ var ProxyMessenger = /** @class */ (function () {
         this.emitter.on("message", handler);
         return this;
     };
+    ProxyMessenger.prototype.offMessage = function (handler) {
+        this.emitter.off("message", handler);
+        return this;
+    };
     /**
      * Listen to calls to postMessage.
      */

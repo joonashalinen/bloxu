@@ -112,6 +112,10 @@ var MessengerClass = /** @class */ (function () {
         this.emitter.on("message", handler);
         return this;
     };
+    MessengerClass.prototype.offMessage = function (handler) {
+        this.emitter.off("message", handler);
+        return this;
+    };
     return MessengerClass;
 }());
 exports.default = MessengerClass;

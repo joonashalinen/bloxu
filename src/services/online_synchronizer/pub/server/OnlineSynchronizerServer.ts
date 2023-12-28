@@ -1,34 +1,36 @@
+import ArithmeticSequence from "../../../../components/math/pub/ArithmeticSequence";
 import { DMessage } from "../../../../components/messaging/pub/DMessage";
-import MessageHotel from "../../../../components/messaging/pub/MessageHotel";
+import Hotel from "../../../../components/messaging/pub/Hotel";
 import ProxyMessenger from "../../../../components/messaging/pub/ProxyMessenger";
+import StringSequence from "../../../../components/strings/pub/StringSequence";
 
 /**
  * Contains the operations and state of the 
  * OnlineSynchronizerServer service.
  */
 export default class OnlineSynchronizerServer {
-    private _runningPlayerId = 1;
-    messageHotel = new MessageHotel();
+    playerIdGenerator = new StringSequence(new ArithmeticSequence());
+    hotel = new Hotel();
     proxyMessenger = new ProxyMessenger<DMessage, DMessage>();
 
     constructor() {
     }
-    
+
     /**
-     * Generates a new player id.
+     * Generate new unique player id.
      */
-    newPlayerId(): string {
-        var id = this._runningPlayerId.toString();
-        this._runningPlayerId = this._runningPlayerId + 1;
-        return id;
+    newPlayerId() {
+        return this.playerIdGenerator.next();
     }
 
     /**
      * Join a game using a code given by the host of the game.
      */
     joinGame(code: string, user: string) {
-        this.messageHotel.joinRoom(code, user);
-        console.log(this.messageHotel.rooms);
+        /* if (this.hotel.isInRoom(user)) {
+            throw new Error("User '" + user + "' is already in a game.");
+        }
+        this.hotel.joinRoom(code, user); */
         return true;
     }
 
@@ -37,14 +39,14 @@ export default class OnlineSynchronizerServer {
      * can be used to invite other players into the game.
      */
     hostGame() {
-        return this.messageHotel.hostRoom();
+        return this.hotel.hostRoom();
     }
 
     /**
      * Causes user to leave the game they are in if they are in one.
      */
     leaveGame(user: string) {
-        this.messageHotel.leaveAllRooms(user);
+        /* this.hotel.leaveAllRooms(user); */
     }
 
     /**

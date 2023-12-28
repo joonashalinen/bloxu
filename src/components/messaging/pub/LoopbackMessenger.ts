@@ -16,4 +16,9 @@ export default class LoopbackMessenger<A> implements IMessenger<A, A> {
         this.emitter.on("message", handler);
         return this;
     }
+
+    offMessage(handler: (msg: A) => void): LoopbackMessenger<A> {
+        this.emitter.off("message", handler);
+        return this;
+    }
 }

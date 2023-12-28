@@ -78,4 +78,9 @@ export default class MessengerClass<C> implements IMessenger<DMessage, DMessage>
         this.emitter.on("message", handler);
         return this;
     }
+
+    offMessage(handler: (msg: DMessage) => void): Messenger {
+        this.emitter.off("message", handler);
+        return this;
+    }
 }

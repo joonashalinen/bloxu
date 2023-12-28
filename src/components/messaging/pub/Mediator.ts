@@ -13,15 +13,29 @@ type Actors = {[name: string]: Actor};
 export default class Mediator implements IMediator {
     emitter: EventEmitter;
     actors: Actors;
+    actorListeners: {[actor: string]: (msg: DMessage) => void}
+
+    constructor(actors: Actors = {}) {
+        this.emitter = new EventEmitter();
+        this.actors = actors;
+        this.actorListeners = {};
+        
+        for (let actorName in actors) {
+            let actor = actors[actorName];
+            this._listenToActor(actorName, actor);
+        }
+    }
 
     /**
      * Set up message listener for given actor. When the actor 
      * emits a message, it is posted to the actors it is directed to.
      */
     _listenToActor(name: string, actor: Actor): void {
-        actor.onMessage((msg: DMessage) => {
+        const listener = (msg: DMessage) => {
             this.postMessage(msg, name)
-        });
+        };
+        this.actorListeners[name] = listener;
+        actor.onMessage(listener);
     }
 
     /**
@@ -34,21 +48,25 @@ export default class Mediator implements IMediator {
         this.emitter.trigger(name, [msg]);
     }
 
-    constructor(actors: Actors = {}) {
-        this.emitter = new EventEmitter();
-        this.actors = actors;
-        for (let actorName in actors) {
-            let actor = actors[actorName];
-            this._listenToActor(actorName, actor);
-        }
-    }
-
     addActor(id: string, actor: Actor) {
         if (id in this.actors) {
             throw new Error("Actor with given id '" + "' already exists.");
         }
         this.actors[id] = actor;
         this._listenToActor(id, actor);
+        return this;
+    }
+
+    removeActor(id: string) {
+        if (!(id in this.actors)) {
+            throw new Error("Actor with given id '" + "' does not exist.");
+        }
+        const actor = this.actors[id];
+        delete this.actors[id];
+
+        actor.offMessage(this.actorListeners[id]);
+        delete this.actorListeners[id];
+        
         return this;
     }
 
@@ -64,6 +82,11 @@ export default class Mediator implements IMediator {
             throw new Error("No actor '" + actor + "' found");
         }
         this.emitter.on(actor, handler);
+        return this;
+    }
+
+    offMessageFor(actor: string, handler: (msg: DMessage) => void): Mediator {
+        this.emitter.off(actor, handler);
         return this;
     }
 
@@ -87,5 +110,9 @@ export default class Mediator implements IMediator {
 
     onMessage(handler: (msg: DMessage) => void): Mediator {
         return this.onMessageFor("*", handler);
+    }
+
+    offMessage(handler: (msg: DMessage) => void): Mediator {
+        return this.offMessageFor("*", handler);
     }
 }

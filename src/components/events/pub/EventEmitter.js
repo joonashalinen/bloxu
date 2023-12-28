@@ -69,9 +69,7 @@ var EventEmitter = /** @class */ (function () {
         for (var i = this._eventListeners.length - 1; i >= 0; i--) {
             if (this._eventListeners[i].event === event
                 &&
-                    (this._eventListeners[i].callback.toString().replace(/\s/g, '')
-                        ===
-                            callback.toString().replace(/\s/g, ''))) {
+                    this._eventListeners[i].callback === callback) {
                 this._eventListeners.splice(i, 1);
             }
         }

@@ -10,6 +10,7 @@ var Mediator = /** @class */ (function () {
         if (actors === void 0) { actors = {}; }
         this.emitter = new EventEmitter_1.default();
         this.actors = actors;
+        this.actorListeners = {};
         for (var actorName in actors) {
             var actor = actors[actorName];
             this._listenToActor(actorName, actor);
@@ -21,9 +22,11 @@ var Mediator = /** @class */ (function () {
      */
     Mediator.prototype._listenToActor = function (name, actor) {
         var _this = this;
-        actor.onMessage(function (msg) {
+        var listener = function (msg) {
             _this.postMessage(msg, name);
-        });
+        };
+        this.actorListeners[name] = listener;
+        actor.onMessage(listener);
     };
     /**
      * Post message to actor and trigger our own event
@@ -42,6 +45,16 @@ var Mediator = /** @class */ (function () {
         this._listenToActor(id, actor);
         return this;
     };
+    Mediator.prototype.removeActor = function (id) {
+        if (!(id in this.actors)) {
+            throw new Error("Actor with given id '" + "' does not exist.");
+        }
+        var actor = this.actors[id];
+        delete this.actors[id];
+        actor.offMessage(this.actorListeners[id]);
+        delete this.actorListeners[id];
+        return this;
+    };
     /**
      * Listen to messages sent to given actor. Note: use this method only to listen
      * to actors other than yourself. An actor does not need to explicitly
@@ -54,6 +67,10 @@ var Mediator = /** @class */ (function () {
             throw new Error("No actor '" + actor + "' found");
         }
         this.emitter.on(actor, handler);
+        return this;
+    };
+    Mediator.prototype.offMessageFor = function (actor, handler) {
+        this.emitter.off(actor, handler);
         return this;
     };
     Mediator.prototype.postMessage = function (msg, callerActor) {
@@ -76,6 +93,9 @@ var Mediator = /** @class */ (function () {
     };
     Mediator.prototype.onMessage = function (handler) {
         return this.onMessageFor("*", handler);
+    };
+    Mediator.prototype.offMessage = function (handler) {
+        return this.offMessageFor("*", handler);
     };
     return Mediator;
 }());

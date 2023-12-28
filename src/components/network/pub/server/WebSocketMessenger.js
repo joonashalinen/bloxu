@@ -32,6 +32,13 @@ var WebSocketMessenger = /** @class */ (function () {
         this.messageHandlers.push(handler);
         return this;
     };
+    WebSocketMessenger.prototype.offMessage = function (handler) {
+        var handlerIndex = this.messageHandlers.indexOf(handler);
+        if (handlerIndex !== -1) {
+            this.messageHandlers.splice(handlerIndex, 1);
+        }
+        return this;
+    };
     return WebSocketMessenger;
 }());
 exports.default = WebSocketMessenger;

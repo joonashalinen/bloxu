@@ -35,4 +35,12 @@ export default class WebSocketMessenger<A, B> implements IMessenger<A, B> {
         this.messageHandlers.push(handler);
         return this;
     }
+
+    offMessage(handler: (msg: B) => void): IMessenger<A, B> {
+        const handlerIndex = this.messageHandlers.indexOf(handler);
+        if (handlerIndex !== -1) {
+            this.messageHandlers.splice(handlerIndex, 1);
+        }
+        return this;
+    }
 }

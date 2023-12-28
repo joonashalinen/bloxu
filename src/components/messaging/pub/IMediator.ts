@@ -12,8 +12,17 @@ export interface IMediator extends IMessenger<DMessage, DMessage> {
      */
     onMessageFor(actor: string, handler: (msg: DMessage) => void): IMediator;
     /**
+     * Remove onMessageFor listener with given handler.
+     */
+    offMessageFor(actor: string, handler: (msg: DMessage) => void): IMediator;
+    /**
      * Add new actor with given id into the Mediator if one does not 
      * already exist with the same id.
      */
     addActor(id: string, actor: IMessenger<DMessage, DMessage>): IMediator;
+
+     /**
+     * Remove actor with given id.
+     */
+    removeActor(id: string): IMediator;
 }

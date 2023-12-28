@@ -23,4 +23,9 @@ export default class WebSocketMessenger<A, B> implements IMessenger<A, B> {
         this.emitter.on("message", handler);
         return this;
     }
+
+    offMessage(handler: (msg: B) => void): IMessenger<A, B> {
+        this.emitter.off("message", handler);
+        return this;
+    }
 }

@@ -14,6 +14,11 @@ export default class ProxyMessenger<I, R> implements IMessenger<I, R> {
         return this;
     }
 
+    offMessage(handler: (msg: R) => void): ProxyMessenger<I, R> {
+        this.emitter.off("message", handler);
+        return this;
+    }
+
     /**
      * Listen to calls to postMessage.
      */

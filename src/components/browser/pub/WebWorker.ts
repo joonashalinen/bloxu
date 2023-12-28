@@ -87,4 +87,9 @@ export default class WebWorker<I, R> implements IMessenger<I, R> {
         };
         return this;
     }
+
+    offMessage(handler: Function): WebWorker<I, R> {
+        this.worker.onmessage = undefined;
+        return this;
+    }
 }

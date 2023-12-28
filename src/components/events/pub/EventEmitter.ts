@@ -46,11 +46,7 @@ export default class EventEmitter {
             if (
                 this._eventListeners[i].event === event 
                 && 
-                ( 
-                    ( this._eventListeners[i].callback as Function ).toString().replace(/\s/g,'') 
-                    === 
-                    ( callback as Function ).toString().replace(/\s/g,'')
-                )
+                this._eventListeners[i].callback === callback
             ) {
                 this._eventListeners.splice(i, 1);
             }
