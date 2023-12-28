@@ -38,6 +38,7 @@ export default class MessengerClass<C> implements IMessenger<DMessage, DMessage>
             const responseMsg: DMessage = {
                 sender: this.id,
                 recipient: msg.sender,
+                id: msg.id,
                 type: "response",
                 message: {
                     type: msg.message.type,

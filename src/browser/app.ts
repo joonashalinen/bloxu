@@ -7,10 +7,28 @@ import World3D from "../services/world3d/pub/World3D";
 import WebWorker from "../components/browser/pub/WebWorker";
 import IOService from "../services/io/pub/IOService";
 import KeyboardController from "../components/controls/pub/KeyboardController";
+import IMessenger from "../components/messaging/pub/IMessenger";
+import { DMessage } from "../components/messaging/pub/DMessage";
 
 class App {
 
     mediator: Mediator;
+
+    /**
+     * Call 'initialize' on the given service.
+     */
+    initializeService(messenger: IMessenger<DMessage, DMessage>, id: string) {
+        messenger.postMessage({
+            sender: "-",
+            recipient: id,
+            type: "request",
+            message: {
+                type: "initialize",
+                args: []
+            }
+        });
+        return this;
+    }
 
     /**
      * The initialization code is separated into 
@@ -53,33 +71,16 @@ class App {
             "onlineSynchronizer": onlineSynchronizerWorker
         };
         this.mediator = new Mediator(messengers);
-
+        
         // Now that we have communications between services, 
         // we can initialize them. World3D must be initialized first, since 
         // other services need it for their initialization procedures.
         await world3d.initialize();
         ioService.initialize();
-        gameMasterWorker.postMessage({
-            type: "request",
-            message: {
-                type: "initialize",
-                args: []
-            }
-        });
-        localPlayerWorker.postMessage({
-            type: "request",
-            message: {
-                type: "initialize",
-                args: []
-            }
-        });
-        remotePlayerWorker.postMessage({
-            type: "request",
-            message: {
-                type: "initialize",
-                args: []
-            }
-        });
+        this.initializeService(gameMasterWorker, "gameMaster");
+        this.initializeService(localPlayerWorker, "localPlayer");
+        this.initializeService(remotePlayerWorker, "remotePlayer");
+        this.initializeService(onlineSynchronizerWorker, "onlineSynchronizer");
     }    
 
     constructor() {

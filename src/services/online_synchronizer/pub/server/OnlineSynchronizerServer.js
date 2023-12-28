@@ -24,12 +24,9 @@ var OnlineSynchronizerServer = /** @class */ (function () {
      * Join a game using a code given by the host of the game.
      */
     OnlineSynchronizerServer.prototype.joinGame = function (code, user) {
-        console.log("code");
-        console.log(code);
-        console.log("user");
-        console.log(user);
         this.messageHotel.joinRoom(code, user);
-        return this;
+        console.log(this.messageHotel.rooms);
+        return true;
     };
     /**
      * Host a new game. Returns the code that

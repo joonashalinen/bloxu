@@ -1,4 +1,3 @@
-import EventEmitter from "../../../../components/events/pub/EventEmitter";
 import { DMessage } from "../../../../components/messaging/pub/DMessage";
 import MessageHotel from "../../../../components/messaging/pub/MessageHotel";
 import ProxyMessenger from "../../../../components/messaging/pub/ProxyMessenger";
@@ -28,12 +27,8 @@ export default class OnlineSynchronizerServer {
      * Join a game using a code given by the host of the game.
      */
     joinGame(code: string, user: string) {
-        console.log("code")
-        console.log(code)
-        console.log("user")
-        console.log(user)
         this.messageHotel.joinRoom(code, user);
-        return this;
+        return true;
     }
 
     /**

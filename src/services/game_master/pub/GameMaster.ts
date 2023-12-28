@@ -1,6 +1,7 @@
 import EventEmitter from "../../../components/events/pub/EventEmitter";
 import { DMessage } from "../../../components/messaging/pub/DMessage";
 import ProxyMessenger from "../../../components/messaging/pub/ProxyMessenger";
+import SyncMessenger from "../../../components/messaging/pub/SyncMessenger";
 import World3D from "../../world3d/pub/World3D";
 import * as babylonjs from "@babylonjs/core";
 
@@ -48,7 +49,7 @@ export default class GameMaster {
     /**
      * Initialization procedure for the LocalGameMaster service.
      */
-    initialize(): GameMaster {
+    async initialize(): Promise<GameMaster> {
         
         // ### Create initial cube islands the players will stand on. ### 
         
@@ -80,6 +81,16 @@ export default class GameMaster {
         // Create the cube islands the players will spawn on.
         this.createCubeIsland("cubeIsland1", {x: 0, y: 0, z: 0});
         this.createCubeIsland("cubeIsland2", {x: 0, y: 0, z: 20});
+
+        const code = await (new SyncMessenger(this.proxyMessenger)).postSyncMessage({
+            recipient: "onlineSynchronizer",
+            sender: "gameMaster",
+            type: "request",
+            message: {
+                type: "hostGame",
+                args: []
+            }
+        });
 
         this.initialized = true;
 
