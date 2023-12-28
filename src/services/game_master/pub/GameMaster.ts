@@ -2,6 +2,7 @@ import EventEmitter from "../../../components/events/pub/EventEmitter";
 import { DMessage } from "../../../components/messaging/pub/DMessage";
 import ProxyMessenger from "../../../components/messaging/pub/ProxyMessenger";
 import SyncMessenger from "../../../components/messaging/pub/SyncMessenger";
+import MessageFactory from "../../../components/messaging/pub/MessageFactory";
 import World3D from "../../world3d/pub/World3D";
 import * as babylonjs from "@babylonjs/core";
 
@@ -17,10 +18,13 @@ interface Vector3D {
  */
 export default class GameMaster {
     proxyMessenger = new ProxyMessenger<DMessage, DMessage>();
+    syncMessenger: SyncMessenger;
     eventHandlers: {[name: string]: Function}
     initialized: boolean;
-    
+    messageFactory = new MessageFactory("gameMaster");
+
     constructor() {
+        this.syncMessenger = new SyncMessenger(this.proxyMessenger);
         this.eventHandlers = {};
         this.initialized = false;
     }
@@ -85,5 +89,57 @@ export default class GameMaster {
         this.initialized = true;
 
         return this;
+    }
+
+    /**
+     * Host a new game. Returns the code that can be used 
+     * to invite other players to the game.
+     */
+    async hostGame() {
+        const code = (await this.syncMessenger.postSyncMessage({
+            recipient: "onlineSynchronizer",
+            sender: "gameMaster",
+            type: "request",
+            message: {
+                type: "hostGame",
+                args: []
+            }
+        }))[0] as string;
+
+        this.proxyMessenger.postMessage(
+            this.messageFactory.createRequest("world3d", "run", [])
+        );
+
+        this.proxyMessenger.postMessage(
+            this.messageFactory.createRequest("localPlayer", "spawn", [{x: 0, y: 4, z: 0}])
+        );
+
+        return code;
+    }
+
+    /**
+     * Join an existing game by using a code given by 
+     * the host of the game.
+     */
+    async joinGame(code: string) {
+        await this.syncMessenger.postSyncMessage({
+            recipient: "onlineSynchronizer",
+            sender: "gameMaster",
+            type: "request",
+            message: {
+                type: "joinGame",
+                args: [code]
+            }
+        })[0] as boolean;
+
+        this.proxyMessenger.postMessage(
+            this.messageFactory.createRequest("world3d", "run", [])
+        );
+
+        this.proxyMessenger.postMessage(
+            this.messageFactory.createRequest("localPlayer", "spawn", [{x: 0, y: 4, z: 20}])
+        );
+
+        return true;
     }
 }

@@ -45,6 +45,21 @@ export default class OnlineSynchronizerClient {
     }
 
     /**
+     * Sends an event message to the server.
+     */
+    async sendEventToServer(type: string, args: Array<unknown> = []) {
+        this.syncMessengerToServer.postSyncMessage({
+            recipient: "onlineSynchronizerServer",
+            sender: this.playerId,
+            type: "event",
+            message: {
+                type: type,
+                args: args
+            }
+        });
+    }
+
+    /**
      * Initialization procedure for the OnlineSynchronizer service. 
      * Once initialization is finished, the service can be used.
      */
@@ -112,5 +127,15 @@ export default class OnlineSynchronizerClient {
      */
     async joinGame(code: string) {
         return (await this.makeSyncRequestToServer("joinGame", [code, this.playerId]));
+    }
+
+    /**
+     * Redirect the local player's control events to the server.
+     */
+    onControllerDirectionChange() {
+        /* this.proxyMessenger.postMessage({
+            recipient: "onlineSynchronizerServer",
+            sender: this.play
+        }) */
     }
 }

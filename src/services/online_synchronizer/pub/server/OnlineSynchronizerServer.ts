@@ -46,4 +46,11 @@ export default class OnlineSynchronizerServer {
     leaveGame(user: string) {
         this.messageHotel.leaveAllRooms(user);
     }
+
+    /**
+     * 
+     */
+    /* sendMessageInGame(user: string, msg: DMessage) {
+        
+    } */
 }

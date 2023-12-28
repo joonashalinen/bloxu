@@ -18,7 +18,7 @@ export default class UI {
         hostGameButton.innerText = "Host Game";
         hostGameButton.addEventListener("click", async () => {
             const code = (await this.syncMessenger.postSyncMessage({
-                recipient: "onlineSynchronizer",
+                recipient: "gameMaster",
                 sender: "ui",
                 type: "request",
                 message: {
@@ -40,7 +40,7 @@ export default class UI {
             if (event.key === 'Enter') {
                 console.log("joining game..");
                 const joined = (await this.syncMessenger.postSyncMessage({
-                    recipient: "onlineSynchronizer",
+                    recipient: "gameMaster",
                     sender: "ui",
                     type: "request",
                     message: {

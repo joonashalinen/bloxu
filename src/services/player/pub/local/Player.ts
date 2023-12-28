@@ -15,12 +15,14 @@ export default class Player implements IPlayer {
     initialized: boolean;
     proxyMessenger: ProxyMessenger<DMessage, DMessage>;
     startingPosition: DVector3;
+    spawned: boolean;
 
     constructor(public playerId: string) {
         this.eventHandlers = {
             "controllerDirectionChange": this.onControllerDirectionChange.bind(this)
         };
         this.initialized = false;
+        this.spawned = false;
         this.proxyMessenger = new ProxyMessenger<DMessage, DMessage>();
         this.startingPosition = {x: 0, y: 4, z: 0};
     }
@@ -45,7 +47,7 @@ export default class Player implements IPlayer {
      * direction control has changed (for example, the thumb joystick of WASD keys).
      */
     onControllerDirectionChange(event): Player {
-        if (this.initialized) {
+        if (this.initialized && this.spawned) {
             this.proxyMessenger.postMessage({
                 sender: "localPlayer",
                 recipient: "world3d",
@@ -70,10 +72,17 @@ export default class Player implements IPlayer {
      * Initialization procedure for the LocalPlayer service.
      */
     initialize(): Player {
+        this.initialized = true;
+        return this;
+    }
 
-        // ### Create Player character. ### 
-        // We are currently just using a movable box 
-        // until a proper player character has been developed.
+    /**
+     * Spawn the player at the given position.
+     * We are currently just using a movable box 
+     * until a proper player character has been developed.
+     */
+    spawn(startingPosition: DVector3): boolean {
+        this.startingPosition = startingPosition;
         
         // Create box with physics.
         this.proxyMessenger.postMessage({
@@ -118,8 +127,8 @@ export default class Player implements IPlayer {
             }
         });
 
-        this.initialized = true;
+        this.spawned = true;
 
-        return this;
+        return true;
     }
 }

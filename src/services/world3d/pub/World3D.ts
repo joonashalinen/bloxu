@@ -41,6 +41,7 @@ export default class World3D {
         this.canvas.style.width = "90%";
         this.canvas.style.height = "90%";
         this.canvas.id = "gameCanvas";
+        this.hide();
         document.body.appendChild(this.canvas);
 
         this.engine = new Engine(this.canvas, true);
@@ -128,7 +129,6 @@ export default class World3D {
         var camera = new babylonjs.FreeCamera("camera1", new babylonjs.Vector3(0, 3, -10), this.scene);
         camera.attachControl(this.canvas, true);
         var light1: HemisphericLight = new HemisphericLight("light1", new Vector3(1, 1, 0), this.scene);
-        // var sphere: Mesh = MeshBuilder.CreateSphere("sphere", { diameter: 1 }, this.scene);
 
         // hide/show the Inspector
         window.addEventListener("keydown", (ev) => {
@@ -149,8 +149,35 @@ export default class World3D {
             new HavokPlugin(true, havokInstance)
         );
 
-        // ### Begin main render loop. ###
+        return this;
+    }
 
+    /**
+     * Show the canvas.
+     */
+    show() {
+        this.canvas.style.display = "block";
+        this.engine.resize();
+    }
+
+    /**
+     * Hide the canvas.
+     */
+    hide() {
+        this.canvas.style.display = "none";
+    }
+
+    /**
+     * Pause the render loop.
+     */
+    pauseRenderLoop() {
+        this.engine.stopRenderLoop();
+    }
+    
+    /**
+     * Run the render loop.
+     */
+    runRenderLoop() {
         this.engine.runRenderLoop(() => {
             for (let id in this.objects) {
                 let obj = this.objects[id];
@@ -160,7 +187,21 @@ export default class World3D {
             }
             this.scene.render();
         });
+    }
 
-        return this;
+    /**
+     * Make the world visible and running.
+     */
+    run() {
+        this.runRenderLoop();
+        this.show();
+    }
+
+    /**
+     * Pause the world and make it no longer visible.
+     */
+    pause() {
+        this.pauseRenderLoop();
+        this.hide();
     }
 }
