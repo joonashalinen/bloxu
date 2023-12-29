@@ -47,6 +47,17 @@ export default class Player implements IPlayer {
      * direction control has changed (for example, the thumb joystick of WASD keys).
      */
     onControllerDirectionChange(event): Player {
+        const direction = event.direction;
+        // Reverse the controls for player 2, who is 
+        // on the opposite side of the map.
+        // A more general solution should be developed for this, 
+        // but due to lack of time, this will have to suffice.
+        if (this.playerId === "player-2") {
+            direction.x = direction.x * (-1);
+            direction.y = direction.y * (-1);
+            direction.z = direction.z * (-1);
+        }
+
         if (this.initialized && this.spawned) {
             this.proxyMessenger.postMessage({
                 sender: this.playerId,
