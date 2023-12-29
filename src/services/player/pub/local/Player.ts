@@ -55,7 +55,6 @@ export default class Player implements IPlayer {
         if (this.playerId === "player-2") {
             direction.x = direction.x * (-1);
             direction.y = direction.y * (-1);
-            direction.z = direction.z * (-1);
         }
 
         if (this.initialized && this.spawned) {

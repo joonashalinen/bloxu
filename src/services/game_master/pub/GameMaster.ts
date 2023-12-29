@@ -139,7 +139,6 @@ export default class GameMaster {
      * to invite other players to the game.
      */
     async hostGame() {
-        console.log("hosting game in game master..");
         const [code, mainPlayerId] = (await this.syncMessenger.postSyncMessage({
             recipient: "onlineSynchronizer",
             sender: "gameMaster",
@@ -149,7 +148,6 @@ export default class GameMaster {
                 args: []
             }
         }))[0] as [string, string];
-        console.log("hosted game in game master");
 
         this.mainPlayerId = mainPlayerId;
 

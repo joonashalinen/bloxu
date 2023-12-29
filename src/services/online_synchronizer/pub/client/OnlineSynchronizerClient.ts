@@ -10,7 +10,6 @@ import WebSocketMessenger from "../../../../components/network/pub/browser/WebSo
  */
 export default class OnlineSynchronizerClient {
     proxyMessenger = new ProxyMessenger<DMessage, DMessage>();
-    serverEventHandlers: {[name: string]: Function} = {};
     serviceId = "onlineSynchronizerClient";
     // We do not know our player id within the game yet until we join one.
     // The id within a game indicates whether we are player 1 or 2.
@@ -19,7 +18,7 @@ export default class OnlineSynchronizerClient {
     // the first 'joinGame' message, after which it will be set to the 
     // real in-game player id.
     playerIdInGame = this.serviceId;
-    eventHandlers: {[name: string]: Function} = {};
+    eventHandlers: {[name: string]: Function};
 
     // This WebSocket is used to communicate with OnlineSynchronizerServer.
     socketToServer: WebSocket = new WebSocket("ws://localhost:3000");
@@ -35,8 +34,12 @@ export default class OnlineSynchronizerClient {
     gameSyncMessenger = new SyncMessenger(this.gameMessenger);
     gameMessageFactory = new MessageFactory(this.playerIdInGame);
     gameConnectionId = "";
+    joinedGame = false;
 
     constructor() {
+        this.eventHandlers = {
+            "controllerDirectionChange": this.onControllerDirectionChange.bind(this)
+        };
     }
 
     /**
@@ -73,9 +76,12 @@ export default class OnlineSynchronizerClient {
      * Sends an event message to the other players in the currently joined game.
      */
     async sendEventInGame(to: string, type: string, args: Array<unknown> = []) {
-        this.gameMessenger.postMessage(
-            this.gameMessageFactory.createEvent(to, type, args)
-        );
+        const msg = this.gameMessageFactory.createEvent("*", type, args);
+        
+        // Set subrecipients.
+        msg.subRecipients = [to];
+
+        this.gameMessenger.postMessage(msg);
     }
 
     /**
@@ -90,13 +96,9 @@ export default class OnlineSynchronizerClient {
             console.log(event);
         })
 
-        console.log("waiting for websockets to open..");
-
         // Ensure the websocket connections have opened before using them.
         await this.messengerToServer.waitForOpen();
         await this.gameMessenger.waitForOpen();
-
-        console.log("websockets opened");
 
         // Retrieve the ids of our connections to the 
         // server so that we can set the proper 'sender' field 
@@ -107,11 +109,12 @@ export default class OnlineSynchronizerClient {
         this.serverMessageFactory.sender = this.serverConnectionId;
         this.gameMessageFactory.sender = this.gameConnectionId;
 
-        // Listen to messages from the server.
-        this.messengerToServer.onMessage((msg) => {
+        // Listen to messages from the joined game (if a game has been joined).
+        this.gameMessenger.onMessage((msg) => {
             // Ignore responses. We use SyncMessenger for messages with responses.
+            // There is some synchronous messaging done on the game room's connection
+            // during setup before joining a game.
             if (msg.type === "response") {return}
-
             // If the message is not a metadata message to the client 
             // but instead a message to the other services then we redirect it.
             if (Array.isArray(msg.subRecipients) && msg.subRecipients.length > 0) {
@@ -129,9 +132,7 @@ export default class OnlineSynchronizerClient {
                 this.proxyMessenger.postMessage(redirectedMsg);
             
             } else {
-                if (msg.type === "event" && msg.message.type in this.serverEventHandlers) {
-                    this.serverEventHandlers[msg.message.type](...msg.message.args);
-                }
+                throw new Error("Handling messages sent directly to OnlineSynchronizerClient not implemented.");
             }
         })
 
@@ -142,7 +143,6 @@ export default class OnlineSynchronizerClient {
      * Host a new game.
      */
     async hostGame() {
-        console.log("hosting game in client..");
         const code = (await this.makeSyncRequestToServer("hostGame"))[0] as string;
         const playerIdInGame = await this.joinGame(code);
         return [code, playerIdInGame];
@@ -156,18 +156,16 @@ export default class OnlineSynchronizerClient {
             "joinGame", 
             [code, this.gameConnectionId]
         ))[0] as string;
-        console.log("playerIdInGame");
-        console.log(this.playerIdInGame);
+        this.joinedGame = true;
         return this.playerIdInGame;
     }
 
     /**
      * Redirect the local player's control events to the server.
      */
-    onControllerDirectionChange() {
-        /* this.proxyMessenger.postMessage({
-            recipient: "onlineSynchronizerServer",
-            sender: this.play
-        }) */
+    onControllerDirectionChange(event) {
+        if (this.joinedGame) {
+            this.sendEventInGame(this.playerIdInGame, "remoteControllerDirectionChange", [event]);
+        }
     }
 }

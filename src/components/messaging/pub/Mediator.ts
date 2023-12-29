@@ -44,8 +44,6 @@ export default class Mediator implements IMediator {
      * interested in this fact.
      */
     _postActorMessage(name: string, actor: Actor, msg: DMessage): void {
-        console.log(`posting message to ${name}`);
-        console.log(msg);
         actor.postMessage(msg);
         this.emitter.trigger(name, [msg]);
     }
