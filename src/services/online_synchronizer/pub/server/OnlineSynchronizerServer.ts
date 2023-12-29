@@ -40,7 +40,7 @@ export default class OnlineSynchronizerServer {
             throw new Error("Player '" + player + "' is already in a game.");
         }
         this.hotel.joinRoom(code, player, messenger);
-        return true;
+        return this.playerIdInGame(player);
     }
 
     /**
@@ -68,6 +68,7 @@ export default class OnlineSynchronizerServer {
         if (room === undefined) {
             throw new Error(`Player ${player} is not currently in any game`);
         } else {
+            console.log((room as DiscreetRoom).aliases[player]);
             return (room as DiscreetRoom).aliases[player];
         }
     }

@@ -1,4 +1,3 @@
-import EventEmitter from "../../../../components/events/pub/EventEmitter";
 import { DMessage } from "../../../../components/messaging/pub/DMessage";
 import MessageFactory from "../../../../components/messaging/pub/MessageFactory";
 import ProxyMessenger from "../../../../components/messaging/pub/ProxyMessenger";
@@ -91,15 +90,13 @@ export default class OnlineSynchronizerClient {
             console.log(event);
         })
 
-        // If the websocket connection has not opened yet.
-        if (this.socketToServer.readyState === WebSocket.CONNECTING) {
-            // Wait for connection to open.
-            await new Promise((resolve, reject) => {
-                this.socketToServer.addEventListener("open", (event) => {
-                    resolve(event);
-                });
-            });
-        }
+        console.log("waiting for websockets to open..");
+
+        // Ensure the websocket connections have opened before using them.
+        await this.messengerToServer.waitForOpen();
+        await this.gameMessenger.waitForOpen();
+
+        console.log("websockets opened");
 
         // Retrieve the ids of our connections to the 
         // server so that we can set the proper 'sender' field 
@@ -138,15 +135,17 @@ export default class OnlineSynchronizerClient {
             }
         })
 
+        return true;
     }
 
     /**
      * Host a new game.
      */
     async hostGame() {
+        console.log("hosting game in client..");
         const code = (await this.makeSyncRequestToServer("hostGame"))[0] as string;
-        await this.joinGame(code);
-        return code;
+        const playerIdInGame = await this.joinGame(code);
+        return [code, playerIdInGame];
     }
 
     /**
@@ -157,6 +156,8 @@ export default class OnlineSynchronizerClient {
             "joinGame", 
             [code, this.gameConnectionId]
         ))[0] as string;
+        console.log("playerIdInGame");
+        console.log(this.playerIdInGame);
         return this.playerIdInGame;
     }
 

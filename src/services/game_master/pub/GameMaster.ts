@@ -22,7 +22,8 @@ export default class GameMaster {
     eventHandlers: {[name: string]: Function}
     initialized: boolean;
     messageFactory = new MessageFactory("gameMaster");
-
+    mainPlayerId: string;
+    
     constructor() {
         this.syncMessenger = new SyncMessenger(this.proxyMessenger);
         this.eventHandlers = {};
@@ -30,32 +31,17 @@ export default class GameMaster {
     }
 
     /**
-     * Create a new standard-sized cube island in the world
-     * at the given position.
+     * Spawn everything needed for the game 
+     * and make the 3D world run.
      */
-    createCubeIsland(id: string, position: Vector3D) {
-        this.proxyMessenger.postMessage({
-            sender: "gameMaster",
-            recipient: "world3d",
-            type: "request",
-            message: {
-                type: "createObject",
-                args: [id, "GameMaster.CubeIsland", {
-                    boundArgs: [id, position],
-                    f: function(this: World3D, id:string, position: Vector3D) {
-                        return [id, new this.babylonjs.Vector3(position.x, position.y, position.z)];
-                    }
-                }]
-            }
-        });
-    }
+    private _startGame() {
 
-    /**
-     * Initialization procedure for the LocalGameMaster service.
-     */
-    async initialize(): Promise<GameMaster> {
-        
-        // ### Create initial cube islands the players will stand on. ### 
+        // Make world run.
+        this.proxyMessenger.postMessage(
+            this.messageFactory.createRequest("world3d", "run")
+        );
+
+        // vvv Create initial cube islands the players will stand on. vvv 
         
         // Register the constructor for a standard floating cube island.
         this.proxyMessenger.postMessage({
@@ -86,9 +72,66 @@ export default class GameMaster {
         this.createCubeIsland("cubeIsland1", {x: 0, y: 0, z: 0});
         this.createCubeIsland("cubeIsland2", {x: 0, y: 0, z: 20});
 
+        // vvv Setup players. vvv        
+
+        // Tell the player services who is the main player and who is the remote player.
+        this.proxyMessenger.postMessage(
+            this.messageFactory.createRequest(this.mainPlayerId, "beMainPlayer")
+        );
+        this.proxyMessenger.postMessage(
+            this.messageFactory.createRequest(this.remotePlayerId(), "beRemotePlayer")
+        );
+
+        // Spawn players.
+        this.proxyMessenger.postMessage(
+            this.messageFactory.createRequest("player-1", "spawn", [{x: 0, y: 4, z: 0}])
+        );
+        this.proxyMessenger.postMessage(
+            this.messageFactory.createRequest("player-2", "spawn", [{x: 0, y: 4, z: 20}])
+        );
+    }
+
+    /**
+     * Create a new standard-sized cube island in the world
+     * at the given position.
+     */
+    createCubeIsland(id: string, position: Vector3D) {
+        this.proxyMessenger.postMessage({
+            sender: "gameMaster",
+            recipient: "world3d",
+            type: "request",
+            message: {
+                type: "createObject",
+                args: [id, "GameMaster.CubeIsland", {
+                    boundArgs: [id, position],
+                    f: function(this: World3D, id:string, position: Vector3D) {
+                        return [id, new this.babylonjs.Vector3(position.x, position.y, position.z)];
+                    }
+                }]
+            }
+        });
+    }
+
+    /**
+     * Initialization procedure for the LocalGameMaster service.
+     */
+    async initialize() {
+
         this.initialized = true;
 
-        return this;
+        return true;
+    }
+
+    /**
+     * In-game id of the other player, which is the remote player. 
+     * We assume the game is 2-player.
+     */
+    remotePlayerId() {
+        if (this.mainPlayerId === "player-1") {
+            return "player-2";
+        } else {
+            return "player-1";
+        }
     }
 
     /**
@@ -96,7 +139,8 @@ export default class GameMaster {
      * to invite other players to the game.
      */
     async hostGame() {
-        const code = (await this.syncMessenger.postSyncMessage({
+        console.log("hosting game in game master..");
+        const [code, mainPlayerId] = (await this.syncMessenger.postSyncMessage({
             recipient: "onlineSynchronizer",
             sender: "gameMaster",
             type: "request",
@@ -104,15 +148,12 @@ export default class GameMaster {
                 type: "hostGame",
                 args: []
             }
-        }))[0] as string;
+        }))[0] as [string, string];
+        console.log("hosted game in game master");
 
-        this.proxyMessenger.postMessage(
-            this.messageFactory.createRequest("world3d", "run", [])
-        );
+        this.mainPlayerId = mainPlayerId;
 
-        this.proxyMessenger.postMessage(
-            this.messageFactory.createRequest("player-1", "spawn", [{x: 0, y: 4, z: 0}])
-        );
+        this._startGame();
 
         return code;
     }
@@ -122,7 +163,7 @@ export default class GameMaster {
      * the host of the game.
      */
     async joinGame(code: string) {
-        await this.syncMessenger.postSyncMessage({
+        this.mainPlayerId = (await this.syncMessenger.postSyncMessage({
             recipient: "onlineSynchronizer",
             sender: "gameMaster",
             type: "request",
@@ -130,16 +171,10 @@ export default class GameMaster {
                 type: "joinGame",
                 args: [code]
             }
-        })[0] as boolean;
+        }))[0] as string;
 
-        this.proxyMessenger.postMessage(
-            this.messageFactory.createRequest("world3d", "run", [])
-        );
+        this._startGame();
 
-        this.proxyMessenger.postMessage(
-            this.messageFactory.createRequest("player-2", "spawn", [{x: 0, y: 4, z: 20}])
-        );
-
-        return true;
+        return this.mainPlayerId;
     }
 }

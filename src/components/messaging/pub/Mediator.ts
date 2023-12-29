@@ -32,7 +32,6 @@ export default class Mediator implements IMediator {
      */
     _listenToActor(name: string, actor: Actor): void {
         const listener = (msg: DMessage) => {
-            console.log(msg);
             this.postMessage(msg, name)
         };
         this.actorListeners[name] = listener;
@@ -45,6 +44,8 @@ export default class Mediator implements IMediator {
      * interested in this fact.
      */
     _postActorMessage(name: string, actor: Actor, msg: DMessage): void {
+        console.log(`posting message to ${name}`);
+        console.log(msg);
         actor.postMessage(msg);
         this.emitter.trigger(name, [msg]);
     }
@@ -100,11 +101,18 @@ export default class Mediator implements IMediator {
                 }
             }
         } else {
-            if (!(msg.recipient in this.actors)) {
-                throw new Error("No actor '" + msg.recipient + "' found");
+            // '-' is a name used by the sender of a message when they do not 
+            // want to receive a response or are not a messenger in the Mediator 
+            // (and thus cannot receive response). Thus, when the recipient is 
+            // '-' this means that a service has sent a response to such a sender. 
+            // In this case, we do not want to cause an error but simply ignore it.
+            if (msg.recipient !== "-") {
+                if (!(msg.recipient in this.actors)) {
+                    throw new Error("No actor '" + msg.recipient + "' found");
+                }
+                var actor = this.actors[msg.recipient];
+                this._postActorMessage(msg.recipient, actor, msg);
             }
-            var actor = this.actors[msg.recipient];
-            this._postActorMessage(msg.recipient, actor, msg);
         }
         return this;
     }

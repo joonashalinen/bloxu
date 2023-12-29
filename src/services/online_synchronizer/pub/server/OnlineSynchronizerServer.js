@@ -36,7 +36,7 @@ var OnlineSynchronizerServer = /** @class */ (function () {
             throw new Error("Player '" + player + "' is already in a game.");
         }
         this.hotel.joinRoom(code, player, messenger);
-        return true;
+        return this.playerIdInGame(player);
     };
     /**
      * Host a new game. Returns the code that
@@ -62,6 +62,7 @@ var OnlineSynchronizerServer = /** @class */ (function () {
             throw new Error("Player ".concat(player, " is not currently in any game"));
         }
         else {
+            console.log(room.aliases[player]);
             return room.aliases[player];
         }
     };

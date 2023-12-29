@@ -28,4 +28,20 @@ export default class WebSocketMessenger<A, B> implements IMessenger<A, B> {
         this.emitter.off("message", handler);
         return this;
     }
+
+    /**
+     * This method can be awaited to ensure
+     * the websocket connection is open 
+     * before sending any messages.
+     */
+    async waitForOpen() {
+        if (this.socket.readyState === WebSocket.CONNECTING) {
+            // Wait for connection to open.
+            await new Promise((resolve, reject) => {
+                this.socket.addEventListener("open", (event) => {
+                    resolve(event);
+                });
+            });
+        }
+    }
 }

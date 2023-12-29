@@ -9,10 +9,11 @@ import Player from "../local/Player";
  * A Player that is controlled remotely by another online player.
  */
 export default class RemotePlayer implements IPlayer {
-    player = new Player("player-2");
+    player: Player;
     eventHandlers: {[name: string]: Function};
 
-    constructor() {
+    constructor(playerId: string) {
+        this.player = new Player(playerId);
         this.player.startingPosition = {x: 0, y: 4, z: 20};
         this.eventHandlers = {};
     }

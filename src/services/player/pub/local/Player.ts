@@ -21,7 +21,7 @@ export default class Player implements IPlayer {
         this.eventHandlers = {
             "controllerDirectionChange": this.onControllerDirectionChange.bind(this)
         };
-        this.initialized = false;
+        this.initialized = true; // The initialization procedure currently does nothing.
         this.spawned = false;
         this.proxyMessenger = new ProxyMessenger<DMessage, DMessage>();
         this.startingPosition = {x: 0, y: 4, z: 0};
@@ -71,9 +71,9 @@ export default class Player implements IPlayer {
     /**
      * Initialization procedure for the LocalPlayer service.
      */
-    initialize(): Player {
+    initialize() {
         this.initialized = true;
-        return this;
+        return true;
     }
 
     /**

@@ -26,7 +26,7 @@ export default class SyncMessenger {
 
         const waitForResponse = new Promise<Array<unknown>>((resolve) => {
             this.messenger.onMessage((res: DMessage) => {
-                if (res.type === "response" && res.id === req.id) {
+                if (res.type === "response" && res.recipient === req.sender && res.id === req.id) {
                     resolve(res.message.args);
                 }
             });

@@ -12,7 +12,7 @@ export default class IOService {
 
     constructor(directionController: IDirectionController) {
         this.directionController = directionController;
-        this.handleDirectionChange = this.handleDirectionChange.bind(this);
+        this._handleDirectionChange = this._handleDirectionChange.bind(this);
         this.proxyMessenger = new ProxyMessenger<DMessage, DMessage>();
     }
 
@@ -21,13 +21,13 @@ export default class IOService {
      */
     initialize(): void {
         // Subscribe to the directionChange event of the direction controller
-        this.directionController.onDirectionChange(this.handleDirectionChange);
+        this.directionController.onDirectionChange(this._handleDirectionChange);
     }
 
     /**
      * Handle the directionChange event from the direction controller.
      */
-    handleDirectionChange(direction: { x: number; y: number }): void {
+    private _handleDirectionChange(direction: { x: number; y: number }): void {
         // Trigger an event with the direction information
         this.proxyMessenger.postMessage({
             sender: "ioService",

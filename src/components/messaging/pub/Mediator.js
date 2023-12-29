@@ -23,7 +23,6 @@ var Mediator = /** @class */ (function () {
     Mediator.prototype._listenToActor = function (name, actor) {
         var _this = this;
         var listener = function (msg) {
-            console.log(msg);
             _this.postMessage(msg, name);
         };
         this.actorListeners[name] = listener;
@@ -85,6 +84,7 @@ var Mediator = /** @class */ (function () {
         }
         else {
             if (!(msg.recipient in this.actors)) {
+                console.log(msg);
                 throw new Error("No actor '" + msg.recipient + "' found");
             }
             var actor = this.actors[msg.recipient];
