@@ -3,6 +3,7 @@ import ProxyMessenger from "../../../components/messaging/pub/ProxyMessenger";
 import SyncMessenger from "../../../components/messaging/pub/SyncMessenger";
 import MessageFactory from "../../../components/messaging/pub/MessageFactory";
 import World3D from "../../world3d/pub/World3D";
+import PlayerBody from "../../world3d/conf/custom_object_types/PlayerBody";
 
 interface Vector3D {
     x: number;
@@ -64,13 +65,27 @@ export default class GameMaster {
         );
 
         // Spawn players.
-
         this.proxyMessenger.postMessage(
             this.messageFactory.createRequest("player-1", "spawn", [{x: 0, y: 1.85, z: 0}])
         );
         this.proxyMessenger.postMessage(
             this.messageFactory.createRequest("player-2", "spawn", [{x: 0, y: 1.85, z: 20}])
         );
+
+        // Center camera on the local player.
+        setTimeout(() => {
+            this.proxyMessenger.postMessage(
+                this.messageFactory.createRequest("world3d", "modify", [
+                    {
+                        boundArgs: [this.mainPlayerId],
+                        f: function(this: World3D, playerId: string) {
+                            const playerBody = this.getObject(`Player:PlayerBody?${playerId}`) as PlayerBody;
+                            this.camera.lockedTarget = playerBody.mainMesh;
+                        }
+                    }
+                ])
+            );
+        }, 500);
     }
 
     /**

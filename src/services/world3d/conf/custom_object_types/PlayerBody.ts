@@ -1,4 +1,4 @@
-import { Mesh, MeshBuilder, PhysicsAggregate, PhysicsBody, PhysicsShape, PhysicsShapeType, Scene, TransformNode, Vector3 } from "@babylonjs/core";
+import { Mesh, MeshBuilder, PhysicsAggregate, PhysicsBody, PhysicsShape, PhysicsShapeType, Scene, TransformNode, Vector2, Vector3 } from "@babylonjs/core";
 import Movable from "../../../../components/objects3d/pub/Movable";
 import Pointer from "../../../../components/objects3d/pub/Pointer";
 import Follower from "../../../../components/objects3d/pub/Follower";
@@ -13,6 +13,7 @@ export default class PlayerBody {
     arrowMesh: Mesh;
     arrowPointer: Pointer;
     arrowFollower: Follower;
+    ballMovable: Movable;
 
     constructor(
         public id: string, 
@@ -65,11 +66,8 @@ export default class PlayerBody {
         // object is used for rotating the arrow around the player mesh.
         this.arrowPointer = new Pointer(this.arrowMesh, this.mainMesh);
         
+        // Make the arrow follow the position of the player character.
         this.arrowFollower = new Follower(this.arrowPointer.centerOfRotation, this.movable);
-
-        // Attach the arrow to the player mesh group so that 
-        // it stays attached to the player mesh.
-        // this.arrowPointer.centerOfRotation.parent = this.meshGroup;
     }
 
     /**
@@ -78,6 +76,27 @@ export default class PlayerBody {
     doOnTick(time: number) {
         this.movable.doOnTick(time);
         this.arrowFollower.doOnTick(time);
+        if (this.ballMovable !== undefined) {
+            this.ballMovable.doOnTick(time);
+        }
+    }
+
+    /**
+     * Shoot in the given direction. The direction is a 2D 
+     * vector where the y-component corresponds 
+     * with the z-coordinate in world space.
+     */
+    shoot(direction: Vector2) {
+        const ball = MeshBuilder.CreateSphere(`PlayerBody:ball?${this.id}`, {diameter: 1}, this.scene);
+        ball.position = this.mainMesh.position.clone();
+        const physicsAggregate = new PhysicsAggregate(
+            ball, 
+            PhysicsShapeType.SPHERE, 
+            { mass: 0.1 }, 
+            this.scene
+        );
+        this.ballMovable = new Movable(physicsAggregate);
+        this.ballMovable.move(new Vector3(direction.x, 0, direction.y * (-1)));
     }
 
 }

@@ -8,6 +8,7 @@ import DataObject from "../../../../components/data_structures/pub/DataObject";
 import MeshLeash2D from "../../../../components/graphics3d/pub/MeshLeash2D";
 import DMeshLeash2D from "../../../../components/graphics3d/pub/DMeshLeash2D";
 import PlayerBody from "../../../world3d/conf/custom_object_types/PlayerBody";
+import { PointerEventTypes } from "@babylonjs/core";
 
 /**
  * Class that contains the operations and state 
@@ -136,9 +137,20 @@ export default class Player implements IPlayer {
                             this.createObject(leashId, "MeshLeash2D", [playerBody.mainMesh]);
                             const leash = this.getObject(leashId) as MeshLeash2D;
 
+                            // Make the leash rotate when the mouse moves.
+                            // The rotation should follow the leash, except around the player character
+                            // around the y-axis.
                             leash.onChange((leash: DMeshLeash2D) => {
                                 const angle = Math.atan2(leash.leash.y, leash.leash.x);
                                 playerBody.arrowPointer.setRotation({x: 0, y: angle + Math.PI, z: 0});
+                            });
+
+                            this.scene.onPointerObservable.add((pointerInfo) => {
+                                if (pointerInfo.type === this.babylonjs.PointerEventTypes.POINTERDOWN) {
+                                    if (leash.lastLeash !== undefined) {
+                                        playerBody.shoot(leash.lastLeash);
+                                    }
+                                }
                             });
                         }
                     }

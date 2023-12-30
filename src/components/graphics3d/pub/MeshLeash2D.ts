@@ -1,4 +1,4 @@
-import * as babylonjs from "@babylonjs/core";
+import { Matrix, Mesh, PointerEventTypes, Vector2, Vector3 } from "@babylonjs/core";
 import EventEmitter from "../../events/pub/EventEmitter";
 
 /**
@@ -9,31 +9,33 @@ import EventEmitter from "../../events/pub/EventEmitter";
  */
 export default class MeshLeash2D {
     emitter = new EventEmitter();
+    lastLeash: Vector2;
 
-    constructor(public mesh: babylonjs.Mesh) {
+    constructor(public mesh: Mesh) {
         const scene = mesh.getScene();
         const engine = scene.getEngine();
         scene.onPointerObservable.add((pointerInfo) => {
-            if (pointerInfo.type === babylonjs.PointerEventTypes.POINTERMOVE) {
+            if (pointerInfo.type === PointerEventTypes.POINTERMOVE) {
                 // Coordinates of the mesh when projected to the 2D screen.
-                const meshPositionOnScreen3D = babylonjs.Vector3.Project(
+                const meshPositionOnScreen3D = Vector3.Project(
                     mesh.getAbsolutePosition(),
-                    babylonjs.Matrix.IdentityReadOnly,
+                    Matrix.IdentityReadOnly,
                     scene.getTransformMatrix(),
                     scene.activeCamera.viewport.toGlobal(
                         engine.getRenderWidth(),
                         engine.getRenderHeight(),
                     )
                 );
-                const meshPositionOnScreen = new babylonjs.Vector2(
+                const meshPositionOnScreen = new Vector2(
                     meshPositionOnScreen3D.x,
                     meshPositionOnScreen3D.y,
                 );
-                const mousePosition = new babylonjs.Vector2(
+                const mousePosition = new Vector2(
                     scene.pointerX,
                     scene.pointerY
                 );
                 const leash = mousePosition.subtract(meshPositionOnScreen);
+                this.lastLeash = leash;
                 this.emitter.trigger("change", [{
                     meshPositionOnScreen: meshPositionOnScreen,
                     mousePosition: mousePosition,

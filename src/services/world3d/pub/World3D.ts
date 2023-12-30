@@ -32,7 +32,8 @@ export default class World3D implements IService {
     scene: babylonjs.Scene;
     engine: babylonjs.Engine;
     canvas: HTMLCanvasElement;
-    camera: babylonjs.Camera;
+    camera: babylonjs.FollowCamera;
+    layers: {[name: string]: babylonjs.Layer};
 
     constructor(document: Document) {
         this.objectTypes = {
@@ -135,8 +136,8 @@ export default class World3D implements IService {
         
         // ### Initialize BabylonJS. ###
 
-        this.camera = new babylonjs.FreeCamera("camera1", new babylonjs.Vector3(0, 3, -10), this.scene);
-        this.camera.attachControl(this.canvas, true);
+        this.camera = new babylonjs.FollowCamera("camera1", new babylonjs.Vector3(0, 5, -10), this.scene);
+        this.camera.attachControl(true);
         var light1: HemisphericLight = new HemisphericLight("light1", new Vector3(1, 1, 0), this.scene);
 
         // hide/show the Inspector
