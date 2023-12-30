@@ -1,10 +1,13 @@
-import EventEmitter from "../../../../components/events/pub/EventEmitter";
 import IPlayer from "../IPlayer";
-import Movable from "../../../../components/objects3d/pub/Movable";
 import World3D from "../../../world3d/pub/World3D";
 import { DMessage } from "../../../../components/messaging/pub/DMessage";
 import ProxyMessenger from "../../../../components/messaging/pub/ProxyMessenger";
 import DVector3 from "../../../../components/graphics3d/pub/DVector3";
+import MessageFactory from "../../../../components/messaging/pub/MessageFactory";
+import DataObject from "../../../../components/data_structures/pub/DataObject";
+import MeshLeash2D from "../../../../components/graphics3d/pub/MeshLeash2D";
+import DMeshLeash2D from "../../../../components/graphics3d/pub/DMeshLeash2D";
+import PlayerBody from "../../../world3d/conf/custom_object_types/PlayerBody";
 
 /**
  * Class that contains the operations and state 
@@ -14,32 +17,26 @@ export default class Player implements IPlayer {
     eventHandlers: {[name: string]: Function}
     initialized: boolean;
     proxyMessenger: ProxyMessenger<DMessage, DMessage>;
-    startingPosition: DVector3;
+    messageFactory: MessageFactory;
     spawned: boolean;
+    disableControls: boolean;
 
     constructor(public playerId: string) {
         this.eventHandlers = {
             "controllerDirectionChange": this.onControllerDirectionChange.bind(this)
         };
-        this.initialized = true; // The initialization procedure currently does nothing.
+        this.initialized = false;
         this.spawned = false;
         this.proxyMessenger = new ProxyMessenger<DMessage, DMessage>();
-        this.startingPosition = {x: 0, y: 4, z: 0};
+        this.messageFactory = new MessageFactory(playerId);
+        this.disableControls = false;
     }
 
     /**
      * Id of the player body object in the world.
      */
     playerBodyId() {
-        return "playerBody:" + this.playerId;
-    }
-
-    /**
-     * Id of the library native object of the player body in the world. 
-     * For BabylonJS this is the PhysicsAggregate object.
-     */
-    nativePlayerBodyId() {
-        return "nativePlayerBody:" + this.playerId;
+        return "Player:PlayerBody?" + this.playerId;
     }
 
     /**
@@ -47,6 +44,8 @@ export default class Player implements IPlayer {
      * direction control has changed (for example, the thumb joystick of WASD keys).
      */
     onControllerDirectionChange(event): Player {
+        if (this.disableControls) {return}
+
         const direction = event.direction;
         // Reverse the controls for player 2, who is 
         // on the opposite side of the map.
@@ -58,6 +57,7 @@ export default class Player implements IPlayer {
         }
 
         if (this.initialized && this.spawned) {
+            // Move the player's body in the controller's direction.
             this.proxyMessenger.postMessage({
                 sender: this.playerId,
                 recipient: "world3d",
@@ -66,8 +66,9 @@ export default class Player implements IPlayer {
                     type: "modifyObject",
                     args: [this.playerBodyId(), {
                         boundArgs: [event.direction],
-                        f: function(this: World3D, direction: {x: number, y:number}, obj: Movable) {
-                            return obj.move(new this.babylonjs.Vector3(direction.x, 0, direction.y * (-1)));
+                        f: function(this: World3D, direction: {x: number, y:number}, body: PlayerBody) {
+                            body.movable.move(new this.babylonjs.Vector3(direction.x, 0, direction.y * (-1)));
+                            return body;
                         }
                     }]
                 }
@@ -87,55 +88,63 @@ export default class Player implements IPlayer {
     }
 
     /**
-     * Spawn the player at the given position.
-     * We are currently just using a movable box 
-     * until a proper player character has been developed.
+     * Spawn the player's body at the given position.
      */
     spawn(startingPosition: DVector3): boolean {
-        this.startingPosition = startingPosition;
-        
-        // Create box with physics.
-        this.proxyMessenger.postMessage({
-            sender: this.playerId,
-            recipient: "world3d",
-            type: "request",
-            message: {
-                type: "createCustomObject",
-                args: [this.nativePlayerBodyId(), {
-                    boundArgs: [this.nativePlayerBodyId(), this.startingPosition],
-                    f: function(this: World3D, nativePlayerBodyId: string, startingPosition: DVector3) {
-                        var box = this.babylonjs.MeshBuilder.CreateBox(nativePlayerBodyId, {size: 0.7}, this.scene);
-                        
-                        box.position.x = startingPosition.x;
-                        box.position.y = startingPosition.y;
-                        box.position.z = startingPosition.z;
-
-                        return new this.babylonjs.PhysicsAggregate(
-                            box, 
-                            this.babylonjs.PhysicsShapeType.BOX, 
-                            { mass: 0.1 }, 
-                            this.scene
-                        );
+        // Create the player's body.
+        this.proxyMessenger.postMessage(
+            this.messageFactory.createRequest("world3d", "createObject", [
+                this.playerBodyId(),
+                "PlayerBody",
+                {
+                    boundArgs: [this.playerBodyId(), startingPosition],
+                    f: function(
+                        this: World3D,
+                        playerBodyId: string,
+                        startingPosition: DVector3
+                    ) {
+                        // Determine the arguments passed to PlayerBody's constructor.
+                        return [
+                            playerBodyId,
+                            startingPosition,
+                            this.scene,
+                            this.meshConstructors
+                        ];
                     }
-                }]
-            }
-        });        
+                }
+            ])
+        );
 
-        // Make a movable box using the created box.
-        this.proxyMessenger.postMessage({
-            sender: this.playerId,
-            recipient: "world3d",
-            type: "request",
-            message: {
-                type: "createObject",
-                args: [this.playerBodyId(), "Movable", {
-                    boundArgs: [this.nativePlayerBodyId()],
-                    f: function(this: World3D, nativePlayerBodyId: string) {
-                        return [this.getObject(nativePlayerBodyId)];
+        if (!this.disableControls) {
+
+            // Set event listeners.
+            this.proxyMessenger.postMessage(
+                this.messageFactory.createRequest("world3d", "listen", [
+                    this.playerId,
+                    {
+                        boundArgs: [this.playerBodyId()],
+                        f: function(
+                            this: World3D, 
+                            sendMsg: (eventName: string, event: DataObject) => void,
+                            playerBodyId: string
+                        ) {
+                            const playerBody = this.getObject(playerBodyId) as PlayerBody;
+
+                            // Create 'leash' that tracks the 2D screen
+                            // vector between the mouse and the player's character.
+                            const leashId = `Player:MeshLeash2D?${playerBodyId}`;
+                            this.createObject(leashId, "MeshLeash2D", [playerBody.mainMesh]);
+                            const leash = this.getObject(leashId) as MeshLeash2D;
+
+                            leash.onChange((leash: DMeshLeash2D) => {
+                                const angle = Math.atan2(leash.leash.y, leash.leash.x);
+                                playerBody.arrowPointer.setRotation({x: 0, y: angle + Math.PI, z: 0});
+                            });
+                        }
                     }
-                }]
-            }
-        });
+                ])
+            );
+        }
 
         this.spawned = true;
 

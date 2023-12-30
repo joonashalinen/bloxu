@@ -1,10 +1,8 @@
-import EventEmitter from "../../../components/events/pub/EventEmitter";
 import { DMessage } from "../../../components/messaging/pub/DMessage";
 import ProxyMessenger from "../../../components/messaging/pub/ProxyMessenger";
 import SyncMessenger from "../../../components/messaging/pub/SyncMessenger";
 import MessageFactory from "../../../components/messaging/pub/MessageFactory";
 import World3D from "../../world3d/pub/World3D";
-import * as babylonjs from "@babylonjs/core";
 
 interface Vector3D {
     x: number;
@@ -34,43 +32,18 @@ export default class GameMaster {
      * Spawn everything needed for the game 
      * and make the 3D world run.
      */
-    private _startGame() {
+    private async _startGame() {
+
+        // vvv Setup environment. vvv
 
         // Make world run.
         this.proxyMessenger.postMessage(
             this.messageFactory.createRequest("world3d", "run")
         );
 
-        // vvv Create initial cube islands the players will stand on. vvv 
-        
-        // Register the constructor for a standard floating cube island.
-        this.proxyMessenger.postMessage({
-            sender: "gameMaster",
-            recipient: "world3d",
-            type: "request",
-            message: {
-                type: "registerObjectType",
-                args: ["GameMaster.CubeIsland", {
-                    boundArgs: [],
-                    f: function(this: World3D, id:string, position: babylonjs.Vector3) {
-                        var box = this.babylonjs.MeshBuilder.CreateBox(id, {size: 3}, this.scene);
-                        box.position.x = position.x;
-                        box.position.y = position.y;
-                        box.position.z = position.z;
-                        return new this.babylonjs.PhysicsAggregate(
-                            box, 
-                            this.babylonjs.PhysicsShapeType.BOX, 
-                            { mass: 0 }, 
-                            this.scene
-                        );
-                    }
-                }]
-            }
-        });
-
         // Create the cube islands the players will spawn on.
-        this.createCubeIsland("cubeIsland1", {x: 0, y: 0, z: 0});
-        this.createCubeIsland("cubeIsland2", {x: 0, y: 0, z: 20});
+        this.createCubeIsland("GameMaster:FloatingCube?1", {x: 0, y: 0, z: 0});
+        this.createCubeIsland("GameMaster:FloatingCube?2", {x: 0, y: 0, z: 20});
 
         // vvv Setup players. vvv        
 
@@ -82,12 +55,21 @@ export default class GameMaster {
             this.messageFactory.createRequest(this.remotePlayerId(), "beRemotePlayer")
         );
 
+        // Initialize players.
+        await this.syncMessenger.postSyncMessage(
+            this.messageFactory.createRequest(this.mainPlayerId, "initialize")
+        );
+        await this.syncMessenger.postSyncMessage(
+            this.messageFactory.createRequest(this.remotePlayerId(), "initialize")
+        );
+
         // Spawn players.
+
         this.proxyMessenger.postMessage(
-            this.messageFactory.createRequest("player-1", "spawn", [{x: 0, y: 4, z: 0}])
+            this.messageFactory.createRequest("player-1", "spawn", [{x: 0, y: 1.85, z: 0}])
         );
         this.proxyMessenger.postMessage(
-            this.messageFactory.createRequest("player-2", "spawn", [{x: 0, y: 4, z: 20}])
+            this.messageFactory.createRequest("player-2", "spawn", [{x: 0, y: 1.85, z: 20}])
         );
     }
 
@@ -102,10 +84,15 @@ export default class GameMaster {
             type: "request",
             message: {
                 type: "createObject",
-                args: [id, "GameMaster.CubeIsland", {
+                args: [id, "FloatingCube", {
                     boundArgs: [id, position],
                     f: function(this: World3D, id:string, position: Vector3D) {
-                        return [id, new this.babylonjs.Vector3(position.x, position.y, position.z)];
+                        return [
+                            id,
+                            3, 
+                            new this.babylonjs.Vector3(position.x, position.y, position.z),
+                            this.scene
+                        ];
                     }
                 }]
             }
@@ -151,7 +138,7 @@ export default class GameMaster {
 
         this.mainPlayerId = mainPlayerId;
 
-        this._startGame();
+        await this._startGame();
 
         return code;
     }
@@ -171,7 +158,7 @@ export default class GameMaster {
             }
         }))[0] as string;
 
-        this._startGame();
+        await this._startGame();
 
         return this.mainPlayerId;
     }

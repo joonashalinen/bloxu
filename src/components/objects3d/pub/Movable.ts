@@ -3,10 +3,12 @@ import DMovable from "./DMovable";
 import { Vector3 } from "@babylonjs/core";
 import { PhysicsAggregate } from "@babylonjs/core/Physics";
 import IObject from "./IObject";
+import EventEmitter from "../../events/pub/EventEmitter";
 
 export default class Movable implements IObject, IMovable, DMovable {
     direction = new Vector3(0, 0, 0);
     nativeObj: PhysicsAggregate;
+    emitter = new EventEmitter();
 
     constructor(nativeObj: PhysicsAggregate) {
         this.nativeObj = nativeObj;
@@ -26,6 +28,7 @@ export default class Movable implements IObject, IMovable, DMovable {
     doOnTick(time: number): IObject {
         if (!this.direction.equals(new Vector3(0, 0, 0))) {
             this.nativeObj.body.setLinearVelocity(this.direction);
+            this.emitter.trigger("move");
         }
         return this;
     }

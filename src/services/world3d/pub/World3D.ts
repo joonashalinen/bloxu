@@ -1,39 +1,51 @@
-import EventEmitter from "../../../components/events/pub/EventEmitter";
 import Movable from "../../../components/objects3d/pub/Movable";
 import * as babylonjs from "@babylonjs/core";
 import "@babylonjs/core/Debug/debugLayer";
 import "@babylonjs/inspector";
-import "@babylonjs/loaders/glTF";
+import "@babylonjs/loaders";
 import { HavokPlugin } from "@babylonjs/core/Physics";
 import HavokPhysics from "@babylonjs/havok";
 import { Engine, Scene, ArcRotateCamera, Vector3, HemisphericLight, Mesh, MeshBuilder } from "@babylonjs/core";
 import IObject from "../../../components/objects3d/pub/IObject";
 import ProxyMessenger from "../../../components/messaging/pub/ProxyMessenger";
 import { DMessage } from "../../../components/messaging/pub/DMessage";
-
-type FunctionWrapper = {
-    boundArgs: Array<unknown>;
-    f: Function;
-};
+import IService from "../../../components/services/pub/IService";
+import MessageFactory from "../../../components/messaging/pub/MessageFactory";
+import SyncMessenger from "../../../components/messaging/pub/SyncMessenger";
+import FunctionWrapper from "../../../components/services/pub/FunctionWrapper";
+import MeshLeash2D from "../../../components/graphics3d/pub/MeshLeash2D";
+import customObjectTypes from "../conf/customObjectTypes";
+import Pointer from "../../../components/objects3d/pub/Pointer";
+import meshConstructors from "../conf/meshConstructors";
 
 /**
  * Class containing the state and operations of the world3d service.
  */
-export default class World3D {
+export default class World3D implements IService {
     objects: {[name: string]: Object};
-    constructors: {[type: string]: Function};
+    objectTypes: {[type: string]: Function};
+    meshConstructors: {[name: string]: Function};
     proxyMessenger: ProxyMessenger<DMessage, DMessage>;
+    syncMessenger: SyncMessenger;
+    messageFactory: MessageFactory;
     babylonjs: typeof babylonjs;
     scene: babylonjs.Scene;
     engine: babylonjs.Engine;
     canvas: HTMLCanvasElement;
+    camera: babylonjs.Camera;
 
     constructor(document: Document) {
-        this.constructors = {
-            "Movable": (aggregate: babylonjs.PhysicsAggregate) => new Movable(aggregate)
+        this.objectTypes = {
+            "Movable": Movable,
+            "MeshLeash2D": MeshLeash2D,
+            "Pointer": Pointer,
+            ...customObjectTypes
         };
         
+        this.meshConstructors = {};
         this.proxyMessenger = new ProxyMessenger<DMessage, DMessage>();
+        this.syncMessenger = new SyncMessenger(this.proxyMessenger);
+        this.messageFactory = new MessageFactory("world3d");
         this.objects = {};
         this.babylonjs = babylonjs;
 
@@ -61,8 +73,8 @@ export default class World3D {
     /**
      * Create new object of given type with given id and args in the world.
      */
-    createObject(id: string, type: string, args: Array<unknown> | FunctionWrapper = []): World3D {
-        if (!(type in this.constructors)) {
+    createObject(id: string, type: string, args: Array<unknown> | FunctionWrapper<Function> = []): World3D {
+        if (!(type in this.objectTypes)) {
             throw new Error("No object of type '" + type + "' exists");
         }
         if (id in this.objects) {
@@ -72,11 +84,8 @@ export default class World3D {
             const { boundArgs, f: getArgs } = args;
             args = getArgs.bind(this)(...boundArgs);
         }
-        try {
-            this.objects[id] = (this.constructors[type])(...args as Array<unknown>);
-        } catch (e) {
-            throw e;
-        }
+        const obj = new (this.objectTypes[type] as typeof Object)(...args as Array<unknown>) ;
+        this.objects[id] = obj;
         return this;
     }
 
@@ -85,12 +94,12 @@ export default class World3D {
      * @param type - The type name for the object.
      * @param wrapper - The object containing boundArgs and the constructor function for creating objects of the specified type.
      */
-    registerObjectType(type: string, wrapper: FunctionWrapper): World3D {
+    registerObjectType(type: string, wrapper: FunctionWrapper<Function>): World3D {
         const { boundArgs, f: constructor } = wrapper;
-        if (type in this.constructors) {
+        if (type in this.objectTypes) {
             throw new Error("Constructor for type '" + type + "' already exists");
         }
-        this.constructors[type] = constructor.bind(this, ...boundArgs);
+        this.objectTypes[type] = constructor.bind(this, ...boundArgs);
         return this;
     }
 
@@ -99,7 +108,7 @@ export default class World3D {
      * @param id - The identifier for the object.
      * @param wrapper - The object containing boundArgs and the create function.
      */
-    createCustomObject(id: string, wrapper: FunctionWrapper): void {
+    createCustomObject(id: string, wrapper: FunctionWrapper<Function>): void {
         const { boundArgs, f: create } = wrapper;
         if (id in this.objects) {
             throw new Error("Object with given id '" + id + "' already exists");
@@ -112,7 +121,7 @@ export default class World3D {
      * @param id - The identifier for the object.
      * @param wrapper - The object containing boundArgs and the modifier function.
      */
-    modifyObject(id: string, wrapper: FunctionWrapper): World3D {
+    modifyObject(id: string, wrapper: FunctionWrapper<Function>): World3D {
         const { boundArgs, f: modifier } = wrapper;
         var obj = this.getObject(id);
         this.objects[id] = modifier.bind(this, ...boundArgs)(obj);
@@ -122,12 +131,12 @@ export default class World3D {
     /**
      * Initialization procedure for the World3D service.
      */
-    async initialize(): Promise<World3D> {
+    async initialize(): Promise<boolean> {
         
         // ### Initialize BabylonJS. ###
 
-        var camera = new babylonjs.FreeCamera("camera1", new babylonjs.Vector3(0, 3, -10), this.scene);
-        camera.attachControl(this.canvas, true);
+        this.camera = new babylonjs.FreeCamera("camera1", new babylonjs.Vector3(0, 3, -10), this.scene);
+        this.camera.attachControl(this.canvas, true);
         var light1: HemisphericLight = new HemisphericLight("light1", new Vector3(1, 1, 0), this.scene);
 
         // hide/show the Inspector
@@ -149,7 +158,10 @@ export default class World3D {
             new HavokPlugin(true, havokInstance)
         );
 
-        return this;
+        // Load meshes configured by the project where World3D is being used.
+        this.meshConstructors = await meshConstructors(this.babylonjs, this.scene);
+
+        return true;
     }
 
     /**

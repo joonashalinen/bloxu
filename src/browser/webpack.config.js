@@ -17,6 +17,7 @@ module.exports = {
         port: 8080, //port that we're using for local host (localhost:8080)
         static: path.resolve(appDirectory, "dist"), //tells webpack to serve from the dist folder
         hot: true,
+        historyApiFallback: true,
         devMiddleware: {
             publicPath: "/",
         }

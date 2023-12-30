@@ -11,6 +11,8 @@ import IMessenger from "../components/messaging/pub/IMessenger";
 import { DMessage } from "../components/messaging/pub/DMessage";
 import UI from "../services/ui/pub/UI";
 import SyncMessenger from "../components/messaging/pub/SyncMessenger";
+import Mixin from "../components/classes/pub/Mixin";
+import OpenService from "../components/services/pub/OpenService";
 
 class App {
 
@@ -42,7 +44,13 @@ class App {
         // ### Setup services. ###
 
         // Create World3D service.
-        var world3d = new World3D(document);
+        var plainWorld3d = new World3D(document);
+        // Allow the World3D service to be freely modifiable by outsiders. 
+        // For details, see the class OpenService. 
+        // The Mixin class is used to add the .modify method to the World3D class.
+        var world3d = (new Mixin(plainWorld3d)).extend(
+            new OpenService(plainWorld3d)
+        ) as (World3D & OpenService);
         
         // Create IOService.
         var ioService = new IOService(new KeyboardController(document));

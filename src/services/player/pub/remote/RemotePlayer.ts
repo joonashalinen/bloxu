@@ -14,7 +14,7 @@ export default class RemotePlayer implements IPlayer {
 
     constructor(playerId: string) {
         this.player = new Player(playerId);
-        this.player.startingPosition = {x: 0, y: 4, z: 20};
+        this.player.disableControls = true;
         this.eventHandlers = {
             "remoteControllerDirectionChange": this.onRemoteControllerDirectionChange.bind(this)
         };
@@ -24,7 +24,7 @@ export default class RemotePlayer implements IPlayer {
      * Initialize RemotePlayer service.
      */
     initialize() {
-        this.player.initialize();
+        return this.player.initialize();
     }
 
     spawn(startingPosition: DVector3) {
@@ -36,6 +36,8 @@ export default class RemotePlayer implements IPlayer {
      * received, e.g. a joystick event.
      */
     onRemoteControllerDirectionChange(event) {
+        this.player.disableControls = false;
         this.player.onControllerDirectionChange(event);
+        this.player.disableControls = true;
     }
 }
