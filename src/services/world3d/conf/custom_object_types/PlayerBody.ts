@@ -55,7 +55,7 @@ export default class PlayerBody {
             this.scene
         );
         // We need to set this so that we can rotate the mesh afterwards.
-        // this.physicsAggregate.body.disablePreStep = false;
+        this.physicsAggregate.body.disablePreStep = false;
 
         // Make a Movable object from the player character so 
         // that we can move it.
@@ -109,9 +109,17 @@ export default class PlayerBody {
      * with the z-coordinate in world space.
      */
     shoot(direction: Vector2) {
+        // Apply needed transformations to make the ball shoot out correctly.
+        // These values were found by manual testing and a more in-depth 
+        // exploration of why this is needed should be done.
+        const transformedDirection = new Vector3(direction.x * (-1), 0, direction.y);
         // Create ball mesh.
         const ball = MeshBuilder.CreateSphere(`PlayerBody:ball?${this.id}`, {diameter: 0.3}, this.scene);
-        ball.position = this.mainMesh.position.clone();
+        // Position the ball in front of the player character.
+        const normalizedDirection = transformedDirection.normalize();
+        ball.position = this.mainMesh.position.add(
+            new Vector3(normalizedDirection.x, 0, normalizedDirection.y)
+        );
         // Add glow effect to ball.
         this.ballGlow = new Glow(this.glowLayer, this.scene);
         this.ballGlow.apply(ball);
@@ -125,7 +133,7 @@ export default class PlayerBody {
         // Make the ball movable and set its course of motion.
         this.ballMovable = new Movable(physicsAggregate);
         this.ballMovable.speed = 80;
-        this.ballMovable.move(new Vector3(direction.x * (-1), 0, direction.y));
+        this.ballMovable.move(transformedDirection);
     }
 
     /**

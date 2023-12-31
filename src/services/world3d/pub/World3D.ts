@@ -38,7 +38,7 @@ export default class World3D implements IService {
     scene: babylonjs.Scene;
     engine: babylonjs.Engine;
     canvas: HTMLCanvasElement;
-    camera: babylonjs.FollowCamera;
+    camera: babylonjs.ArcRotateCamera;
 
     constructor(document: Document) {
         this.objects = {};
@@ -160,8 +160,11 @@ export default class World3D implements IService {
         
         // ### Initialize BabylonJS. ###
 
-        this.camera = new babylonjs.FollowCamera("camera1", new babylonjs.Vector3(0, 5, -10), this.scene);
-        this.camera.attachControl(true);
+        // Setup camera.
+        this.camera = new babylonjs.ArcRotateCamera("camera1", (-1)*Math.PI/2, Math.PI/4, 20, new this.babylonjs.Vector3(0, 0, 0), this.scene);
+        // this.camera.attachControl(true);
+
+        // Setup lighting.
         var light1: HemisphericLight = new HemisphericLight("light1", new Vector3(1, 1, 0), this.scene);
 
         // hide/show the Inspector
