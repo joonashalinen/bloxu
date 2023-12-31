@@ -1,4 +1,4 @@
-import { Matrix, Mesh, PointerEventTypes, Vector2, Vector3 } from "@babylonjs/core";
+import { Engine, Matrix, Mesh, PointerEventTypes, Scene, Vector2, Vector3 } from "@babylonjs/core";
 import EventEmitter from "../../events/pub/EventEmitter";
 
 /**
@@ -10,39 +10,60 @@ import EventEmitter from "../../events/pub/EventEmitter";
 export default class MeshLeash2D {
     emitter = new EventEmitter();
     lastLeash: Vector2;
+    scene: Scene;
+    engine: Engine;
 
     constructor(public mesh: Mesh) {
-        const scene = mesh.getScene();
-        const engine = scene.getEngine();
-        scene.onPointerObservable.add((pointerInfo) => {
+        this.scene = mesh.getScene();
+        this.engine = this.scene.getEngine();
+    }
+
+    /**
+     * Makes the leash automatically update itself 
+     * whenever the mouse moves on the screen.
+     */
+    enableAutoUpdate() {
+        // Update the leash whenever the mouse moves.
+        this.scene.onPointerObservable.add((pointerInfo) => {
             if (pointerInfo.type === PointerEventTypes.POINTERMOVE) {
-                // Coordinates of the mesh when projected to the 2D screen.
-                const meshPositionOnScreen3D = Vector3.Project(
-                    mesh.getAbsolutePosition(),
-                    Matrix.IdentityReadOnly,
-                    scene.getTransformMatrix(),
-                    scene.activeCamera.viewport.toGlobal(
-                        engine.getRenderWidth(),
-                        engine.getRenderHeight(),
-                    )
-                );
-                const meshPositionOnScreen = new Vector2(
-                    meshPositionOnScreen3D.x,
-                    meshPositionOnScreen3D.y,
-                );
                 const mousePosition = new Vector2(
-                    scene.pointerX,
-                    scene.pointerY
+                    this.scene.pointerX,
+                    this.scene.pointerY
                 );
-                const leash = mousePosition.subtract(meshPositionOnScreen);
-                this.lastLeash = leash;
-                this.emitter.trigger("change", [{
-                    meshPositionOnScreen: meshPositionOnScreen,
-                    mousePosition: mousePosition,
-                    leash: leash
-                }]);
+                this.update(mousePosition);
             }
         });
+    }
+
+    /**
+     * Update the leash position.
+     */
+    update(mousePosition: Vector2) {
+        // Coordinates of the mesh when projected to the 2D screen.
+        const meshPositionOnScreen3D = Vector3.Project(
+            this.mesh.getAbsolutePosition(),
+            Matrix.IdentityReadOnly,
+            this.scene.getTransformMatrix(),
+            this.scene.activeCamera.viewport.toGlobal(
+                this.engine.getRenderWidth(),
+                this.engine.getRenderHeight(),
+            )
+        );
+        const meshPositionOnScreen = new Vector2(
+            meshPositionOnScreen3D.x,
+            meshPositionOnScreen3D.y,
+        );
+
+        const leash = mousePosition.subtract(meshPositionOnScreen);
+        this.lastLeash = leash;
+
+        this.emitter.trigger("change", [{
+            meshPositionOnScreen: meshPositionOnScreen,
+            mousePosition: mousePosition,
+            leash: leash
+        }]);
+
+        return this;
     }
 
     /**

@@ -1,7 +1,9 @@
-import { Mesh, MeshBuilder, PhysicsAggregate, PhysicsBody, PhysicsShape, PhysicsShapeType, Scene, TransformNode, Vector2, Vector3 } from "@babylonjs/core";
+import { GlowLayer, Mesh, MeshBuilder, PhysicsAggregate, PhysicsBody, PhysicsShape, PhysicsShapeType, Scene, TransformNode, Vector2, Vector3 } from "@babylonjs/core";
 import Movable from "../../../../components/objects3d/pub/Movable";
 import Pointer from "../../../../components/objects3d/pub/Pointer";
 import Follower from "../../../../components/objects3d/pub/Follower";
+import Glow from "../../../../components/graphics3d/pub/effects/Glow";
+import DPlayerBody from "./DPlayerBody";
 
 /**
  * The body that the Player service owns and controls.
@@ -14,6 +16,8 @@ export default class PlayerBody {
     arrowPointer: Pointer;
     arrowFollower: Follower;
     ballMovable: Movable;
+    ballGlow: Glow;
+    glowLayer: GlowLayer;
 
     constructor(
         public id: string, 
@@ -68,6 +72,9 @@ export default class PlayerBody {
         
         // Make the arrow follow the position of the player character.
         this.arrowFollower = new Follower(this.arrowPointer.centerOfRotation, this.movable);
+
+        // Create glow layer for the glow effect of the plasma ball.
+        this.glowLayer = new GlowLayer(`PlayerBody:glowLayer?${this.id}`, scene);
     }
 
     /**
@@ -87,16 +94,46 @@ export default class PlayerBody {
      * with the z-coordinate in world space.
      */
     shoot(direction: Vector2) {
-        const ball = MeshBuilder.CreateSphere(`PlayerBody:ball?${this.id}`, {diameter: 1}, this.scene);
+        // Create ball mesh.
+        const ball = MeshBuilder.CreateSphere(`PlayerBody:ball?${this.id}`, {diameter: 0.3}, this.scene);
         ball.position = this.mainMesh.position.clone();
+        // Add glow effect to ball.
+        this.ballGlow = new Glow(this.glowLayer, this.scene);
+        this.ballGlow.apply(ball);
+        // Enable physics for ball.
         const physicsAggregate = new PhysicsAggregate(
             ball, 
             PhysicsShapeType.SPHERE, 
             { mass: 0.1 }, 
             this.scene
         );
+        // Make the ball movable and set its course of motion.
         this.ballMovable = new Movable(physicsAggregate);
+        this.ballMovable.speed = 80;
         this.ballMovable.move(new Vector3(direction.x, 0, direction.y * (-1)));
     }
 
+    /**
+     * Returns the state of the PlayerBody as 
+     * a data object.
+     */
+    state(): DPlayerBody {
+        const position = this.physicsAggregate.transformNode.position;
+        return {
+            position: {
+                x: position.x,
+                y: position.y,
+                z: position.z
+            }
+        };
+    }
+
+    /**
+     * Sets the inner state of the PlayerBody to reflect 
+     * the state represented in the given data object.
+     */
+    setState(state: DPlayerBody) {
+        const pos = state.position;
+        this.physicsAggregate.transformNode.position.set(pos.x, pos.y, pos.z);
+    }
 }

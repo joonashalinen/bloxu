@@ -24,6 +24,7 @@ export default class Pointer {
      */
     update() {
         this.centerOfRotation.position = this.targetMesh.position.clone();
+        return this;
     }
 
     /**

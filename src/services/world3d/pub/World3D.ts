@@ -17,13 +17,19 @@ import MeshLeash2D from "../../../components/graphics3d/pub/MeshLeash2D";
 import customObjectTypes from "../conf/customObjectTypes";
 import Pointer from "../../../components/objects3d/pub/Pointer";
 import meshConstructors from "../conf/meshConstructors";
+import Glow from "../../../components/graphics3d/pub/effects/Glow";
+
+type Types = {[type: string]: Function};
+type Instances = {[name: string]: Object};
 
 /**
  * Class containing the state and operations of the world3d service.
  */
 export default class World3D implements IService {
-    objects: {[name: string]: Object};
-    objectTypes: {[type: string]: Function};
+    objects: Instances;
+    objectTypes: Types;
+    effects: Instances;
+    effectTypes: Types;
     meshConstructors: {[name: string]: Function};
     proxyMessenger: ProxyMessenger<DMessage, DMessage>;
     syncMessenger: SyncMessenger;
@@ -33,9 +39,9 @@ export default class World3D implements IService {
     engine: babylonjs.Engine;
     canvas: HTMLCanvasElement;
     camera: babylonjs.FollowCamera;
-    layers: {[name: string]: babylonjs.Layer};
 
     constructor(document: Document) {
+        this.objects = {};
         this.objectTypes = {
             "Movable": Movable,
             "MeshLeash2D": MeshLeash2D,
@@ -43,16 +49,21 @@ export default class World3D implements IService {
             ...customObjectTypes
         };
         
+        this.effects = {};
+        this.effectTypes = {
+            "Glow": Glow
+        };
+
         this.meshConstructors = {};
         this.proxyMessenger = new ProxyMessenger<DMessage, DMessage>();
         this.syncMessenger = new SyncMessenger(this.proxyMessenger);
         this.messageFactory = new MessageFactory("world3d");
-        this.objects = {};
         this.babylonjs = babylonjs;
 
         this.canvas = document.createElement("canvas");
         this.canvas.style.width = "90%";
         this.canvas.style.height = "90%";
+        this.canvas.style.cursor = "none";
         this.canvas.id = "gameCanvas";
         this.hide();
         document.body.appendChild(this.canvas);
@@ -72,21 +83,34 @@ export default class World3D implements IService {
     }
 
     /**
+     * Get an effect instance with given id if it exists.
+     */
+    getEffect(id: string) {
+        if (!(id in this.effects)) {
+            throw new Error("Effect with given id '" + id + "' does not exist");
+        }
+        return this.effects[id];
+    }
+
+    /**
      * Create new object of given type with given id and args in the world.
      */
     createObject(id: string, type: string, args: Array<unknown> | FunctionWrapper<Function> = []): World3D {
-        if (!(type in this.objectTypes)) {
-            throw new Error("No object of type '" + type + "' exists");
-        }
         if (id in this.objects) {
             throw new Error("Object with given id '" + id + "' already exists");
         }
-        if (!Array.isArray(args)) {
-            const { boundArgs, f: getArgs } = args;
-            args = getArgs.bind(this)(...boundArgs);
+        this.objects[id] =this._create(type, this.objectTypes, args);
+        return this;
+    }
+
+    /**
+     * Create new object of given type with given id and args in the world.
+     */
+    createEffect(id: string, type: string, args: Array<unknown> | FunctionWrapper<Function> = []): World3D {
+        if (id in this.effects) {
+            throw new Error("Effect with given id '" + id + "' already exists");
         }
-        const obj = new (this.objectTypes[type] as typeof Object)(...args as Array<unknown>) ;
-        this.objects[id] = obj;
+        this.effects[id] =this._create(type, this.effectTypes, args);
         return this;
     }
 
@@ -162,6 +186,19 @@ export default class World3D implements IService {
         // Load meshes configured by the project where World3D is being used.
         this.meshConstructors = await meshConstructors(this.babylonjs, this.scene);
 
+        // Communicate to the outside world about events.
+        this.scene.onPointerObservable.add((pointerInfo) => {
+            // Mouse down event.
+            if (pointerInfo.type === this.babylonjs.PointerEventTypes.POINTERDOWN) {
+                this.proxyMessenger.postMessage(
+                    this.messageFactory.createEvent("*", "World3D:<event>mouseDown", [{
+                        x: pointerInfo.event.clientX,
+                        y: pointerInfo.event.clientY
+                    }])
+                )
+            }
+        });
+
         return true;
     }
 
@@ -216,5 +253,25 @@ export default class World3D implements IService {
     pause() {
         this.pauseRenderLoop();
         this.hide();
+    }
+
+    /**
+     * Create a new instance of given type name 
+     * from the list of class constructors 'types'.
+     */
+    private _create(
+        type: string, 
+        types: Types, 
+        args: Array<unknown> | FunctionWrapper<Function>
+    ) {
+        if (!(type in types)) {
+            throw new Error("No type '" + type + "' exists");
+        }
+        if (!Array.isArray(args)) {
+            const { boundArgs, f: getArgs } = args;
+            args = getArgs.bind(this)(...boundArgs);
+        }
+        const obj = new (types[type] as typeof Object)(...args as Array<unknown>) ;
+        return obj;
     }
 }

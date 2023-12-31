@@ -3,6 +3,7 @@ import MessageFactory from "../../../../components/messaging/pub/MessageFactory"
 import ProxyMessenger from "../../../../components/messaging/pub/ProxyMessenger";
 import SyncMessenger from "../../../../components/messaging/pub/SyncMessenger";
 import WebSocketMessenger from "../../../../components/network/pub/browser/WebSocketMessenger";
+import { ShootEvent } from "../../../player/pub/local/Player";
 
 /**
  * Contains the operations and state of the 
@@ -38,7 +39,8 @@ export default class OnlineSynchronizerClient {
 
     constructor() {
         this.eventHandlers = {
-            "controllerDirectionChange": this.onControllerDirectionChange.bind(this)
+            "controllerDirectionChange": this.onControllerDirectionChange.bind(this),
+            "Player:<event>shoot": this.onPlayerShoot.bind(this)
         };
     }
 
@@ -166,6 +168,15 @@ export default class OnlineSynchronizerClient {
     onControllerDirectionChange(event) {
         if (this.joinedGame) {
             this.sendEventInGame(this.playerIdInGame, "remoteControllerDirectionChange", [event]);
+        }
+    }
+
+    /**
+     * When the local player has shot.
+     */
+    onPlayerShoot(state: ShootEvent) {
+        if (this.joinedGame) {
+            this.sendEventInGame(this.playerIdInGame, "OnlineSynchronizer:Player:<event>shoot", [state]);
         }
     }
 }

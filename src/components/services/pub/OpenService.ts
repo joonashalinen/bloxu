@@ -16,7 +16,7 @@ export default class OpenService {
      * that is allowed to do anything to the class.
      */
     modify(modifier: FunctionWrapper<(self: IService, ...args: unknown[]) => void>) {
-        modifier.f.bind(this)(...modifier.boundArgs);
+        return modifier.f.bind(this)(...modifier.boundArgs);
     }
 
     /**

@@ -9,6 +9,7 @@ export default class Movable implements IObject, IMovable, DMovable {
     direction = new Vector3(0, 0, 0);
     nativeObj: PhysicsAggregate;
     emitter = new EventEmitter();
+    speed: number = 10;
 
     constructor(nativeObj: PhysicsAggregate) {
         this.nativeObj = nativeObj;
@@ -27,7 +28,8 @@ export default class Movable implements IObject, IMovable, DMovable {
 
     doOnTick(time: number): IObject {
         if (!this.direction.equals(new Vector3(0, 0, 0))) {
-            this.nativeObj.body.setLinearVelocity(this.direction);
+            const mass = this.nativeObj.body.getMassProperties().mass;
+            this.nativeObj.body.setLinearVelocity(this.direction.normalize().scale(mass * this.speed));
             this.emitter.trigger("move");
         }
         return this;
