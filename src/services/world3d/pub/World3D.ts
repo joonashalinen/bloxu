@@ -60,13 +60,16 @@ export default class World3D implements IService {
         this.messageFactory = new MessageFactory("world3d");
         this.babylonjs = babylonjs;
 
+        // Setup canvas element.
         this.canvas = document.createElement("canvas");
         this.canvas.style.width = "90%";
         this.canvas.style.height = "90%";
-        this.canvas.style.cursor = "none";
         this.canvas.id = "gameCanvas";
         this.hide();
-        document.body.appendChild(this.canvas);
+        const canvasWrapper = document.createElement("div");
+        canvasWrapper.appendChild(this.canvas);
+        canvasWrapper.style.cursor = "crosshair";
+        document.body.appendChild(canvasWrapper);
 
         this.engine = new Engine(this.canvas, true);
         this.scene = new Scene(this.engine);
