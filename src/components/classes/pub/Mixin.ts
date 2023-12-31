@@ -16,10 +16,24 @@ export default class Mixin<T extends Object> {
      * @param source The object from which the methods and properties will be taken.
      */
     extend<U extends object, >(source: U): T & U {
-        var methodNames = Object.getOwnPropertyNames(source.constructor.prototype);
+        // Copy properties from source to target.
+        const propNames = Object.getOwnPropertyNames(source);
+        propNames.forEach((name) => {
+            if (this.target[name] !== undefined) {
+                throw new Error(`Mixin conflict with property '${name}'`);
+            } else {
+                this.target[name] = source[name];
+            }
+        });
+        // Copy methods from source to target.
+        const methodNames = Object.getOwnPropertyNames(source.constructor.prototype);
         methodNames.forEach((name) => {
             if (name !== "constructor") {
-                this.target[name] = (source[name] as Function).bind(this.target);
+                if (this.target[name] !== undefined) {
+                    throw new Error(`Mixin conflict with method '${name}'`);
+                } else {
+                    this.target[name] = (source[name] as Function).bind(this.target);
+                }
             }
         });
         return this.target as T & U;

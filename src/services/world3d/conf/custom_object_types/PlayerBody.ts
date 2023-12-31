@@ -147,7 +147,8 @@ export default class PlayerBody {
                 x: position.x,
                 y: position.y,
                 z: position.z
-            }
+            },
+            rotationAngle: this.mainMeshRotatable.angle
         };
     }
 
@@ -158,6 +159,7 @@ export default class PlayerBody {
     setState(state: DPlayerBody) {
         const pos = state.position;
         this.physicsAggregate.transformNode.position.set(pos.x, pos.y, pos.z);
+        this.mainMeshRotatable.setAngle(state.rotationAngle);
     }
 
     /**
@@ -167,5 +169,19 @@ export default class PlayerBody {
     enableAutoUpdate() {
         this.arrowMeshRotatable.enableAutoUpdate();
         this.mainMeshRotatable.enableAutoUpdate();
+    }
+
+    /**
+     * Move in given 2D direction within the x-z-plane.
+     */
+    move(direction: Vector2) {
+        this.movable.move(new Vector3(direction.x, 0, direction.y * (-1)));
+    }
+
+    /**
+     * Disable any objects related to UI, such as the aiming arrow.
+     */
+    disableUI() {
+        this.arrowMesh.setEnabled(false);
     }
 }

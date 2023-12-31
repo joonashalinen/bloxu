@@ -15,7 +15,7 @@ export default class OpenService {
      * Modify the class with a given function
      * that is allowed to do anything to the class.
      */
-    modify(modifier: FunctionWrapper<(self: IService, ...args: unknown[]) => void>) {
+    modify(modifier: FunctionWrapper<(...args: unknown[]) => void>) {
         return modifier.f.bind(this)(...modifier.boundArgs);
     }
 
@@ -32,6 +32,6 @@ export default class OpenService {
         const sendMsg = (eventName: string, event: DataObject) => this.service.proxyMessenger.postMessage(
             this.service.messageFactory.createEvent(listeningService, eventName, [event])
         );
-        listener.f.bind(this)(sendMsg, ...listener.boundArgs);
+        listener.f.bind(this.service)(sendMsg.bind(this), ...listener.boundArgs);
     }
 }

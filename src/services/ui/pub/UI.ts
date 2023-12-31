@@ -38,7 +38,6 @@ export default class UI {
         document.body.appendChild(joinGameCodeInput);
         joinGameCodeInput.addEventListener('keydown', async (event) => {
             if (event.key === 'Enter') {
-                console.log("joining game..");
                 const joined = (await this.syncMessenger.postSyncMessage({
                     recipient: "gameMaster",
                     sender: "ui",
@@ -48,11 +47,6 @@ export default class UI {
                         args: [joinGameCodeInput.value]
                     }
                 }))[0] as boolean;
-                console.log("joining game over");
-                console.log(joined);
-                if (joined === true) {
-                    console.log("joined game");
-                }
             }
         });
 

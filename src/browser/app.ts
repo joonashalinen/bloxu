@@ -47,7 +47,7 @@ class App {
         var plainWorld3d = new World3D(document);
         // Allow the World3D service to be freely modifiable by outsiders. 
         // For details, see the class OpenService. 
-        // The Mixin class is used to add the .modify method to the World3D class.
+        // The Mixin class is used to add the .modify and .listen methods to the World3D class.
         var world3d = (new Mixin(plainWorld3d)).extend(
             new OpenService(plainWorld3d)
         ) as (World3D & OpenService);

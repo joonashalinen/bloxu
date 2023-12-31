@@ -28,7 +28,7 @@ export default class MessengerClass<C> implements IMessenger<DMessage, DMessage>
      * The given msg is assumed to be of type "request".
      */
     async _callMethod(msg: DMessage) {
-        const result = await this.wrappee[msg.message.type](...msg.message.args);
+        const result = await this.wrappee[msg.message.type](...msg.message.args, msg);
         // If the result is not the wrapped class itself or undefined then we assume 
         // that the result value matters and we send it as a response message.
         if (
@@ -64,12 +64,18 @@ export default class MessengerClass<C> implements IMessenger<DMessage, DMessage>
             if (
                 typeof this.wrappee === "object" && 
                 "eventHandlers" in this.wrappee && 
-                typeof this.wrappee.eventHandlers === "object" && 
-                msg.message.type in this.wrappee.eventHandlers
+                typeof this.wrappee.eventHandlers === "object"
             ) {
-                this.wrappee.eventHandlers[msg.message.type](...msg.message.args)
+                // If the event type has a direct handler in the service class, 
+                // we use it by default.
+                if (msg.message.type in this.wrappee.eventHandlers) {
+                    this.wrappee.eventHandlers[msg.message.type](...msg.message.args, msg)
+                } else if (typeof this.wrappee.eventHandlers["*"] === "function"){
+                    // Else, if the service class has a fallback event handler for 
+                    // all events, we use that.
+                    this.wrappee.eventHandlers["*"](msg)
+                }
             }
-            
         }
         return this;
     }

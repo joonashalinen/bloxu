@@ -12,7 +12,7 @@ import SyncMessenger from "../../../../components/messaging/pub/SyncMessenger";
 import DPlayerBody from "../../../world3d/conf/custom_object_types/DPlayerBody";
 import DVector2 from "../../../../components/graphics3d/pub/DVector2";
 
-export type ShootEvent = {direction: DVector2, body: DPlayerBody};
+export type DirectionEvent = {direction: DVector2, body: DPlayerBody};
 
 /**
  * Class that contains the operations and state 
@@ -30,7 +30,8 @@ export default class Player implements IPlayer {
     constructor(public playerId: string) {
         this.eventHandlers = {
             "controllerDirectionChange": this.onControllerDirectionChange.bind(this),
-            "World3D:<event>mouseDown": this.onMouseDown.bind(this)
+            "World3D:<event>mouseDown": this.onMouseDown.bind(this),
+            "World3D:Player:<event>rotate": this.onBodyRotate.bind(this)
         };
         this.initialized = false;
         this.spawned = false;
@@ -72,7 +73,7 @@ export default class Player implements IPlayer {
                     }
                 }
             ])
-        ))[0] as ShootEvent;
+        ))[0] as DirectionEvent;
 
         // Send a message to the environment that the player has shot.
         this.proxyMessenger.postMessage(
@@ -84,7 +85,7 @@ export default class Player implements IPlayer {
      * Does what Player wants to do when the controller's 
      * direction control has changed (for example, the thumb joystick or WASD keys).
      */
-    onControllerDirectionChange(event): Player {
+    async onControllerDirectionChange(event: DirectionEvent) {
         if (this.disableControls) {return}
 
         const direction = event.direction;
@@ -99,25 +100,31 @@ export default class Player implements IPlayer {
 
         if (this.initialized && this.spawned) {
             // Move the player's body in the controller's direction.
-            this.proxyMessenger.postMessage({
+            const directionEvent = (await this.syncMessenger.postSyncMessage({
                 sender: this.playerId,
                 recipient: "world3d",
                 type: "request",
                 message: {
-                    type: "modifyObject",
-                    args: [this.playerBodyId(), {
-                        boundArgs: [event.direction],
-                        f: function(this: World3D, direction: {x: number, y:number}, body: PlayerBody) {
-                            body.movable.move(new this.babylonjs.Vector3(direction.x, 0, direction.y * (-1)));
-                            return body;
+                    type: "modify",
+                    args: [{
+                        boundArgs: [this.playerBodyId(), event.direction],
+                        f: function(this: World3D, bodyId: string, direction: {x: number, y:number}) {
+                            const body = this.getObject(bodyId) as PlayerBody;
+                            body.move(new this.babylonjs.Vector2(direction.x, direction.y));
+                            return {
+                                direction: direction,
+                                body: body.state()
+                            };
                         }
                     }]
                 }
-            });
-            return this;
-        } else {
-            return this;
+            }))[0] as DirectionEvent;
+            // Send a message to the environment that the player has changed movement direction.
+            this.proxyMessenger.postMessage(
+                this.messageFactory.createEvent("*", "Player:<event>move", [directionEvent])
+            );
         }
+        return this;
     }
 
     /**
@@ -156,6 +163,25 @@ export default class Player implements IPlayer {
             ])
         );
 
+        if (this.disableControls) {
+            // Disable UI of body.
+            this.proxyMessenger.postMessage(
+                this.messageFactory.createRequest("world3d", "modifyObject", [
+                    this.playerBodyId(),
+                    {
+                        boundArgs: [],
+                        f: function(
+                            this: World3D,
+                            body: PlayerBody
+                        ) {
+                            body.disableUI();
+                            return body;
+                        }
+                    }
+                ])
+            );
+        }
+
         // Set event listeners.
         this.proxyMessenger.postMessage(
             this.messageFactory.createRequest("world3d", "listen", [
@@ -164,7 +190,7 @@ export default class Player implements IPlayer {
                     boundArgs: [this.playerBodyId(), this.disableControls],
                     f: function(
                         this: World3D, 
-                        sendMsg: (eventName: string, event: DataObject) => void,
+                        sendMsg: (eventName: string, event: DPlayerBody) => void,
                         playerBodyId: string,
                         disableControls: boolean
                     ) {
@@ -177,6 +203,10 @@ export default class Player implements IPlayer {
                             // Let the player's body handle updating its own 
                             // objects.
                             playerBody.enableAutoUpdate();
+                            // Get notifications of the player character's rotation events from World3D.
+                            playerBody.mainMeshRotatable.emitter.on("rotate", () => {
+                                sendMsg("World3D:Player:<event>rotate", playerBody.state())
+                            });
                         }
                     }
                 }
@@ -207,5 +237,17 @@ export default class Player implements IPlayer {
                 }
             ])
         );
+    }
+
+    /**
+     * When the Player's player body has rotated in the world.
+     * This is an event that occurs only if the Player's controls are not 
+     * disabled.
+     */
+    onBodyRotate(state: DPlayerBody) {
+        // Send a rotate event to the service's environment.
+        this.proxyMessenger.postMessage(
+            this.messageFactory.createEvent("*", "Player:<event>rotate", [state])
+        )
     }
 }
