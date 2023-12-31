@@ -4,17 +4,23 @@ import Pointer from "../../../../components/objects3d/pub/Pointer";
 import Follower from "../../../../components/objects3d/pub/Follower";
 import Glow from "../../../../components/graphics3d/pub/effects/Glow";
 import DPlayerBody from "./DPlayerBody";
+import MouseRotatable from "../../../../components/objects3d/pub/MouseRotatable";
+import MeshLeash2D from "../../../../components/graphics3d/pub/MeshLeash2D";
 
 /**
  * The body that the Player service owns and controls.
  */
 export default class PlayerBody {
     mainMesh: Mesh;
+    mainMeshRotatable: MouseRotatable;
     physicsAggregate: PhysicsAggregate;
     movable: Movable;
+
     arrowMesh: Mesh;
     arrowPointer: Pointer;
     arrowFollower: Follower;
+    arrowMeshRotatable: MouseRotatable;
+    
     ballMovable: Movable;
     ballGlow: Glow;
     glowLayer: GlowLayer;
@@ -39,8 +45,6 @@ export default class PlayerBody {
         // is currently just a box.
         this.mainMesh = MeshBuilder.CreateBox(`PlayerBody:mainMesh?${this.id}`, {size: 0.7}, this.scene);
         this.mainMesh.position.set(startingPosition.x, startingPosition.y, startingPosition.z);
-        // Attach the player mesh to the player mesh group.
-        // this.mainMesh.parent = this.meshGroup;
 
         // Add physics to the player character. We 
         // want physics enabled for collision detection.
@@ -50,9 +54,11 @@ export default class PlayerBody {
             { mass: 0.1 }, 
             this.scene
         );
+        // We need to set this so that we can rotate the mesh afterwards.
+        // this.physicsAggregate.body.disablePreStep = false;
 
-        // Make a Movable object from the player mesh group
-        // so that we can move it.
+        // Make a Movable object from the player character so 
+        // that we can move it.
         this.movable = new Movable(this.physicsAggregate);
 
         // Create mesh of pointer arrow shown when aiming that is attached to the player character.
@@ -70,6 +76,15 @@ export default class PlayerBody {
         // object is used for rotating the arrow around the player mesh.
         this.arrowPointer = new Pointer(this.arrowMesh, this.mainMesh);
         
+        // Make a MouseRotatable object from the main character mesh 
+        // so that it rotates along with the mouse pointer such that 
+        // it always points at it.
+        this.mainMeshRotatable = new MouseRotatable(this.physicsAggregate.transformNode);
+        
+        // Make a MouseRotatable from the arrow pointer mesh 
+        // so that it follows the mouse pointer.
+        this.arrowMeshRotatable = new MouseRotatable(this.arrowPointer.centerOfRotation);
+
         // Make the arrow follow the position of the player character.
         this.arrowFollower = new Follower(this.arrowPointer.centerOfRotation, this.movable);
 
@@ -110,7 +125,7 @@ export default class PlayerBody {
         // Make the ball movable and set its course of motion.
         this.ballMovable = new Movable(physicsAggregate);
         this.ballMovable.speed = 80;
-        this.ballMovable.move(new Vector3(direction.x, 0, direction.y * (-1)));
+        this.ballMovable.move(new Vector3(direction.x * (-1), 0, direction.y));
     }
 
     /**
@@ -135,5 +150,14 @@ export default class PlayerBody {
     setState(state: DPlayerBody) {
         const pos = state.position;
         this.physicsAggregate.transformNode.position.set(pos.x, pos.y, pos.z);
+    }
+
+    /**
+     * Enable PlayerBody to automatically keep 
+     * its objects updated.
+     */
+    enableAutoUpdate() {
+        this.arrowMeshRotatable.enableAutoUpdate();
+        this.mainMeshRotatable.enableAutoUpdate();
     }
 }

@@ -1,10 +1,10 @@
-import { Engine, Matrix, Mesh, PointerEventTypes, Scene, Vector2, Vector3 } from "@babylonjs/core";
+import { Engine, Matrix, Mesh, PointerEventTypes, Scene, TransformNode, Vector2, Vector3 } from "@babylonjs/core";
 import EventEmitter from "../../events/pub/EventEmitter";
 
 /**
  * Represents the 2D vector that is formed 
  * between a given Mesh's projection on to the screen
- * and the mouse pointer. This vector can be though of as a 
+ * and the mouse pointer. This vector can be thought of as a 
  * 2D 'leash' between the mouse pointer and the Mesh.
  */
 export default class MeshLeash2D {
@@ -13,7 +13,7 @@ export default class MeshLeash2D {
     scene: Scene;
     engine: Engine;
 
-    constructor(public mesh: Mesh) {
+    constructor(public mesh: TransformNode) {
         this.scene = mesh.getScene();
         this.engine = this.scene.getEngine();
     }

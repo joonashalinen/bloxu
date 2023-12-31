@@ -61,14 +61,12 @@ export default class Player implements IPlayer {
                         bodyId: string
                     ) {
                         const body = this.getObject(bodyId) as PlayerBody;
-                        // Shoot in the direction of the
-                        // 2D screen leash around the player character.
-                        const leash = this.getObject(`Player:MeshLeash2D?${body.id}`) as MeshLeash2D;
-                        if (leash.lastLeash !== undefined) {
-                            body.shoot(leash.lastLeash);
-                        }
+                        // Shoot in the direction pointed to by the 
+                        // aim arrow around the character.
+                        const direction = body.arrowMeshRotatable.direction;
+                        body.shoot(direction);
                         return {
-                            direction: {x: leash.lastLeash.x, y: leash.lastLeash.y},
+                            direction: {x: direction.x, y: direction.y},
                             body: body.state()
                         };
                     }
@@ -172,26 +170,13 @@ export default class Player implements IPlayer {
                     ) {
                         const playerBody = this.getObject(playerBodyId) as PlayerBody;
 
-                        // Create 'leash' that tracks the 2D screen
-                        // vector between the mouse and the player's character.
-                        const leashId = `Player:MeshLeash2D?${playerBodyId}`;
-                        this.createObject(leashId, "MeshLeash2D", [playerBody.mainMesh]);
-                        const leash = this.getObject(leashId) as MeshLeash2D;
-
                         // If the player service should be disconnected 
                         // from any controls (such as the keyboard or mouse) 
                         // then we do not want to set the related event listeners.
                         if (!disableControls) {
-                            // Make the leash rotate when the mouse moves.
-                            // The rotation should follow the leash, except around the player character
-                            // around the y-axis.
-                            leash.enableAutoUpdate();
-                            // Update the 3D pointer arrow coming from the character 
-                            // whenever the leash changes.
-                            leash.onChange((leash: DMeshLeash2D) => {
-                                const angle = Math.atan2(leash.leash.y, leash.leash.x);
-                                playerBody.arrowPointer.setRotation({x: 0, y: angle + Math.PI, z: 0});
-                            });
+                            // Let the player's body handle updating its own 
+                            // objects.
+                            playerBody.enableAutoUpdate();
                         }
                     }
                 }
@@ -217,7 +202,6 @@ export default class Player implements IPlayer {
                         state: DPlayerBody
                     ) {
                         const body = this.getObject(bodyId) as PlayerBody;
-                        const leash = this.getObject(`Player:MeshLeash2D?${body.id}`) as MeshLeash2D;
                         body.setState(state);
                     }
                 }
