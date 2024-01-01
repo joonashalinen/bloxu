@@ -1,7 +1,7 @@
-import EventEmitter from "../../../components/events/pub/EventEmitter";
 import IDirectionController from "../../../components/controls/pub/IDirectionController";
 import ProxyMessenger from "../../../components/messaging/pub/ProxyMessenger";
 import { DMessage } from "../../../components/messaging/pub/DMessage";
+import TCompassPoint from "../../../components/geometry/pub/TCompassPoint";
 
 /**
  * Class responsible for managing keyboard events and other input/output operations.
@@ -12,7 +12,6 @@ export default class IOService {
 
     constructor(directionController: IDirectionController) {
         this.directionController = directionController;
-        this._handleDirectionChange = this._handleDirectionChange.bind(this);
         this.proxyMessenger = new ProxyMessenger<DMessage, DMessage>();
     }
 
@@ -20,8 +19,25 @@ export default class IOService {
      * Initialize the IOService.
      */
     initialize(): void {
-        // Subscribe to the directionChange event of the direction controller
-        this.directionController.onDirectionChange(this._handleDirectionChange);
+        this.directionController.onCompassPointChange(
+            this._handleCompassPointChange.bind(this)
+        );
+    }
+
+    /**
+     * Handle the compassPointChange event from the direction controller.
+     */
+    private _handleCompassPointChange(compassPoint: TCompassPoint): void {
+        // Trigger an event with the direction information
+        this.proxyMessenger.postMessage({
+            sender: "ioService",
+            recipient: "*",
+            type: "event",
+            message: {
+                type: "IOService:<event>controllerCompassPointChange",
+                args: [compassPoint]
+            }
+        });
     }
 
     /**

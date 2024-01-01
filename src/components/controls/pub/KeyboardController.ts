@@ -1,6 +1,7 @@
 import { Vector2 } from "@babylonjs/core";
 import IDirectionController from "./IDirectionController";
 import EventEmitter from "../../../components/events/pub/EventEmitter";
+import TCompassPoint from "../../geometry/pub/TCompassPoint";
 
 /**
  * Class responsible for managing keyboard events and implementing IDirectionController.
@@ -20,6 +21,14 @@ export default class KeyboardController implements IDirectionController {
     }
 
     /**
+     * Listen to direction events in the direction of one of 8 discrete 
+     * compass points.
+     */
+    onCompassPointChange(callback: (direction: TCompassPoint) => void): void {
+        this.emitter.on("compassPointChange", callback);
+    }
+
+    /**
      * Handle the keydown event.
      */
     handleKeyDown(event: KeyboardEvent): void {
@@ -28,9 +37,11 @@ export default class KeyboardController implements IDirectionController {
 
         // Calculate the direction based on the pressed keys
         const direction = this.calculateDirection();
+        const compassPoint = this.determineCompassPoint();
 
         // Trigger an event with the direction information
         this.emitter.trigger("directionChange", [{ direction }]);
+        this.emitter.trigger("compassPointChange", [compassPoint]);
     }
 
     /**
@@ -42,9 +53,11 @@ export default class KeyboardController implements IDirectionController {
 
         // Calculate the direction based on the remaining pressed keys
         const direction = this.calculateDirection();
+        const compassPoint = this.determineCompassPoint();
 
         // Trigger an event with the direction information
         this.emitter.trigger("directionChange", [{ direction }]);
+        this.emitter.trigger("compassPointChange", [compassPoint]);
     }
 
     /**
@@ -56,10 +69,10 @@ export default class KeyboardController implements IDirectionController {
 
         // Check the pressed keys and update the direction accordingly
         if (this.pressedKeys.has("w")) {
-            y -= 1;
+            y += 1;
         }
         if (this.pressedKeys.has("s")) {
-            y += 1;
+            y -= 1;
         }
         if (this.pressedKeys.has("a")) {
             x -= 1;
@@ -76,6 +89,18 @@ export default class KeyboardController implements IDirectionController {
         }
 
         return new Vector2(x, y);
+    }
+
+    /**
+     * Determine the current compass point direction.
+     */
+    determineCompassPoint() {
+        return (
+            (this.pressedKeys.has("w") && !this.pressedKeys.has("s") ? "north" : "") + 
+            (this.pressedKeys.has("s") && !this.pressedKeys.has("w") ? "south" : "") + 
+            (this.pressedKeys.has("d") && !this.pressedKeys.has("a") ? "east" : "") + 
+            (this.pressedKeys.has("a") && !this.pressedKeys.has("d") ? "west" : "")
+        )
     }
 
     // Implement the onDirectionChange method from the IDirectionController interface

@@ -2,7 +2,7 @@ import DVector3 from "../../../../components/graphics3d/pub/DVector3";
 import PlayerBody from "../../../world3d/conf/custom_object_types/PlayerBody";
 import World3D from "../../../world3d/pub/World3D";
 import IPlayer from "../IPlayer";
-import Player, { DirectionEvent } from "../local/Player";
+import Player, { CompassPointEvent, DirectionEvent } from "../local/Player";
 import DVector2 from "../../../../components/graphics3d/pub/DVector2";
 import DPlayerBody from "../../../world3d/conf/custom_object_types/DPlayerBody";
 
@@ -17,7 +17,7 @@ export default class RemotePlayer implements IPlayer {
         this.player = new Player(playerId);
         this.player.disableControls = true;
         this.eventHandlers = {
-            "OnlineSynchronizer:Player:<event>move": this.onRemoteControllerDirectionChange.bind(this),
+            "OnlineSynchronizer:Player:<event>move": this.onRemotePlayerMove.bind(this),
             "OnlineSynchronizer:Player:<event>shoot": this.onRemoteShoot.bind(this),
             "OnlineSynchronizer:Player:<event>rotate": this.onSimpleStateChange.bind(this)
         };
@@ -38,14 +38,14 @@ export default class RemotePlayer implements IPlayer {
      * When a controller direction event has been 
      * received, e.g. a joystick event.
      */
-    onRemoteControllerDirectionChange(event: DirectionEvent) {
+    onRemotePlayerMove(event: CompassPointEvent) {
         // Update the player's state in the world 
         // to mirror the state the real player had at the time of the event.
         this.player.setState(event.body);
         // Enable controls temporarily so that we can simulate a controller direction event.
         // happening to the Player.
         this.player.disableControls = false;
-        this.player.onControllerDirectionChange(event);
+        this.player.onControllerCompassPointChange(event.compassPoint);
         this.player.disableControls = true;
     }
 

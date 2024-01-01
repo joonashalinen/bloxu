@@ -6,6 +6,8 @@ import Glow from "../../../../components/graphics3d/pub/effects/Glow";
 import DPlayerBody from "./DPlayerBody";
 import MouseRotatable from "../../../../components/objects3d/pub/MouseRotatable";
 import MeshLeash2D from "../../../../components/graphics3d/pub/MeshLeash2D";
+import CompassPointVector from "../../../../components/graphics3d/pub/CompassPointVector";
+import TCompassPoint from "../../../../components/geometry/pub/TCompassPoint";
 
 /**
  * The body that the Player service owns and controls.
@@ -172,10 +174,12 @@ export default class PlayerBody {
     }
 
     /**
-     * Move in given 2D direction within the x-z-plane.
+     * Move in given compass point direction.
      */
-    move(direction: Vector2) {
-        this.movable.move(new Vector3(direction.x, 0, direction.y * (-1)));
+    move(direction: TCompassPoint) {
+        console.log(direction);
+        const directionVector = (new CompassPointVector(direction)).vector;
+        this.movable.move(new Vector3(directionVector.x, 0, directionVector.y));
     }
 
     /**

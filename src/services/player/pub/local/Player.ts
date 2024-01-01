@@ -11,8 +11,10 @@ import PlayerBody from "../../../world3d/conf/custom_object_types/PlayerBody";
 import SyncMessenger from "../../../../components/messaging/pub/SyncMessenger";
 import DPlayerBody from "../../../world3d/conf/custom_object_types/DPlayerBody";
 import DVector2 from "../../../../components/graphics3d/pub/DVector2";
+import TCompassPoint from "../../../../components/geometry/pub/TCompassPoint";
 
 export type DirectionEvent = {direction: DVector2, body: DPlayerBody};
+export type CompassPointEvent = {compassPoint: TCompassPoint, body: DPlayerBody};
 
 /**
  * Class that contains the operations and state 
@@ -29,7 +31,7 @@ export default class Player implements IPlayer {
 
     constructor(public playerId: string) {
         this.eventHandlers = {
-            "controllerDirectionChange": this.onControllerDirectionChange.bind(this),
+            "IOService:<event>controllerCompassPointChange": this.onControllerCompassPointChange.bind(this),
             "World3D:<event>mouseDown": this.onMouseDown.bind(this),
             "World3D:Player:<event>rotate": this.onBodyRotate.bind(this)
         };
@@ -85,19 +87,8 @@ export default class Player implements IPlayer {
      * Does what Player wants to do when the controller's 
      * direction control has changed (for example, the thumb joystick or WASD keys).
      */
-    async onControllerDirectionChange(event: DirectionEvent) {
+    async onControllerCompassPointChange(compassPoint: TCompassPoint) {
         if (this.disableControls) {return}
-
-        const direction = event.direction;
-        // Reverse the controls for player 2, who is 
-        // on the opposite side of the map.
-        // A more general solution should be developed for this, 
-        // but due to lack of time, this will have to suffice.
-        if (this.playerId === "player-2") {
-            direction.x = direction.x * (-1);
-            direction.y = direction.y * (-1);
-        }
-
         if (this.initialized && this.spawned) {
             // Move the player's body in the controller's direction.
             const directionEvent = (await this.syncMessenger.postSyncMessage({
@@ -107,12 +98,12 @@ export default class Player implements IPlayer {
                 message: {
                     type: "modify",
                     args: [{
-                        boundArgs: [this.playerBodyId(), event.direction],
-                        f: function(this: World3D, bodyId: string, direction: {x: number, y:number}) {
+                        boundArgs: [this.playerBodyId(), compassPoint],
+                        f: function(this: World3D, bodyId: string, compassPoint: TCompassPoint) {
                             const body = this.getObject(bodyId) as PlayerBody;
-                            body.move(new this.babylonjs.Vector2(direction.x, direction.y));
+                            body.move(compassPoint);
                             return {
-                                direction: direction,
+                                compassPoint: compassPoint,
                                 body: body.state()
                             };
                         }
