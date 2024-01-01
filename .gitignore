@@ -1,5 +1,3 @@
 **/node_modules
-dist/
-
 docs/*.bkp
 docs/*.dtmp
