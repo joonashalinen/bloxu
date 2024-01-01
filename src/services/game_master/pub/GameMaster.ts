@@ -81,6 +81,10 @@ export default class GameMaster {
                         f: function(this: World3D, playerId: string) {
                             const playerBody = this.getObject(`Player:PlayerBody?${playerId}`) as PlayerBody;
                             this.camera.lockedTarget = playerBody.mainMesh;
+                            // If we are player 2, then we wish to rotate the camera 180 degrees.
+                            if (playerId === "player-2") {
+                                this.camera.alpha = this.camera.alpha + Math.PI
+                            }
                         }
                     }
                 ])

@@ -29,7 +29,7 @@ export default class Movable implements IObject, IMovable, DMovable {
     doOnTick(time: number): IObject {
         if (!this.direction.equals(new Vector3(0, 0, 0))) {
             const mass = this.nativeObj.body.getMassProperties().mass;
-            this.nativeObj.body.setLinearVelocity(this.direction.normalize().scale(mass * this.speed));
+            this.nativeObj.body.setLinearVelocity(this.direction.normalize().scale(mass! * this.speed));
             this.emitter.trigger("move");
         }
         return this;

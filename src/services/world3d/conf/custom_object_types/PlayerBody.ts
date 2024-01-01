@@ -1,4 +1,4 @@
-import { GlowLayer, Mesh, MeshBuilder, PhysicsAggregate, PhysicsBody, PhysicsShape, PhysicsShapeType, Scene, TransformNode, Vector2, Vector3 } from "@babylonjs/core";
+import { Axis, GlowLayer, Mesh, MeshBuilder, PhysicsAggregate, PhysicsBody, PhysicsShape, PhysicsShapeType, Quaternion, Scene, TransformNode, Vector2, Vector3 } from "@babylonjs/core";
 import Movable from "../../../../components/objects3d/pub/Movable";
 import Pointer from "../../../../components/objects3d/pub/Pointer";
 import Follower from "../../../../components/objects3d/pub/Follower";
@@ -177,9 +177,18 @@ export default class PlayerBody {
      * Move in given compass point direction.
      */
     move(direction: TCompassPoint) {
-        console.log(direction);
+        // Transform compass direction into vector.
         const directionVector = (new CompassPointVector(direction)).vector;
-        this.movable.move(new Vector3(directionVector.x, 0, directionVector.y));
+        // Transform to 3D vector.
+        const direction3D = new Vector3(directionVector.x, 0, directionVector.y);
+        // Adjust the direction vector based on the current rotation angle.
+        // We want movements to be relative to the orientation of the player character.
+        const relativeDirection = direction3D.rotateByQuaternionToRef(
+            Quaternion.RotationAxis(Axis.Y, this.mainMeshRotatable.angle - Math.PI/2),
+            new Vector3()
+        );
+        // Move the player character.
+        this.movable.move(relativeDirection);
     }
 
     /**
