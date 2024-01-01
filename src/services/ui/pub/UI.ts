@@ -57,6 +57,25 @@ export default class UI {
         this.codeText = document.createElement("p");
         document.body.appendChild(this.codeText);
 
-        this.eventHandlers = {};
+        this.eventHandlers = {
+            "GameMaster:<event>loseGame": this.onGameLose.bind(this),
+            "GameMaster:<event>winGame": this.onGameWin.bind(this)
+        };
+    }
+
+    /**
+     * When the player has lost the game.
+     */
+    onGameLose() {
+        window.alert("You lost")
+        location.reload();
+    }
+
+    /**
+     * When the player has won the game.
+     */
+    onGameWin() {
+        window.alert("You won")
+        location.reload();
     }
 }

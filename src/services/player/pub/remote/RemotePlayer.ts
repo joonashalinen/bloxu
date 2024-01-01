@@ -17,9 +17,10 @@ export default class RemotePlayer implements IPlayer {
         this.player = new Player(playerId);
         this.player.disableControls = true;
         this.eventHandlers = {
-            "OnlineSynchronizer:Player:<event>move": this.onRemotePlayerMove.bind(this),
+            "OnlineSynchronizer:Player:<event>move": this.onRemoteMove.bind(this),
             "OnlineSynchronizer:Player:<event>shoot": this.onRemoteShoot.bind(this),
-            "OnlineSynchronizer:Player:<event>rotate": this.onSimpleStateChange.bind(this)
+            "OnlineSynchronizer:Player:<event>rotate": this.onSimpleStateChange.bind(this),
+            "OnlineSynchronizer:Player:<event>die": this.onRemoteDie.bind(this)
         };
     }
     
@@ -38,7 +39,7 @@ export default class RemotePlayer implements IPlayer {
      * When a controller direction event has been 
      * received, e.g. a joystick event.
      */
-    onRemotePlayerMove(event: CompassPointEvent) {
+    onRemoteMove(event: CompassPointEvent) {
         // Update the player's state in the world 
         // to mirror the state the real player had at the time of the event.
         this.player.setState(event.body);
@@ -80,5 +81,15 @@ export default class RemotePlayer implements IPlayer {
      */
     onSimpleStateChange(state: DPlayerBody) {
         this.player.setState(state);
+    }
+
+    /**
+     * When the player has died in their game.
+     */
+    onRemoteDie() {
+        // Tell the environment that the remote player has died.
+        this.player.proxyMessenger.postMessage(
+            this.player.messageFactory.createEvent("*", "Player:<event>die", [this.player.playerId])
+        );
     }
 }

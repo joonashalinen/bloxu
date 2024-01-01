@@ -21,11 +21,14 @@ export default class GameMaster {
     eventHandlers: {[name: string]: Function}
     initialized: boolean;
     messageFactory = new MessageFactory("gameMaster");
-    mainPlayerId: string;
+    localPlayerId: string;
+    gameRunning: boolean = false;
     
     constructor() {
         this.syncMessenger = new SyncMessenger(this.proxyMessenger);
-        this.eventHandlers = {};
+        this.eventHandlers = {
+            "Player:<event>die": this.onPlayerDeath.bind(this)
+        };
         this.initialized = false;
     }
 
@@ -50,7 +53,7 @@ export default class GameMaster {
 
         // Tell the player services who is the main player and who is the remote player.
         this.proxyMessenger.postMessage(
-            this.messageFactory.createRequest(this.mainPlayerId, "beMainPlayer")
+            this.messageFactory.createRequest(this.localPlayerId, "beMainPlayer")
         );
         this.proxyMessenger.postMessage(
             this.messageFactory.createRequest(this.remotePlayerId(), "beRemotePlayer")
@@ -58,7 +61,7 @@ export default class GameMaster {
 
         // Initialize players.
         await this.syncMessenger.postSyncMessage(
-            this.messageFactory.createRequest(this.mainPlayerId, "initialize")
+            this.messageFactory.createRequest(this.localPlayerId, "initialize")
         );
         await this.syncMessenger.postSyncMessage(
             this.messageFactory.createRequest(this.remotePlayerId(), "initialize")
@@ -74,22 +77,28 @@ export default class GameMaster {
 
         // Center camera on the local player.
         setTimeout(() => {
-            this.proxyMessenger.postMessage(
-                this.messageFactory.createRequest("world3d", "modify", [
-                    {
-                        boundArgs: [this.mainPlayerId],
-                        f: function(this: World3D, playerId: string) {
-                            const playerBody = this.getObject(`Player:PlayerBody?${playerId}`) as PlayerBody;
-                            this.camera.lockedTarget = playerBody.mainMesh;
-                            // If we are player 2, then we wish to rotate the camera 180 degrees.
-                            if (playerId === "player-2") {
-                                this.camera.alpha = this.camera.alpha + Math.PI
+                this.proxyMessenger.postMessage(
+                    this.messageFactory.createRequest("world3d", "modify", [
+                        {
+                            boundArgs: [this.localPlayerId],
+                            f: function(this: World3D, playerId: string) {
+                                const playerBody = this.getObject(`Player:PlayerBody?${playerId}`) as PlayerBody;
+                                this.camera.lockedTarget = playerBody.mainMesh;
+                                // If we are player 2, then we wish to rotate the camera 180 degrees.
+                                if (playerId === "player-2") {
+                                    this.camera.alpha = this.camera.alpha + Math.PI
+                                }
                             }
                         }
-                    }
-                ])
-            );
-        }, 500);
+                    ])
+                );
+            },
+            // We give some time for the Player service to create the body.
+            // This is a dirty, unreliable hack and should be fixed.
+            500
+        );
+
+        this.gameRunning = true;
     }
 
     /**
@@ -133,7 +142,7 @@ export default class GameMaster {
      * We assume the game is 2-player.
      */
     remotePlayerId() {
-        if (this.mainPlayerId === "player-1") {
+        if (this.localPlayerId === "player-1") {
             return "player-2";
         } else {
             return "player-1";
@@ -145,7 +154,7 @@ export default class GameMaster {
      * to invite other players to the game.
      */
     async hostGame() {
-        const [code, mainPlayerId] = (await this.syncMessenger.postSyncMessage({
+        const [code, localPlayerId] = (await this.syncMessenger.postSyncMessage({
             recipient: "onlineSynchronizer",
             sender: "gameMaster",
             type: "request",
@@ -155,7 +164,7 @@ export default class GameMaster {
             }
         }))[0] as [string, string];
 
-        this.mainPlayerId = mainPlayerId;
+        this.localPlayerId = localPlayerId;
 
         await this._startGame();
 
@@ -167,7 +176,7 @@ export default class GameMaster {
      * the host of the game.
      */
     async joinGame(code: string) {
-        this.mainPlayerId = (await this.syncMessenger.postSyncMessage({
+        this.localPlayerId = (await this.syncMessenger.postSyncMessage({
             recipient: "onlineSynchronizer",
             sender: "gameMaster",
             type: "request",
@@ -179,6 +188,31 @@ export default class GameMaster {
 
         await this._startGame();
 
-        return this.mainPlayerId;
+        return this.localPlayerId;
+    }
+
+    /**
+     * When a player has died.
+     */
+    onPlayerDeath(playerId: string) {
+        if (this.gameRunning) {
+            // Notify the service's environment that the game has ended.
+            this.proxyMessenger.postMessage(
+                this.messageFactory.createEvent("*", "GameMaster:<event>endGame")
+            );
+            // Determine whether the local player has lost or won.
+            if (playerId === this.localPlayerId) {
+                // Notify the environment that the local player has lost.
+                this.proxyMessenger.postMessage(
+                    this.messageFactory.createEvent("*", "GameMaster:<event>loseGame")
+                );   
+            } else {
+                // Notify the environment that the local player has won.
+                this.proxyMessenger.postMessage(
+                    this.messageFactory.createEvent("*", "GameMaster:<event>winGame")
+                );
+            }
+            this.gameRunning = false;
+        }
     }
 }

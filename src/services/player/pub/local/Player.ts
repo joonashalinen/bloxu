@@ -4,9 +4,6 @@ import { DMessage } from "../../../../components/messaging/pub/DMessage";
 import ProxyMessenger from "../../../../components/messaging/pub/ProxyMessenger";
 import DVector3 from "../../../../components/graphics3d/pub/DVector3";
 import MessageFactory from "../../../../components/messaging/pub/MessageFactory";
-import DataObject from "../../../../components/data_structures/pub/DataObject";
-import MeshLeash2D from "../../../../components/graphics3d/pub/MeshLeash2D";
-import DMeshLeash2D from "../../../../components/graphics3d/pub/DMeshLeash2D";
 import PlayerBody from "../../../world3d/conf/custom_object_types/PlayerBody";
 import SyncMessenger from "../../../../components/messaging/pub/SyncMessenger";
 import DPlayerBody from "../../../world3d/conf/custom_object_types/DPlayerBody";
@@ -28,15 +25,18 @@ export default class Player implements IPlayer {
     messageFactory: MessageFactory;
     spawned: boolean;
     disableControls: boolean;
+    isAlive: boolean;
 
     constructor(public playerId: string) {
         this.eventHandlers = {
             "IOService:<event>controllerCompassPointChange": this.onControllerCompassPointChange.bind(this),
             "World3D:<event>mouseDown": this.onMouseDown.bind(this),
-            "World3D:Player:<event>rotate": this.onBodyRotate.bind(this)
+            "World3D:Player:<event>rotate": this.onBodyRotate.bind(this),
+            "World3D:Player:<event>projectileHit": this.onBodyProjectileHit.bind(this)
         };
         this.initialized = false;
         this.spawned = false;
+        this.isAlive = true;
         this.proxyMessenger = new ProxyMessenger<DMessage, DMessage>();
         this.syncMessenger = new SyncMessenger(this.proxyMessenger);
         this.messageFactory = new MessageFactory(playerId);
@@ -186,7 +186,7 @@ export default class Player implements IPlayer {
                         disableControls: boolean
                     ) {
                         const playerBody = this.getObject(playerBodyId) as PlayerBody;
-
+;
                         // If the player service should be disconnected 
                         // from any controls (such as the keyboard or mouse) 
                         // then we do not want to set the related event listeners.
@@ -197,6 +197,10 @@ export default class Player implements IPlayer {
                             // Get notifications of the player character's rotation events from World3D.
                             playerBody.mainMeshRotatable.emitter.on("rotate", () => {
                                 sendMsg("World3D:Player:<event>rotate", playerBody.state())
+                            });
+                            // Get notifications of when the player character gets hit with a projectile.
+                            playerBody.emitter.on("projectileHit", () => {
+                                sendMsg("World3D:Player:<event>projectileHit", playerBody.state());
                             });
                         }
                     }
@@ -240,5 +244,20 @@ export default class Player implements IPlayer {
         this.proxyMessenger.postMessage(
             this.messageFactory.createEvent("*", "Player:<event>rotate", [state])
         )
+    }
+
+    /**
+     * When the Player's player body has rotated in the world.
+     * This is an event that occurs only if the Player's controls are not 
+     * disabled.
+     */
+    onBodyProjectileHit(state: DPlayerBody) {
+        if (this.isAlive) {
+            this.isAlive = false;
+            // Notify the service's environment that the player has died.
+            this.proxyMessenger.postMessage(
+                this.messageFactory.createEvent("*", "Player:<event>die", [this.playerId])
+            );
+        }
     }
 }

@@ -1,4 +1,4 @@
-import { Axis, GlowLayer, Mesh, MeshBuilder, PhysicsAggregate, PhysicsBody, PhysicsShape, PhysicsShapeType, Quaternion, Scene, TransformNode, Vector2, Vector3 } from "@babylonjs/core";
+import { AbstractMesh, Axis, GlowLayer, Mesh, MeshBuilder, PhysicsAggregate, PhysicsBody, PhysicsShape, PhysicsShapeType, Quaternion, Scene, TransformNode, Vector2, Vector3 } from "@babylonjs/core";
 import Movable from "../../../../components/objects3d/pub/Movable";
 import Pointer from "../../../../components/objects3d/pub/Pointer";
 import Follower from "../../../../components/objects3d/pub/Follower";
@@ -8,6 +8,7 @@ import MouseRotatable from "../../../../components/objects3d/pub/MouseRotatable"
 import MeshLeash2D from "../../../../components/graphics3d/pub/MeshLeash2D";
 import CompassPointVector from "../../../../components/graphics3d/pub/CompassPointVector";
 import TCompassPoint from "../../../../components/geometry/pub/TCompassPoint";
+import EventEmitter from "../../../../components/events/pub/EventEmitter";
 
 /**
  * The body that the Player service owns and controls.
@@ -26,6 +27,8 @@ export default class PlayerBody {
     ballMovable: Movable;
     ballGlow: Glow;
     glowLayer: GlowLayer;
+
+    emitter = new EventEmitter();
 
     constructor(
         public id: string, 
@@ -58,6 +61,9 @@ export default class PlayerBody {
         );
         // We need to set this so that we can rotate the mesh afterwards.
         this.physicsAggregate.body.disablePreStep = false;
+        // Enable collision callbacks so we can detect when the player gets hit 
+        // by a projectile.
+        this.physicsAggregate.body.setCollisionCallbackEnabled(true);
 
         // Make a Movable object from the player character so 
         // that we can move it.
@@ -166,11 +172,18 @@ export default class PlayerBody {
 
     /**
      * Enable PlayerBody to automatically keep 
-     * its objects updated.
+     * its objects updated and to listen to 
+     * relevant events (i.e. collision).
      */
     enableAutoUpdate() {
         this.arrowMeshRotatable.enableAutoUpdate();
         this.mainMeshRotatable.enableAutoUpdate();
+        this.physicsAggregate.body.getCollisionObservable().add((event) => {
+            const bodyId = event.collidedAgainst.transformNode.id;
+            if (bodyId.includes("PlayerBody:ball") && !bodyId.includes(this.id)) {
+                this.emitter.trigger("projectileHit", []);
+            }
+        });
     }
 
     /**

@@ -129,7 +129,7 @@ export default class OnlineSynchronizerClient {
                     sender: "onlineSynchronizer",
                     recipient: msg.subRecipients[0]
                 };
-                redirectedMsg.subRecipients.unshift();
+                redirectedMsg.subRecipients!.unshift();
                 this.proxyMessenger.postMessage(redirectedMsg);
             
             } else {
