@@ -37,7 +37,7 @@ export default class Server {
     startExpressServer() {
         const app = (express as unknown as Function)();
         this.expressApp = app;
-        const port = 80;
+        const port = 3001;
 
         app.use(express.static("public"))
 
