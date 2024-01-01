@@ -83,12 +83,18 @@ var Mediator = /** @class */ (function () {
             }
         }
         else {
-            if (!(msg.recipient in this.actors)) {
-                console.log(msg);
-                throw new Error("No actor '" + msg.recipient + "' found");
+            // '-' is a name used by the sender of a message when they do not 
+            // want to receive a response or are not a messenger in the Mediator 
+            // (and thus cannot receive response). Thus, when the recipient is 
+            // '-' this means that a service has sent a response to such a sender. 
+            // In this case, we do not want to cause an error but simply ignore it.
+            if (msg.recipient !== "-") {
+                if (!(msg.recipient in this.actors)) {
+                    throw new Error("No actor '" + msg.recipient + "' found");
+                }
+                var actor = this.actors[msg.recipient];
+                this._postActorMessage(msg.recipient, actor, msg);
             }
-            var actor = this.actors[msg.recipient];
-            this._postActorMessage(msg.recipient, actor, msg);
         }
         return this;
     };

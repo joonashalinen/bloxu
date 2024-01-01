@@ -35,6 +35,15 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
     }
 };
+var __spreadArray = (this && this.__spreadArray) || function (to, from, pack) {
+    if (pack || arguments.length === 2) for (var i = 0, l = from.length, ar; i < l; i++) {
+        if (ar || !(i in from)) {
+            if (!ar) ar = Array.prototype.slice.call(from, 0, i);
+            ar[i] = from[i];
+        }
+    }
+    return to.concat(ar || Array.prototype.slice.call(from));
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 var EventEmitter_1 = require("../../events/pub/EventEmitter");
 /**
@@ -64,7 +73,7 @@ var MessengerClass = /** @class */ (function () {
             var _a;
             return __generator(this, function (_b) {
                 switch (_b.label) {
-                    case 0: return [4 /*yield*/, (_a = this.wrappee)[msg.message.type].apply(_a, msg.message.args)];
+                    case 0: return [4 /*yield*/, (_a = this.wrappee)[msg.message.type].apply(_a, __spreadArray(__spreadArray([], msg.message.args, false), [msg], false))];
                     case 1:
                         result = _b.sent();
                         // If the result is not the wrapped class itself or undefined then we assume 
@@ -101,9 +110,17 @@ var MessengerClass = /** @class */ (function () {
         else if (msg.type === "event") {
             if (typeof this.wrappee === "object" &&
                 "eventHandlers" in this.wrappee &&
-                typeof this.wrappee.eventHandlers === "object" &&
-                msg.message.type in this.wrappee.eventHandlers) {
-                (_a = this.wrappee.eventHandlers)[msg.message.type].apply(_a, msg.message.args);
+                typeof this.wrappee.eventHandlers === "object") {
+                // If the event type has a direct handler in the service class, 
+                // we use it by default.
+                if (msg.message.type in this.wrappee.eventHandlers) {
+                    (_a = this.wrappee.eventHandlers)[msg.message.type].apply(_a, __spreadArray(__spreadArray([], msg.message.args, false), [msg], false));
+                }
+                else if (typeof this.wrappee.eventHandlers["*"] === "function") {
+                    // Else, if the service class has a fallback event handler for 
+                    // all events, we use that.
+                    this.wrappee.eventHandlers["*"](msg);
+                }
             }
         }
         return this;
