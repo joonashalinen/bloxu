@@ -10,6 +10,8 @@ import { DirectionEvent } from "../../../player/pub/local/Player";
  * OnlineSynchronizerClient service.
  */
 export default class OnlineSynchronizerClient {
+
+    websocketServerAddress = "ws://138.197.9.66:3000";
     proxyMessenger = new ProxyMessenger<DMessage, DMessage>();
     serviceId = "onlineSynchronizerClient";
     // We do not know our player id within the game yet until we join one.
@@ -22,7 +24,7 @@ export default class OnlineSynchronizerClient {
     eventHandlers: {[name: string]: Function};
     
     // This WebSocket is used to communicate with OnlineSynchronizerServer.
-    socketToServer: WebSocket = new WebSocket("ws://localhost:3000");
+    socketToServer: WebSocket = new WebSocket(this.websocketServerAddress);
     messengerToServer = new WebSocketMessenger<DMessage, DMessage>(this.socketToServer);
     syncMessengerToServer = new SyncMessenger(this.messengerToServer);
     serverMessageFactory = new MessageFactory(this.serviceId);
@@ -30,7 +32,7 @@ export default class OnlineSynchronizerClient {
 
     // This WebSocket is used to communicate with other 
     // players within a joined game.
-    gameSocket: WebSocket = new WebSocket("ws://localhost:3000");
+    gameSocket: WebSocket = new WebSocket(this.websocketServerAddress);
     gameMessenger = new WebSocketMessenger<DMessage, DMessage>(this.gameSocket);
     gameSyncMessenger = new SyncMessenger(this.gameMessenger);
     gameMessageFactory = new MessageFactory(this.playerIdInGame);
