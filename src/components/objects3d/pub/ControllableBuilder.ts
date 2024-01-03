@@ -9,6 +9,7 @@ import IMovable from "./IMovable";
 import IRotatable from "./IRotatable";
 import AnimatedMovable from "./AnimatedMovable";
 import CompassPointMovable from "./CompassPointMovable";
+import AntiRelativeMovable from "./AntiRelativeMovable";
 
 /**
  * A builder for objects that can be controlled.
@@ -39,9 +40,16 @@ export default class ControllableBuilder {
 
     /**
      * Make the object automatically face the mouse cursor at all times (rotating around the y-axis).
+     * If we wish to make the object physical at any point (for example by making it movable), 
+     * we should do that first before calling this method.
      */
     makeMouseRotatable() {
         const rotatable = new MouseRotatable(this.topNode);
+        // If the object has physics enabled.
+        if (this.result.as("Physical") !== undefined) {
+            // We need to set this so that we can rotate the mesh.
+            (this.result.as("Physical") as Movable).physicsAggregate.body.disablePreStep = false;
+        }
         this.result.is(rotatable);
         this.topRotatable = rotatable;
         return this;
@@ -61,10 +69,32 @@ export default class ControllableBuilder {
             );
         }
 
-        // We need to set this so that we can rotate the mesh.
-        (this.result.as("Movable") as Movable).physicsAggregate.body.disablePreStep = false;
-
         const relativeMovable = new RelativeMovable(
+            this.topMovable, 
+            this.topRotatable
+        );
+
+        this.result.is(relativeMovable);
+        this.topMovable = relativeMovable;
+        return this;
+    }
+
+    /**
+     * Add the opposite effect of RelativeMovable to the chain of movement direction 
+     * transformations done when moving the object.
+     */
+    makeAntiRelativeMovable() {
+        if (
+            this.topMovable === undefined,
+            this.topRotatable === undefined
+        ) {
+            throw new Error(
+                "The object to be built must be made movable and " + 
+                "an rotatable before it can be made a RelativeMovable."
+            );
+        }
+
+        const relativeMovable = new AntiRelativeMovable(
             this.topMovable, 
             this.topRotatable
         );

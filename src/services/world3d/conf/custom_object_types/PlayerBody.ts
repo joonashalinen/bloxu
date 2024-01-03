@@ -56,6 +56,8 @@ export default class PlayerBody {
         const controllableBuilder = new ControllableBuilder(characterMesh);
         controllableBuilder.makeMovable(0.01, 0.7);
         controllableBuilder.makeMouseRotatable();
+        // Undoes the AntiRelativeMovable, resulting in 
+        // moving in the original movement direction.
         controllableBuilder.makeRelativeMovable();
         controllableBuilder.makeAnimatedMovable(
             [
@@ -82,6 +84,8 @@ export default class PlayerBody {
             ],
             characterAnimations["idle"]
         );
+        // Make AntiRelativeMovable to make character animations relative to the orientation.
+        controllableBuilder.makeAntiRelativeMovable();
         controllableBuilder.makeCompassPointMovable();
         this.body = controllableBuilder.result;
         this.mainMesh = this.body.as("Physical").transformNode as Mesh;
