@@ -1,18 +1,21 @@
 import IMovable from "./IMovable";
 import DMovable from "./DMovable";
-import { Vector3 } from "@babylonjs/core";
+import { TransformNode, Vector3 } from "@babylonjs/core";
 import { PhysicsAggregate } from "@babylonjs/core/Physics";
 import IObject from "./IObject";
 import EventEmitter from "../../events/pub/EventEmitter";
+import IPhysical from "./IPhysical";
 
-export default class Movable implements IObject, IMovable, DMovable {
+export default class Movable implements IObject, IMovable, DMovable, IPhysical {
     direction = new Vector3(0, 0, 0);
-    nativeObj: PhysicsAggregate;
+    transformNode: TransformNode;
+    physicsAggregate: PhysicsAggregate;
     emitter = new EventEmitter();
     speed: number = 10;
 
-    constructor(nativeObj: PhysicsAggregate) {
-        this.nativeObj = nativeObj;
+    constructor(physicsAggregate: PhysicsAggregate) {
+        this.transformNode = physicsAggregate.transformNode;
+        this.physicsAggregate = physicsAggregate;
     }
 
     move(direction: Vector3, onlyInDirection: boolean = true): IMovable {
@@ -27,11 +30,9 @@ export default class Movable implements IObject, IMovable, DMovable {
     }
 
     doOnTick(time: number): IObject {
-        if (!this.direction.equals(new Vector3(0, 0, 0))) {
-            const mass = this.nativeObj.body.getMassProperties().mass;
-            this.nativeObj.body.setLinearVelocity(this.direction.normalize().scale(mass! * this.speed));
-            this.emitter.trigger("move");
-        }
+        const mass = this.physicsAggregate.body.getMassProperties().mass;
+        this.physicsAggregate.body.setLinearVelocity(this.direction.normalize().scale(mass! * this.speed));
+        this.emitter.trigger("move");
         return this;
     }
 

@@ -1,4 +1,4 @@
-import { AbstractMesh, Axis, GlowLayer, Mesh, MeshBuilder, PhysicsAggregate, PhysicsBody, PhysicsShape, PhysicsShapeType, Quaternion, Scene, TransformNode, Vector2, Vector3 } from "@babylonjs/core";
+import { AbstractMesh, AnimationGroup, Axis, GlowLayer, Mesh, MeshBuilder, PhysicsAggregate, PhysicsBody, PhysicsMotionType, PhysicsShape, PhysicsShapeType, Quaternion, Scene, TransformNode, Vector2, Vector3 } from "@babylonjs/core";
 import Movable from "../../../../components/objects3d/pub/Movable";
 import Pointer from "../../../../components/objects3d/pub/Pointer";
 import Follower from "../../../../components/objects3d/pub/Follower";
@@ -9,15 +9,25 @@ import MeshLeash2D from "../../../../components/graphics3d/pub/MeshLeash2D";
 import CompassPointVector from "../../../../components/graphics3d/pub/CompassPointVector";
 import TCompassPoint from "../../../../components/geometry/pub/TCompassPoint";
 import EventEmitter from "../../../../components/events/pub/EventEmitter";
+import Characterized from "../../../../components/classes/pub/Characterized";
+import IObject from "../../../../components/objects3d/pub/IObject";
+import CompassPointMovable from "../../../../components/objects3d/pub/CompassPointMovable";
+import RelativeMovable from "../../../../components/objects3d/pub/RelativeMovable";
+import AnimatedMovable from "../../../../components/objects3d/pub/AnimatedMovable";
+import { ICharacterAnimations } from "../meshConstructors";
 
 /**
  * The body that the Player service owns and controls.
  */
 export default class PlayerBody {
+    body: Characterized<IObject> = new Characterized();
+    ui: Characterized<IObject> = new Characterized();
+
     mainMesh: Mesh;
     mainMeshRotatable: MouseRotatable;
     physicsAggregate: PhysicsAggregate;
-    movable: Movable;
+    movable: CompassPointMovable;
+    characterAnimations: ICharacterAnimations;
 
     arrowMesh: Mesh;
     arrowPointer: Pointer;
@@ -35,39 +45,43 @@ export default class PlayerBody {
         public startingPosition: Vector3, 
         public scene: Scene,
         public meshConstructors: {
-            "DirectionArrow": (id: string) => Mesh
+            "DirectionArrow": (id: string) => Mesh,
+            "Player": (id: string) => [Mesh, ICharacterAnimations]
         }
     ) {
         this.startingPosition = startingPosition;
-        
-        // Create the mesh group for the player character that
-        //  is used for attaching other meshes to it.
-        // For example, the aiming arrow shown when shooting is attached 
-        // to the same group later so that it follows the player character.
-        // this.meshGroup = new TransformNode(`PlayerBody:meshGroup?${this.id}`);
 
-        // Create the player character mesh, which 
-        // is currently just a box.
+        // Create the player character mesh.
+        // We first create a box that acts as the wrapper for the player character mesh.
+        // We want the box wrapper so that physics behaves well.
         this.mainMesh = MeshBuilder.CreateBox(`PlayerBody:mainMesh?${this.id}`, {size: 0.7}, this.scene);
-        this.mainMesh.position.set(startingPosition.x, startingPosition.y, startingPosition.z);
+        // Hide the box.
+        this.mainMesh.visibility = 0;
+
+        const [characterMesh, characterAnimations] = meshConstructors["Player"](`PlayerBody:characterMesh?${this.id}`);
+        this.characterAnimations = characterAnimations;
+        // Add the player character mesh to the box wrapper.
+        this.mainMesh.addChild(characterMesh);
+        // Position the character at the given starting position.
+        this.mainMesh.position.set(startingPosition.x, startingPosition.y + 1, startingPosition.z);
 
         // Add physics to the player character. We 
         // want physics enabled for collision detection.
         this.physicsAggregate = new PhysicsAggregate(
             this.mainMesh, 
             PhysicsShapeType.BOX, 
-            { mass: 0.1 }, 
+            { mass: 1,  }, 
             this.scene
         );
+        // this.physicsAggregate.body.setMotionType(PhysicsMotionType.ANIMATED);
         // We need to set this so that we can rotate the mesh afterwards.
         this.physicsAggregate.body.disablePreStep = false;
         // Enable collision callbacks so we can detect when the player gets hit 
         // by a projectile.
         this.physicsAggregate.body.setCollisionCallbackEnabled(true);
-
-        // Make a Movable object from the player character so 
-        // that we can move it.
-        this.movable = new Movable(this.physicsAggregate);
+        this.physicsAggregate.body.setMassProperties({
+            inertia: new Vector3(0, 0, 0)
+        });
 
         // Create mesh of pointer arrow shown when aiming that is attached to the player character.
         this.arrowMesh = this.meshConstructors.DirectionArrow(`PlayerBody:arrowMesh?${this.id}`);
@@ -89,12 +103,52 @@ export default class PlayerBody {
         // it always points at it.
         this.mainMeshRotatable = new MouseRotatable(this.physicsAggregate.transformNode);
         
+        const animatedMovable = new AnimatedMovable(
+            new RelativeMovable(
+                new Movable(this.physicsAggregate),
+                this.mainMeshRotatable
+            ),
+            [
+                new Vector2(0, 0),
+                new Vector2(0, 1),
+                (new Vector2(1, 1)).normalize(),
+                new Vector2(1, 0),
+                (new Vector2(1, -1)).normalize(),
+                new Vector2(0, -1),
+                (new Vector2(-1, -1)).normalize(),
+                new Vector2(-1, 0),
+                (new Vector2(-1, 1)).normalize(),
+            ],
+            [
+                characterAnimations["idle"],
+                characterAnimations["moveForward"],
+                characterAnimations["moveForwardRight"],
+                characterAnimations["moveRight"],
+                characterAnimations["moveBackwardRight"],
+                characterAnimations["moveBackward"],
+                characterAnimations["moveBackwardLeft"],
+                characterAnimations["moveLeft"],
+                characterAnimations["moveForwardLeft"]
+            ]
+        );
+
+        animatedMovable.currentAnimation = characterAnimations[0];
+
+        // Make a movable object from the player character so 
+        // that we can move it.
+        this.movable = new CompassPointMovable(animatedMovable);
+
+        (((this.movable.movable as AnimatedMovable).movable as RelativeMovable).movable as Movable).speed = 0.01;
+
         // Make a MouseRotatable from the arrow pointer mesh 
         // so that it follows the mouse pointer.
         this.arrowMeshRotatable = new MouseRotatable(this.arrowPointer.centerOfRotation);
 
         // Make the arrow follow the position of the player character.
-        this.arrowFollower = new Follower(this.arrowPointer.centerOfRotation, this.movable);
+        this.arrowFollower = new Follower(
+            this.arrowPointer.centerOfRotation, 
+            (((this.movable.movable as AnimatedMovable).movable as RelativeMovable).movable as Movable)
+        );
 
         // Create glow layer for the glow effect of the plasma ball.
         this.glowLayer = new GlowLayer(`PlayerBody:glowLayer?${this.id}`, scene);
@@ -104,7 +158,7 @@ export default class PlayerBody {
      * Update player's body for the current render iteration.
      */
     doOnTick(time: number) {
-        this.movable.doOnTick(time);
+        (((this.movable.movable as AnimatedMovable).movable as RelativeMovable).movable as Movable).doOnTick(time);
         this.arrowFollower.doOnTick(time);
         if (this.ballMovable !== undefined) {
             this.ballMovable.doOnTick(time);
@@ -142,6 +196,18 @@ export default class PlayerBody {
         this.ballMovable = new Movable(physicsAggregate);
         this.ballMovable.speed = 80;
         this.ballMovable.move(transformedDirection);
+
+        const currentAnimation = (this.movable.movable as AnimatedMovable).currentAnimation;
+        if (currentAnimation !== undefined) {
+            currentAnimation.stop();
+        }
+        this.characterAnimations["shoot"].enableBlending = true;
+        this.characterAnimations["shoot"].blendingSpeed = 0.1;
+        this.characterAnimations["shoot"].start();
+        this.characterAnimations["shoot"].onAnimationEndObservable.add(() => {
+            this.characterAnimations["idle"].start();
+            (this.movable.movable as AnimatedMovable).currentAnimation = this.characterAnimations["idle"];
+        });
     }
 
     /**
@@ -190,18 +256,7 @@ export default class PlayerBody {
      * Move in given compass point direction.
      */
     move(direction: TCompassPoint) {
-        // Transform compass direction into vector.
-        const directionVector = (new CompassPointVector(direction)).vector;
-        // Transform to 3D vector.
-        const direction3D = new Vector3(directionVector.x, 0, directionVector.y);
-        // Adjust the direction vector based on the current rotation angle.
-        // We want movements to be relative to the orientation of the player character.
-        const relativeDirection = direction3D.rotateByQuaternionToRef(
-            Quaternion.RotationAxis(Axis.Y, this.mainMeshRotatable.angle - Math.PI/2),
-            new Vector3()
-        );
-        // Move the player character.
-        this.movable.move(relativeDirection);
+        this.movable.move(direction);
     }
 
     /**

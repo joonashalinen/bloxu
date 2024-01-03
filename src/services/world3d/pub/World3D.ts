@@ -18,6 +18,7 @@ import customObjectTypes from "../conf/customObjectTypes";
 import Pointer from "../../../components/objects3d/pub/Pointer";
 import meshConstructors from "../conf/meshConstructors";
 import Glow from "../../../components/graphics3d/pub/effects/Glow";
+import ITickable from "../../../components/objects3d/pub/ITickable";
 
 type Types = {[type: string]: Function};
 type Instances = {[name: string]: Object};
@@ -238,7 +239,7 @@ export default class World3D implements IService {
             for (let id in this.objects) {
                 let obj = this.objects[id];
                 if ("doOnTick" in obj) {
-                    (obj as IObject).doOnTick(0);
+                    (obj as ITickable).doOnTick(0);
                 }
             }
             this.scene.render();

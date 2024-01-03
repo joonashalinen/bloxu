@@ -2,22 +2,24 @@ import { Camera, Mesh, Node, Quaternion, Scene, TransformNode, Vector2 } from "@
 import MeshLeash2D from "../../graphics3d/pub/MeshLeash2D";
 import DMeshLeash2D from "../../graphics3d/pub/DMeshLeash2D";
 import EventEmitter from "../../events/pub/EventEmitter";
+import IObject from "./IObject";
+import IRotatable from "./IRotatable";
 
 /**
  * Wrapper for a mesh to make it always face 
  * the mouse pointer.
  */
-export default class MouseRotatable {
+export default class MouseRotatable implements IObject, IRotatable {
     leash: MeshLeash2D;
     angle: number = 0;
     direction: Vector2 = new Vector2(0, 0);
     emitter = new EventEmitter();
 
-    constructor(public mesh: TransformNode) {
-        if (this.mesh.getScene() === null) {
+    constructor(public transformNode: TransformNode) {
+        if (this.transformNode.getScene() === null) {
             throw new Error(`Mesh is not connected to a scene.`);
         }
-        this.leash = new MeshLeash2D(mesh);
+        this.leash = new MeshLeash2D(transformNode);
     }
 
     /**
@@ -46,7 +48,7 @@ export default class MouseRotatable {
      * Rotate the mesh based on the given leash.
      */
     setMeshRotation(leash: Vector2) {
-        const scene = this.mesh.getScene();
+        const scene = this.transformNode.getScene();
         const cameraPosition = scene!.activeCamera!.position;
         // Angle of the camera position in relation to the x-axis within the x-z plane.
         const cameraAngle = Math.atan2(cameraPosition.z, cameraPosition.x);
@@ -63,6 +65,6 @@ export default class MouseRotatable {
     setAngle(angle: number) {
         this.angle = angle;
         this.direction = new Vector2(Math.cos(this.angle), Math.sin(this.angle));
-        this.mesh.rotationQuaternion = Quaternion.FromEulerAngles(0, this.angle, 0);
+        this.transformNode.rotationQuaternion = Quaternion.FromEulerAngles(0, this.angle, 0);
     }
 }

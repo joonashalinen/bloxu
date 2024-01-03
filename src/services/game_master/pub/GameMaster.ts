@@ -117,7 +117,7 @@ export default class GameMaster {
                     f: function(this: World3D, id:string, position: Vector3D) {
                         return [
                             id,
-                            3, 
+                            10, 
                             new this.babylonjs.Vector3(position.x, position.y, position.z),
                             this.scene
                         ];
