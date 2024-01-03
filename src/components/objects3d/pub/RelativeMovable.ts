@@ -1,14 +1,17 @@
-import { Axis, Quaternion, Vector3 } from "@babylonjs/core";
+import { Axis, Quaternion, TransformNode, Vector3 } from "@babylonjs/core";
 import IMovable from "./IMovable";
 import IRotatable from "./IRotatable";
+import IObject from "./IObject";
 
 /**
  * A movable object that moves in relation to its 
  * current orientation.
  */
-export default class RelativeMovable implements IMovable {
-    constructor(public movable: IMovable, public rotatable: IRotatable) {
-        
+export default class RelativeMovable implements IMovable, IObject {
+    transformNode: TransformNode;
+
+    constructor(public movable: IMovable & IObject, public rotatable: IRotatable) {
+        this.transformNode = movable.transformNode;
     }
 
     /**

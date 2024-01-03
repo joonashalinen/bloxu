@@ -9,6 +9,7 @@ import SyncMessenger from "../../../../components/messaging/pub/SyncMessenger";
 import DPlayerBody from "../../../world3d/conf/custom_object_types/DPlayerBody";
 import DVector2 from "../../../../components/graphics3d/pub/DVector2";
 import TCompassPoint from "../../../../components/geometry/pub/TCompassPoint";
+import MouseRotatable from "../../../../components/objects3d/pub/MouseRotatable";
 
 export type DirectionEvent = {direction: DVector2, body: DPlayerBody};
 export type CompassPointEvent = {compassPoint: TCompassPoint, body: DPlayerBody};
@@ -195,7 +196,7 @@ export default class Player implements IPlayer {
                             // objects.
                             playerBody.enableAutoUpdate();
                             // Get notifications of the player character's rotation events from World3D.
-                            playerBody.mainMeshRotatable.emitter.on("rotate", () => {
+                            (playerBody.body.as("MouseRotatable") as MouseRotatable).emitter.on("rotate", () => {
                                 sendMsg("World3D:Player:<event>rotate", playerBody.state())
                             });
                             // Get notifications of when the player character gets hit with a projectile.

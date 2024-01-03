@@ -1,19 +1,25 @@
-import { AnimationGroup, Vector2, Vector3 } from "@babylonjs/core";
+import { AnimationGroup, TransformNode, Vector2, Vector3 } from "@babylonjs/core";
 import IMovable from "./IMovable";
 import DiscreteVector from "../../graphics3d/pub/DiscreteVector";
+import IObject from "./IObject";
 
 /**
  * A movable that has direction-specific movement animations.
  */
-export default class AnimatedMovable implements IMovable {
+export default class AnimatedMovable implements IMovable, IObject {
     currentAnimation: AnimationGroup;
+    transformNode: TransformNode;
 
     constructor(
-        public movable: IMovable, 
+        public movable: IMovable & IObject, 
         public directions: Array<Vector2>, 
         public animations: Array<AnimationGroup>
     ) {
-        
+        this.transformNode = movable.transformNode;
+        animations.forEach((animation) => {
+            animation.enableBlending = true;
+            animation.blendingSpeed = 0.2;
+        });
     }
 
     move(direction: Vector3, onlyInDirection?: boolean | undefined): IMovable {
@@ -25,8 +31,6 @@ export default class AnimatedMovable implements IMovable {
             if (this.currentAnimation !== undefined) {
                 this.currentAnimation.stop();
             }
-            animation.enableBlending = true;
-            animation.blendingSpeed = 0.1;
             animation.play(true);
             this.currentAnimation = animation;
         }
