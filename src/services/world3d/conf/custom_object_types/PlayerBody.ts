@@ -95,6 +95,7 @@ export default class PlayerBody {
         );
         // Make AntiRelativeMovable to make character animations relative to the orientation.
         controllableBuilder.makeAntiRelativeMovable();
+        controllableBuilder.makeCameraRelativeMovable();
         controllableBuilder.makeCompassPointMovable();
         controllableBuilder.makeAnimatedMovableRotatable();
         this.body = controllableBuilder.result;

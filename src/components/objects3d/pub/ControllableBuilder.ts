@@ -12,6 +12,7 @@ import CompassPointMovable from "./CompassPointMovable";
 import AntiRelativeMovable from "./AntiRelativeMovable";
 import AnimatedRotatable from "./AnimatedRotatable";
 import AnimatedMovableRotatable from "./AnimatedMovableRotatable";
+import CameraRelativeMovable from "./CameraRelativeMovable";
 
 /**
  * A builder for objects that can be controlled.
@@ -110,7 +111,7 @@ export default class ControllableBuilder {
         ) {
             throw new Error(
                 "The object to be built must be made movable and " + 
-                "an rotatable before it can be made a RelativeMovable."
+                "a rotatable before it can be made a RelativeMovable."
             );
         }
 
@@ -135,7 +136,7 @@ export default class ControllableBuilder {
         ) {
             throw new Error(
                 "The object to be built must be made movable and " + 
-                "an rotatable before it can be made a RelativeMovable."
+                "a rotatable before it can be made a RelativeMovable."
             );
         }
 
@@ -146,6 +147,29 @@ export default class ControllableBuilder {
 
         this.result.is(relativeMovable);
         this.topMovable = relativeMovable;
+        return this;
+    }
+
+    /**
+     * Make the object move in relation to the current camera orientation.
+     */
+    makeCameraRelativeMovable() {
+        if (
+            this.topMovable === undefined
+        ) {
+            throw new Error(
+                "The object to be built must be made movable " + 
+                "before it can be made a CameraRelativeMovable."
+            );
+        }
+
+        const cameraRelativeMovable = new CameraRelativeMovable(
+            this.topMovable, 
+            this.topMovable.transformNode.getScene().activeCamera!
+        );
+
+        this.result.is(cameraRelativeMovable);
+        this.topMovable = cameraRelativeMovable;
         return this;
     }
 
