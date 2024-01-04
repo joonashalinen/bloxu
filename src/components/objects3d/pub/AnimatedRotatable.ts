@@ -88,7 +88,7 @@ export default class AnimatedRotatable implements IObject, IRotatable, IAutoUpda
 
         // If there is not enough of a different in the turn speed, we 
         // do not update it.
-        if (Math.abs(newAnimationSpeed - this.currentAnimationSpeed) > 0.5) {
+        if (Math.abs(newAnimationSpeed - this.currentAnimationSpeed) > 0.2) {
             this.currentAnimationSpeed = newAnimationSpeed;
             animation.speedRatio = this.currentAnimationSpeed;
         }
