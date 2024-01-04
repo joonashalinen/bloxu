@@ -1,6 +1,6 @@
-import { Camera, Mesh, Node, Quaternion, Scene, TransformNode, Vector2 } from "@babylonjs/core";
-import MeshLeash2D from "../../graphics3d/pub/MeshLeash2D";
-import DMeshLeash2D from "../../graphics3d/pub/DMeshLeash2D";
+import { GroundMesh, MeshBuilder, Quaternion, TransformNode, Vector2 } from "@babylonjs/core";
+import MeshLeash3D from "../../graphics3d/pub/MeshLeash3D";
+import DMeshLeash3D from "../../graphics3d/pub/DMeshLeash3D";
 import EventEmitter from "../../events/pub/EventEmitter";
 import IObject from "./IObject";
 import IRotatable from "./IRotatable";
@@ -11,16 +11,30 @@ import IEventable from "../../events/pub/IEventable";
  * the mouse pointer.
  */
 export default class MouseRotatable implements IObject, IRotatable, IEventable {
-    leash: MeshLeash2D;
+    leash: MeshLeash3D;
     angle: number = 0;
     direction: Vector2 = new Vector2(0, 0);
     emitter = new EventEmitter();
+    pickPlane: GroundMesh;
 
     constructor(public transformNode: TransformNode) {
         if (this.transformNode.getScene() === null) {
             throw new Error(`Mesh is not connected to a scene.`);
         }
-        this.leash = new MeshLeash2D(transformNode);
+
+        // Create plane we use for projecting mouse coordinates to 
+        // 3D world coordinates.
+        this.pickPlane = MeshBuilder.CreateGround(
+            `MouseRotatable:pickPlane?${transformNode.id}`, 
+            {
+                width: 10000,
+                height: 10000
+            },
+            transformNode.getScene()
+        );
+        this.pickPlane.visibility = 0;
+        this.pickPlane.position = transformNode.position.clone();
+        this.leash = new MeshLeash3D(transformNode, this.pickPlane);
     }
 
     /**
@@ -31,7 +45,7 @@ export default class MouseRotatable implements IObject, IRotatable, IEventable {
         // Make the leash rotate when the mouse moves.
         this.leash.enableAutoUpdate();
         // Update the mesh when the leash changes (i.e. the mouse moves).
-        this.leash.onChange((leash: DMeshLeash2D) => {
+        this.leash.onChange((leash: DMeshLeash3D) => {
             this.setMeshRotation(leash.leash);
             this.emitter.trigger("rotate", [leash]);
         });
@@ -48,18 +62,12 @@ export default class MouseRotatable implements IObject, IRotatable, IEventable {
     }
 
     /**
-     * Rotate the mesh based on the given leash.
+     * Rotate the mesh based on the given direction vector along 
+     * the x-z-plane.
      */
-    setMeshRotation(leash: Vector2) {
-        const scene = this.transformNode.getScene();
-        const cameraPosition = scene!.activeCamera!.position;
-        // Angle of the camera position in relation to the x-axis within the x-z plane.
-        const cameraAngle = Math.atan2(cameraPosition.z, cameraPosition.x);
-        // Angle of the leash relative to the x-axis coming from 
-        // the mesh on the 2D screen.
-        const leashAngle = Math.atan2(leash.y, leash.x);
-        const angle = leashAngle - cameraAngle + (Math.PI / 2);
-        this.setAngle(angle);
+    setMeshRotation(direction: Vector2) {
+        const directionAngle = Math.atan2(direction.y, direction.x);
+        this.setAngle((-1) * directionAngle - Math.PI);
         return this;
     }
 

@@ -81,17 +81,14 @@ export default class AnimatedRotatable implements IObject, IRotatable, IAutoUpda
         // Average the last N turn observations.
         const averagedAngleDifference = this.turnAngleMovingAverage
                                                                     .observe(timeAdjustedAngleDifference).get();
-        // 30 is a magic number found via trial and error for making the turn animation look correct.
+        // 80 is a magic number found via trial and error for making the turn animation look correct.
         const newAnimationSpeed = this.originalAnimationSpeed * averagedAngleDifference * 80;
 
         const animation = this.animations[direction];
 
-        console.log(newAnimationSpeed);
-
         // If there is not enough of a different in the turn speed, we 
         // do not update it.
         if (Math.abs(newAnimationSpeed - this.currentAnimationSpeed) > 0.5) {
-            console.log(newAnimationSpeed);
             this.currentAnimationSpeed = newAnimationSpeed;
             animation.speedRatio = this.currentAnimationSpeed;
         }

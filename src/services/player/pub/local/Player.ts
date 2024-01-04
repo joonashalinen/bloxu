@@ -65,9 +65,8 @@ export default class Player implements IPlayer {
                         bodyId: string
                     ) {
                         const body = this.getObject(bodyId) as PlayerBody;
-                        // Shoot in the direction pointed to by the 
-                        // aim arrow around the character.
-                        const direction = body.arrowMeshRotatable.direction;
+                        // Shoot in the direction faced by the character.
+                        const direction = (body.body.as("MouseRotatable") as MouseRotatable).direction;
                         body.shoot(direction);
                         return {
                             direction: {x: direction.x, y: direction.y},

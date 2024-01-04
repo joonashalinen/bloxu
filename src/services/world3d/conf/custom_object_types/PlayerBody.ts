@@ -56,7 +56,7 @@ export default class PlayerBody {
 
         // Configure character controls.
         const controllableBuilder = new ControllableBuilder(characterMesh);
-        controllableBuilder.makeMovable(0.01, 0.7);
+        controllableBuilder.makeMovable(0.01);
         controllableBuilder.makeMouseRotatable();
         controllableBuilder.makeAnimatedRotatable(
             {
@@ -101,7 +101,7 @@ export default class PlayerBody {
         this.mainMesh = this.body.as("Physical").transformNode as Mesh;
 
         // Position the character at the given starting position.
-        controllableBuilder.topNode.position.set(startingPosition.x, startingPosition.y + 5, startingPosition.z);
+        controllableBuilder.topNode.position.set(startingPosition.x, startingPosition.y + 4, startingPosition.z);
         
         // Configure physics settings.
         const physicsAggregate = (this.body.as("Physical") as Physical).physicsAggregate;
@@ -114,7 +114,7 @@ export default class PlayerBody {
 
         // Create mesh of pointer arrow shown when aiming that is attached to the player character.
         this.arrowMesh = this.meshConstructors.DirectionArrow(`PlayerBody:arrowMesh?${this.id}`);
-         
+
         // Scale the mesh, since the model is too big by default.
         this.arrowMesh.scaling = this.arrowMesh.scaling.multiplyByFloats(0.5, 0.5, 0.5);
 
@@ -139,6 +139,9 @@ export default class PlayerBody {
 
         // Create glow layer for the glow effect of the plasma ball.
         this.glowLayer = new GlowLayer(`PlayerBody:glowLayer?${this.id}`, scene);
+
+        // Hide the aim arrow for now. We may want to remove the aim arrow completely.
+        this.disableUI();
     }
 
     /**
@@ -167,7 +170,7 @@ export default class PlayerBody {
         // Position the ball in front of the player character.
         const normalizedDirection = transformedDirection.normalize();
         ball.position = this.mainMesh.position.add(
-            new Vector3(normalizedDirection.x, 0, normalizedDirection.y)
+            new Vector3(normalizedDirection.x, 0, normalizedDirection.z)
         );
         // Add glow effect to ball.
         this.ballGlow = new Glow(this.glowLayer, this.scene);

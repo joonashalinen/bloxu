@@ -27,8 +27,8 @@ export default class ControllableBuilder {
     /**
      * Make the object movable.
      */
-    makeMovable(speed: number, boundingBoxSize: number) {
-        const physical = new Physical(this.topNode, boundingBoxSize, 1);
+    makeMovable(speed: number) {
+        const physical = new Physical(this.topNode, 1);
         const movable = new Movable(physical.physicsAggregate);
         movable.speed = speed;
 

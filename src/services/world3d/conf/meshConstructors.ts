@@ -49,7 +49,6 @@ export default async function(babylonjs: typeof BABYLON, scene: BABYLON.Scene) {
             mesh!.setEnabled(true);
 
             const animationGroupsClone = entries.animationGroups;
-            console.log(animationGroupsClone);
 
             // Label animations.
             const animationGroups = {

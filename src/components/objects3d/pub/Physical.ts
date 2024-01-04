@@ -11,15 +11,23 @@ export default class Physical implements IPhysical, IObject {
 
     constructor(
         wrappable: AbstractMesh,
-        size: number,
         mass: number
     ) {
+        // Calculate the size for the box wrapper.
+        const boundingPoints = wrappable.getHierarchyBoundingVectors();
+        const width = boundingPoints.max.x - boundingPoints.min.x;
+        const height = boundingPoints.max.y - boundingPoints.min.y;
+        wrappable.position.y = wrappable.position.y - height/2;
+
         // Create box wrapper for the given mesh.
         // This is so that physics behaves well 
         // for meshes of all shapes.
         this.transformNode = MeshBuilder.CreateBox(
             `Physical:transformNode?${wrappable.id}`, 
-            {size: size},
+            {
+                width: width,
+                height: height
+            },
             wrappable.getScene()
         );
         
