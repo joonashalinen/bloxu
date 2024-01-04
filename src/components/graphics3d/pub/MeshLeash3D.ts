@@ -1,4 +1,4 @@
-import { Engine, GroundMesh, Matrix, Mesh, PointerEventTypes, Scene, TransformNode, Vector2, Vector3 } from "@babylonjs/core";
+import { AbstractMesh, Engine, GroundMesh, Matrix, Mesh, PointerEventTypes, Scene, TransformNode, Vector2, Vector3 } from "@babylonjs/core";
 import EventEmitter from "../../events/pub/EventEmitter";
 import Movable from "../../objects3d/pub/Movable";
 import Follower from "../../objects3d/pub/Follower";
@@ -47,7 +47,9 @@ export default class MeshLeash3D {
         this.leashPlane.position = this.transformNode.position.clone();
 
         // Project the mouse position to the plane.
-        const pickedPoint = this.scene.pick(mousePosition.x, mousePosition.y).pickedPoint;
+        const pickedPoint = this.scene.pick(mousePosition.x, mousePosition.y, (mesh: AbstractMesh) => {
+            return mesh === this.leashPlane;
+        }).pickedPoint;
         const pickedPoint2D = new Vector2(pickedPoint!.x, pickedPoint!.z);
         const meshPosition2D = new Vector2(
             this.transformNode.getAbsolutePosition().x,
