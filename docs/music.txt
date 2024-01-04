@@ -1,14 +1,11 @@
 Battle music 1
-https://freemusicarchive.org/music/Lobo_Loco/after-twelve-is-green/valley-of-no-return-id-1512/
+https://freemusicarchive.org/music/anemoia/sedative/asymmetric
 
 Battle music 2
-https://freemusicarchive.org/music/Lobo_Loco/next-wildwestworld/little-canyon-ride-id-1308/
+https://freemusicarchive.org/music/anemoia/exosphere/zip-1
 
-Battle music 3
-https://freemusicarchive.org/music/Lobo_Loco/my-favorite-blues-country-compilation-remastered-1/speedy-delta-id-917-remastered/
-
-Main menu music
-https://freemusicarchive.org/music/Lobo_Loco/my-favorite-blues-country-compilation-remastered-1/place-on-my-bonfire-id-1170-remastered/
+Build music
+https://freemusicarchive.org/music/anemoia/exosphere/exosphere
 
 Shop theme
 https://freemusicarchive.org/music/holiznacc0/chiptunes
