@@ -15,6 +15,8 @@ import AnimatedMovable from "../../../../components/objects3d/pub/AnimatedMovabl
 import { ICharacterAnimations } from "../meshConstructors";
 import ControllableBuilder from "../../../../components/objects3d/pub/ControllableBuilder";
 import Physical from "../../../../components/objects3d/pub/Physical";
+import AnimatedRotatable from "../../../../components/objects3d/pub/AnimatedRotatable";
+import AnimatedMovableRotatable from "../../../../components/objects3d/pub/AnimatedMovableRotatable";
 
 /**
  * The body that the Player service owns and controls.
@@ -56,7 +58,14 @@ export default class PlayerBody {
         const controllableBuilder = new ControllableBuilder(characterMesh);
         controllableBuilder.makeMovable(0.01, 0.7);
         controllableBuilder.makeMouseRotatable();
-        // Undoes the AntiRelativeMovable, resulting in 
+        controllableBuilder.makeAnimatedRotatable(
+            {
+                left: this.characterAnimations["turnLeft"],
+                right: this.characterAnimations["turnRight"]
+            },
+            this.characterAnimations["idle"]
+        )
+        // Undoes the AntiRelativeMovable (applied below), resulting in 
         // moving in the original movement direction.
         controllableBuilder.makeRelativeMovable();
         controllableBuilder.makeAnimatedMovable(
@@ -87,6 +96,7 @@ export default class PlayerBody {
         // Make AntiRelativeMovable to make character animations relative to the orientation.
         controllableBuilder.makeAntiRelativeMovable();
         controllableBuilder.makeCompassPointMovable();
+        controllableBuilder.makeAnimatedMovableRotatable();
         this.body = controllableBuilder.result;
         this.mainMesh = this.body.as("Physical").transformNode as Mesh;
 
@@ -221,12 +231,15 @@ export default class PlayerBody {
     enableAutoUpdate() {
         this.arrowMeshRotatable.enableAutoUpdate();
         (this.body.as("MouseRotatable") as MouseRotatable).enableAutoUpdate();
+        (this.body.as("AnimatedRotatable") as AnimatedRotatable).enableAutoUpdate();
+        (this.body.as("AnimatedMovableRotatable") as AnimatedMovableRotatable).enableAutoUpdate();
         (this.body.as("Physical") as Physical).physicsAggregate.body.getCollisionObservable().add((event) => {
             const bodyId = event.collidedAgainst.transformNode.id;
             if (bodyId.includes("PlayerBody:ball") && !bodyId.includes(this.id)) {
                 this.emitter.trigger("projectileHit", []);
             }
         });
+        return this;
     }
 
     /**

@@ -4,12 +4,13 @@ import DMeshLeash2D from "../../graphics3d/pub/DMeshLeash2D";
 import EventEmitter from "../../events/pub/EventEmitter";
 import IObject from "./IObject";
 import IRotatable from "./IRotatable";
+import IEventable from "../../events/pub/IEventable";
 
 /**
  * Wrapper for a mesh to make it always face 
  * the mouse pointer.
  */
-export default class MouseRotatable implements IObject, IRotatable {
+export default class MouseRotatable implements IObject, IRotatable, IEventable {
     leash: MeshLeash2D;
     angle: number = 0;
     direction: Vector2 = new Vector2(0, 0);
@@ -34,6 +35,7 @@ export default class MouseRotatable implements IObject, IRotatable {
             this.setMeshRotation(leash.leash);
             this.emitter.trigger("rotate", [leash]);
         });
+        return this;
     }
 
     /**
@@ -42,6 +44,7 @@ export default class MouseRotatable implements IObject, IRotatable {
     update(mousePos: Vector2) {
         this.leash.update(mousePos);
         this.setMeshRotation(this.leash.lastLeash);
+        return this;
     }
 
     /**
@@ -57,6 +60,7 @@ export default class MouseRotatable implements IObject, IRotatable {
         const leashAngle = Math.atan2(leash.y, leash.x);
         const angle = leashAngle - cameraAngle + (Math.PI / 2);
         this.setAngle(angle);
+        return this;
     }
 
     /**
@@ -66,5 +70,6 @@ export default class MouseRotatable implements IObject, IRotatable {
         this.angle = angle;
         this.direction = new Vector2(Math.cos(this.angle), Math.sin(this.angle));
         this.transformNode.rotationQuaternion = Quaternion.FromEulerAngles(0, this.angle, 0);
+        return this;
     }
 }

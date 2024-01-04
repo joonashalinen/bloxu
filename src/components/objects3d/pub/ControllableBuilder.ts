@@ -10,6 +10,8 @@ import IRotatable from "./IRotatable";
 import AnimatedMovable from "./AnimatedMovable";
 import CompassPointMovable from "./CompassPointMovable";
 import AntiRelativeMovable from "./AntiRelativeMovable";
+import AnimatedRotatable from "./AnimatedRotatable";
+import AnimatedMovableRotatable from "./AnimatedMovableRotatable";
 
 /**
  * A builder for objects that can be controlled.
@@ -17,7 +19,7 @@ import AntiRelativeMovable from "./AntiRelativeMovable";
 export default class ControllableBuilder {
     result = new Characterized<IObject>();
     topMovable: IMovable & IObject;
-    topRotatable: IRotatable;
+    topRotatable: IRotatable & IObject;
 
     constructor(public topNode: AbstractMesh) {
     }
@@ -52,6 +54,49 @@ export default class ControllableBuilder {
         }
         this.result.is(rotatable);
         this.topRotatable = rotatable;
+        return this;
+    }
+
+    /**
+     * Add turning animations to the object.
+     */
+    makeAnimatedRotatable(
+        animations: {left: AnimationGroup, right: AnimationGroup},
+        restAnimation: AnimationGroup
+    ) {
+        if (this.topRotatable === undefined) {
+            throw new Error("The object must first be a rotatable before it can become an AnimatedRotatable");
+        } 
+
+        const animatedRotatable = new AnimatedRotatable(this.topRotatable, animations, restAnimation);
+        this.result.is(animatedRotatable);
+        this.topRotatable = animatedRotatable;
+        return this;
+    }
+
+    /**
+     * Make the object (which is assumed to already be rotatable and movable with animations) 
+     * disable rotation animations whenever the object moves.
+     */
+    makeAnimatedMovableRotatable() {
+        if (this.result.as("Movable") === undefined) {
+            throw new Error(
+                "The object must first be an Movable before it can be made " + 
+                "an AnimatedMovableRotatable"
+            );
+        }
+        if (this.result.as("AnimatedRotatable") === undefined) {
+            throw new Error(
+                "The object must first be an AnimatedRotatable before it can be made " + 
+                "an AnimatedMovableRotatable"
+            );
+        }
+
+        const movable = this.result.as("Movable") as Movable;
+        const animatedRotatable = this.result.as("AnimatedRotatable") as AnimatedRotatable;
+        const animatedMovableRotatable = new AnimatedMovableRotatable(movable, animatedRotatable);
+        
+        this.result.is(animatedMovableRotatable);
         return this;
     }
 

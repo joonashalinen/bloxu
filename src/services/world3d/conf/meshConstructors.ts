@@ -11,6 +11,8 @@ export interface ICharacterAnimations {
     "moveBackwardRight": BABYLON.AnimationGroup, 
     "moveBackwardLeft": BABYLON.AnimationGroup, 
     "moveLeft": BABYLON.AnimationGroup,
+    "turnLeft": BABYLON.AnimationGroup,
+    "turnRight": BABYLON.AnimationGroup,
     "shoot": BABYLON.AnimationGroup
 }
 
@@ -47,6 +49,7 @@ export default async function(babylonjs: typeof BABYLON, scene: BABYLON.Scene) {
             mesh!.setEnabled(true);
 
             const animationGroupsClone = entries.animationGroups;
+            console.log(animationGroupsClone);
 
             // Label animations.
             const animationGroups = {
@@ -59,6 +62,8 @@ export default async function(babylonjs: typeof BABYLON, scene: BABYLON.Scene) {
                 "moveBackwardLeft": animationGroupsClone[3], 
                 "moveLeft": animationGroupsClone[7],
                 "moveForwardLeft": animationGroupsClone[5],
+                "turnRight": animationGroupsClone[13],
+                "turnLeft": animationGroupsClone[11],
                 "shoot": animationGroupsClone[9]
             } as ICharacterAnimations;
 
@@ -71,6 +76,8 @@ export default async function(babylonjs: typeof BABYLON, scene: BABYLON.Scene) {
             animationGroups.moveForwardRight.speedRatio = 1.2;
             animationGroups.moveBackwardLeft.speedRatio = 1.25;
             animationGroups.moveBackwardRight.speedRatio = 1.25;
+            animationGroups.turnLeft.speedRatio = 2;
+            animationGroups.turnRight.speedRatio = 2;
 
             return [
                 mesh,

@@ -5,8 +5,9 @@ import { PhysicsAggregate } from "@babylonjs/core/Physics";
 import IObject from "./IObject";
 import EventEmitter from "../../events/pub/EventEmitter";
 import IPhysical from "./IPhysical";
+import IEventable from "../../events/pub/IEventable";
 
-export default class Movable implements IObject, IMovable, DMovable, IPhysical {
+export default class Movable implements IObject, IMovable, DMovable, IPhysical, IEventable {
     direction = new Vector3(0, 0, 0);
     transformNode: TransformNode;
     physicsAggregate: PhysicsAggregate;
@@ -25,14 +26,27 @@ export default class Movable implements IObject, IMovable, DMovable, IPhysical {
             } else {
                 this.direction = this.direction.add(direction).normalize();
             }
+            this.updateVelocity();
+        }
+        if (this.direction.equals(new Vector3(0, 0, 0))) {
+            this.emitter.trigger("moveEnd");
         }
         return this;
     }
 
-    doOnTick(time: number): IObject {
+    /**
+     * Update the velocity of the physics body.
+     */
+    updateVelocity() {
         const mass = this.physicsAggregate.body.getMassProperties().mass;
         this.physicsAggregate.body.setLinearVelocity(this.direction.normalize().scale(mass! * this.speed));
         this.emitter.trigger("move");
+    }
+
+    doOnTick(time: number): IObject {
+        if (!this.direction.equals(new Vector3(0, 0, 0))) {
+            this.updateVelocity();
+        }
         return this;
     }
 
