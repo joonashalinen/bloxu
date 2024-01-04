@@ -90,7 +90,7 @@ export default class AnimatedRotatable implements IObject, IRotatable, IAutoUpda
 
         // If there is not enough of a different in the turn speed, we 
         // do not update it.
-        if (Math.abs(newAnimationSpeed - this.currentAnimationSpeed) > 1) {
+        if (Math.abs(newAnimationSpeed - this.currentAnimationSpeed) > 0.5) {
             console.log(newAnimationSpeed);
             this.currentAnimationSpeed = newAnimationSpeed;
             animation.speedRatio = this.currentAnimationSpeed;
@@ -138,7 +138,13 @@ export default class AnimatedRotatable implements IObject, IRotatable, IAutoUpda
         if (this.endTurnTimeout !== undefined) {
             clearTimeout(this.endTurnTimeout as number);
         }
+        // Go to the rest animation that 
+        // it will be the animation we continue from once 
+        // animations are enabled again.
         this.goToRestAnimation();
+        // However, we want the animation to not play
+        // while animations are disabled.
+        this.currentAnimation.stop();
         this.animationsEnabled = false;
     }
 
@@ -146,6 +152,11 @@ export default class AnimatedRotatable implements IObject, IRotatable, IAutoUpda
      * Enable rotation animations.
      */
     enableAnimations() {
+        // Continue animation we left on when 
+        // disabling.
+        if (this.currentAnimation !== undefined) {
+            this.currentAnimation.play(true);
+        }
         this.animationsEnabled = true;
     }
 
