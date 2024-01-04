@@ -11,11 +11,29 @@ export default class Follower implements ITickable {
     }
 
     /**
+     * Make the object update its position automatically 
+     * whenever the movable moves.
+     */
+    enableAutoUpdate() {
+        this.movable.emitter.on("move", () => {
+            this.update();
+        });
+    }
+
+    /**
+     * Make the object's position match the 
+     * position of the tracked object.
+     */
+    update() {
+        this.mesh.position = this.movable.physicsAggregate.transformNode.position.clone();
+    }
+
+    /**
      * Update the Follower's mesh position to 
      * match the position of the followed mesh.
      */
     doOnTick(time: number) {
-        this.mesh.position = this.movable.physicsAggregate.transformNode.position.clone();
+        this.update();
         return this;
     }
 }

@@ -192,7 +192,7 @@ export default class PlayerBody {
             currentAnimation.stop();
         }
         this.characterAnimations["shoot"].enableBlending = true;
-        this.characterAnimations["shoot"].blendingSpeed = 0.1;
+        this.characterAnimations["shoot"].blendingSpeed = 0.2;
         this.characterAnimations["shoot"].start();
         this.characterAnimations["shoot"].onAnimationEndObservable.add(() => {
             this.characterAnimations["idle"].start();
