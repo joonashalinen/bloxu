@@ -19,6 +19,17 @@ export default class Movable implements IObject, IMovable, DMovable, IPhysical, 
         this.physicsAggregate = physicsAggregate;
     }
 
+    /**
+     * Make the Movable keep itself in motion 
+     * automatically without needing to call 
+     * .doOnTick().
+     */
+    enableAutoUpdate() {
+        this.physicsAggregate.transformNode.getScene()!.onBeforeRenderObservable.add(() => {
+           this.doOnTick(0); 
+        });
+    }
+
     move(direction: Vector3, onlyInDirection: boolean = true): IMovable {
         if (!this.direction.equals(direction)) {
             if (onlyInDirection) {

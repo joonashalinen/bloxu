@@ -17,6 +17,7 @@ import ControllableBuilder from "../../../../components/objects3d/pub/Controllab
 import Physical from "../../../../components/objects3d/pub/Physical";
 import AnimatedRotatable from "../../../../components/objects3d/pub/AnimatedRotatable";
 import AnimatedMovableRotatable from "../../../../components/objects3d/pub/AnimatedMovableRotatable";
+import ProjectileWeapon from "../../../../components/objects3d/pub/ProjectileWeapon";
 
 /**
  * The body that the Player service owns and controls.
@@ -36,6 +37,8 @@ export default class PlayerBody {
     ballMovable: Movable;
     ballGlow: Glow;
     glowLayer: GlowLayer;
+
+    gun: ProjectileWeapon;
 
     emitter = new EventEmitter();
 
@@ -153,6 +156,24 @@ export default class PlayerBody {
 
         pistolMesh.attachToBone(characterSkeleton.bones[23], characterMesh.getChildren()[0] as Mesh);
 
+        this.gun = new ProjectileWeapon(
+            pistolMesh,
+            "plasmaPistol",
+            (id: string) => {
+                const ball = MeshBuilder.CreateSphere(
+                    `PlayerBody:ball?${this.id}`, 
+                    {diameter: 0.3}, 
+                    this.scene
+                );
+
+                // Add glow effect to ball.
+                const ballGlow = new Glow(this.glowLayer, this.scene);
+                ballGlow.apply(ball);
+                
+                return ball
+            }
+        );
+
     }
 
     /**
@@ -176,27 +197,7 @@ export default class PlayerBody {
         // These values were found by manual testing and a more in-depth 
         // exploration of why this is needed should be done.
         const transformedDirection = new Vector3(direction.x * (-1), 0, direction.y);
-        // Create ball mesh.
-        const ball = MeshBuilder.CreateSphere(`PlayerBody:ball?${this.id}`, {diameter: 0.3}, this.scene);
-        // Position the ball in front of the player character.
-        const normalizedDirection = transformedDirection.normalize();
-        ball.position = this.mainMesh.position.add(
-            new Vector3(normalizedDirection.x, 0, normalizedDirection.z)
-        );
-        // Add glow effect to ball.
-        this.ballGlow = new Glow(this.glowLayer, this.scene);
-        this.ballGlow.apply(ball);
-        // Enable physics for ball.
-        const physicsAggregate = new PhysicsAggregate(
-            ball, 
-            PhysicsShapeType.SPHERE, 
-            { mass: 0.1 }, 
-            this.scene
-        );
-        // Make the ball movable and set its course of motion.
-        this.ballMovable = new Movable(physicsAggregate);
-        this.ballMovable.speed = 80;
-        this.ballMovable.move(transformedDirection);
+        this.gun.shoot(transformedDirection);
 
         const currentAnimation = (this.body.as("AnimatedMovable") as AnimatedMovable).currentAnimation;
         if (currentAnimation !== undefined) {
