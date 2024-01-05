@@ -1,0 +1,15 @@
+{
+  "name": "bloxu-prototypes",
+  "version": "1.0.0",
+  "description": "Package where prototyping and feasibility testing is done for the bloxu game project.",
+  "main": "index.js",
+  "scripts": {
+    "build": "",
+    "start": "npx serve ./public"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "serve": "^14.2.1"
+  }
+}

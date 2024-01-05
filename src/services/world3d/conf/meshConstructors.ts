@@ -30,7 +30,14 @@ export default async function(babylonjs: typeof BABYLON, scene: BABYLON.Scene) {
         "player.glb",
         scene
     ));
-    playerMeshImport.meshes[0].setEnabled(false);
+    playerMeshImport.rootNodes[0].setEnabled(false);
+
+    const gunMeshImport = (await babylonjs.SceneLoader.LoadAssetContainerAsync(
+        "assets/models/",
+        "plasma_pistol.glb",
+        scene
+    ));
+    gunMeshImport.meshes[0].setEnabled(false);
 
     return {
         "DirectionArrow": (id: string) => {
@@ -41,14 +48,28 @@ export default async function(babylonjs: typeof BABYLON, scene: BABYLON.Scene) {
         },
         "Player": (id: string) => {
             const entries = playerMeshImport.instantiateModelsToScene();
+            const rootMesh = entries.rootNodes[0] as BABYLON.Mesh;
+            const characterMesh = rootMesh.getChildren()[0] as BABYLON.Mesh;
 
-            // Clone mesh.
-            const mesh = entries.rootNodes[0] as BABYLON.Mesh;
-            mesh!.rotate(babylonjs.Vector3.Up(), (-1) * Math.PI / 2);
-            mesh!.scaling = mesh!.scaling.scale(0.3);
-            mesh!.setEnabled(true);
+            console.log(characterMesh)
+            rootMesh!.rotate(babylonjs.Vector3.Up(), (-1) * Math.PI / 2);
+            characterMesh!.rotate(babylonjs.Vector3.Forward(), Math.PI / 2);
+            rootMesh!.position = new BABYLON.Vector3(0, 0, 0);
+            rootMesh!.scaling = rootMesh!.scaling.scale(0.3);
+            // entries.skeletons[0].bones.map((bone) => bone.scale(0.3, 0.3, 0.3, true));
+            rootMesh!.setEnabled(true);
+            characterMesh.id = id;
+            rootMesh.id = "Root:" + id;
+
+            const skeleton = entries.skeletons[0];
+            // @ts-ignore
+            skeleton.position = new BABYLON.Vector3(0, 0, 0);
+            // @ts-ignore
+            skeleton.scaling = new BABYLON.Vector3(0.3, 0.3, 0.3);
 
             const animationGroupsClone = entries.animationGroups;
+
+            console.log(animationGroupsClone);
 
             // Label animations.
             const animationGroups = {
@@ -79,9 +100,23 @@ export default async function(babylonjs: typeof BABYLON, scene: BABYLON.Scene) {
             animationGroups.turnRight.speedRatio = 2;
 
             return [
-                mesh,
-                animationGroups
+                rootMesh,
+                animationGroups,
+                skeleton
             ];
+        },
+        "PlasmaPistol": (id: string) => {
+            const entries = gunMeshImport.instantiateModelsToScene();
+            const mesh = entries.rootNodes[0] as BABYLON.Mesh;
+            mesh!.rotate(babylonjs.Vector3.Left(), (-1) * Math.PI - 0.4);
+            mesh!.rotate(babylonjs.Vector3.Forward(), Math.PI/2);
+            mesh!.rotate(babylonjs.Vector3.Up(), (-1) * Math.PI/2);
+            mesh!.scaling = new BABYLON.Vector3(5, 5, 5);
+            mesh.position = new BABYLON.Vector3(0, 10, 0);
+            mesh!.setEnabled(true);
+            mesh.id = id;
+
+            return mesh;
         }
     };
 }

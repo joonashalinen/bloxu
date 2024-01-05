@@ -1,4 +1,4 @@
-import { GlowLayer, Mesh, MeshBuilder, PhysicsAggregate, PhysicsShapeType, Scene, Vector2, Vector3 } from "@babylonjs/core";
+import { GlowLayer, Mesh, MeshBuilder, PhysicsAggregate, PhysicsShapeType, Scene, Skeleton, Vector2, Vector3 } from "@babylonjs/core";
 import Movable from "../../../../components/objects3d/pub/Movable";
 import Pointer from "../../../../components/objects3d/pub/Pointer";
 import Follower from "../../../../components/objects3d/pub/Follower";
@@ -45,13 +45,18 @@ export default class PlayerBody {
         public scene: Scene,
         public meshConstructors: {
             "DirectionArrow": (id: string) => Mesh,
-            "Player": (id: string) => [Mesh, ICharacterAnimations]
+            "Player": (id: string) => [Mesh, ICharacterAnimations, Skeleton],
+            "PlasmaPistol": (id: string) => Mesh
         }
     ) {
         this.startingPosition = startingPosition;
 
         // Load character mesh and animations.
-        const [characterMesh, characterAnimations] = meshConstructors["Player"](`PlayerBody:characterMesh?${this.id}`);
+        const [
+            characterMesh, 
+            characterAnimations, 
+            characterSkeleton
+        ] = meshConstructors["Player"](`PlayerBody:characterMesh?${this.id}`);
         this.characterAnimations = characterAnimations;
 
         // Configure character controls.
@@ -143,6 +148,11 @@ export default class PlayerBody {
 
         // Hide the aim arrow for now. We may want to remove the aim arrow completely.
         this.disableUI();
+
+        const pistolMesh = meshConstructors["PlasmaPistol"]("test");
+
+        pistolMesh.attachToBone(characterSkeleton.bones[23], characterMesh.getChildren()[0] as Mesh);
+
     }
 
     /**
