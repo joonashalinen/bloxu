@@ -68,7 +68,7 @@ export default class RemotePlayer implements IPlayer {
                         direction: DVector2
                     ) {
                         const body = this.getObject(bodyId) as PlayerBody;
-                        body.shoot(new this.babylonjs.Vector2(direction.x, direction.y));
+                        body.currentState.shoot(new this.babylonjs.Vector2(direction.x, direction.y));
                     }
                 }
             ])

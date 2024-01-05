@@ -16,6 +16,12 @@ export interface ICharacterAnimations {
     "shoot": BABYLON.AnimationGroup
 }
 
+export interface AnimatedMesh {
+    mesh: BABYLON.Mesh,
+    animations: ICharacterAnimations,
+    skeleton: BABYLON.Skeleton
+}
+
 export default async function(babylonjs: typeof BABYLON, scene: BABYLON.Scene) {
     const directionArrowMesh: BABYLON.AbstractMesh = (await babylonjs.SceneLoader.ImportMeshAsync(
         null,
@@ -69,8 +75,6 @@ export default async function(babylonjs: typeof BABYLON, scene: BABYLON.Scene) {
 
             const animationGroupsClone = entries.animationGroups;
 
-            console.log(animationGroupsClone);
-
             // Label animations.
             const animationGroups = {
                 "idle": animationGroupsClone[1], 
@@ -99,11 +103,11 @@ export default async function(babylonjs: typeof BABYLON, scene: BABYLON.Scene) {
             animationGroups.turnLeft.speedRatio = 2;
             animationGroups.turnRight.speedRatio = 2;
 
-            return [
-                rootMesh,
-                animationGroups,
-                skeleton
-            ];
+            return {
+                mesh: rootMesh,
+                animations: animationGroups,
+                skeleton: skeleton
+            };
         },
         "PlasmaPistol": (id: string) => {
             const entries = gunMeshImport.instantiateModelsToScene();

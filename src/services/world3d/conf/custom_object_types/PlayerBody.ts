@@ -12,12 +12,13 @@ import IObject from "../../../../components/objects3d/pub/IObject";
 import CompassPointMovable from "../../../../components/objects3d/pub/CompassPointMovable";
 import RelativeMovable from "../../../../components/objects3d/pub/RelativeMovable";
 import AnimatedMovable from "../../../../components/objects3d/pub/AnimatedMovable";
-import { ICharacterAnimations } from "../meshConstructors";
+import { AnimatedMesh, ICharacterAnimations } from "../meshConstructors";
 import ControllableBuilder from "../../../../components/objects3d/pub/ControllableBuilder";
 import Physical from "../../../../components/objects3d/pub/Physical";
 import AnimatedRotatable from "../../../../components/objects3d/pub/AnimatedRotatable";
 import AnimatedMovableRotatable from "../../../../components/objects3d/pub/AnimatedMovableRotatable";
 import ProjectileWeapon from "../../../../components/objects3d/pub/ProjectileWeapon";
+import BattleModeState from "./BattleModeState";
 
 /**
  * The body that the Player service owns and controls.
@@ -25,6 +26,7 @@ import ProjectileWeapon from "../../../../components/objects3d/pub/ProjectileWea
 export default class PlayerBody {
     body: Characterized<IObject> = new Characterized();
     ui: Characterized<IObject> = new Characterized();
+    currentState: BattleModeState;
 
     mainMesh: Mesh;
     characterAnimations: ICharacterAnimations;
@@ -48,22 +50,18 @@ export default class PlayerBody {
         public scene: Scene,
         public meshConstructors: {
             "DirectionArrow": (id: string) => Mesh,
-            "Player": (id: string) => [Mesh, ICharacterAnimations, Skeleton],
+            "Player": (id: string) => AnimatedMesh,
             "PlasmaPistol": (id: string) => Mesh
         }
     ) {
         this.startingPosition = startingPosition;
 
         // Load character mesh and animations.
-        const [
-            characterMesh, 
-            characterAnimations, 
-            characterSkeleton
-        ] = meshConstructors["Player"](`PlayerBody:characterMesh?${this.id}`);
-        this.characterAnimations = characterAnimations;
+        const character = meshConstructors["Player"](`PlayerBody:characterMesh?${this.id}`);
+        this.characterAnimations = character.animations;
 
         // Configure character controls.
-        const controllableBuilder = new ControllableBuilder(characterMesh);
+        const controllableBuilder = new ControllableBuilder(character.mesh);
         controllableBuilder.makeMovable(0.01);
         controllableBuilder.makeMouseRotatable();
         controllableBuilder.makeAnimatedRotatable(
@@ -89,17 +87,17 @@ export default class PlayerBody {
                 (new Vector2(-1, 1)).normalize(),
             ],
             [
-                characterAnimations["idle"],
-                characterAnimations["moveForward"],
-                characterAnimations["moveForwardRight"],
-                characterAnimations["moveRight"],
-                characterAnimations["moveBackwardRight"],
-                characterAnimations["moveBackward"],
-                characterAnimations["moveBackwardLeft"],
-                characterAnimations["moveLeft"],
-                characterAnimations["moveForwardLeft"]
+                character.animations["idle"],
+                character.animations["moveForward"],
+                character.animations["moveForwardRight"],
+                character.animations["moveRight"],
+                character.animations["moveBackwardRight"],
+                character.animations["moveBackward"],
+                character.animations["moveBackwardLeft"],
+                character.animations["moveLeft"],
+                character.animations["moveForwardLeft"]
             ],
-            characterAnimations["idle"]
+            character.animations["idle"]
         );
         // Make AntiRelativeMovable to make character animations relative to the orientation.
         controllableBuilder.makeAntiRelativeMovable();
@@ -146,34 +144,16 @@ export default class PlayerBody {
             ((this.body.as("RelativeMovable") as RelativeMovable).movable as Movable)
         );
 
-        // Create glow layer for the glow effect of the plasma ball.
-        this.glowLayer = new GlowLayer(`PlayerBody:glowLayer?${this.id}`, scene);
-
         // Hide the aim arrow for now. We may want to remove the aim arrow completely.
         this.disableUI();
 
         const pistolMesh = meshConstructors["PlasmaPistol"]("test");
-
-        pistolMesh.attachToBone(characterSkeleton.bones[23], characterMesh.getChildren()[0] as Mesh);
-
-        this.gun = new ProjectileWeapon(
-            pistolMesh,
-            "plasmaPistol",
-            (id: string) => {
-                const ball = MeshBuilder.CreateSphere(
-                    `PlayerBody:ball?${this.id}`, 
-                    {diameter: 0.3}, 
-                    this.scene
-                );
-
-                // Add glow effect to ball.
-                const ballGlow = new Glow(this.glowLayer, this.scene);
-                ballGlow.apply(ball);
-                
-                return ball
-            }
+        this.currentState = new BattleModeState(
+            this.id,
+            character,
+            this.body,
+            pistolMesh
         );
-
     }
 
     /**
@@ -182,34 +162,14 @@ export default class PlayerBody {
     doOnTick(time: number) {
         ((this.body.as("RelativeMovable") as RelativeMovable).movable as Movable).doOnTick(time);
         this.arrowFollower.doOnTick(time);
-        if (this.ballMovable !== undefined) {
-            this.ballMovable.doOnTick(time);
-        }
     }
 
     /**
-     * Shoot in the given direction. The direction is a 2D 
-     * vector where the y-component corresponds 
-     * with the z-coordinate in world space.
+     * Do the main action of the body in its current state. 
+     * Redirects the command to the current state.
      */
-    shoot(direction: Vector2) {
-        // Apply needed transformations to make the ball shoot out correctly.
-        // These values were found by manual testing and a more in-depth 
-        // exploration of why this is needed should be done.
-        const transformedDirection = new Vector3(direction.x * (-1), 0, direction.y);
-        this.gun.shoot(transformedDirection);
-
-        const currentAnimation = (this.body.as("AnimatedMovable") as AnimatedMovable).currentAnimation;
-        if (currentAnimation !== undefined) {
-            currentAnimation.stop();
-        }
-        this.characterAnimations["shoot"].enableBlending = true;
-        this.characterAnimations["shoot"].blendingSpeed = 0.2;
-        this.characterAnimations["shoot"].start();
-        this.characterAnimations["shoot"].onAnimationEndObservable.add(() => {
-            this.characterAnimations["idle"].start();
-            (this.body.as("AnimatedMovable") as AnimatedMovable).currentAnimation = this.characterAnimations["idle"];
-        });
+    doMainAction() {
+        this.currentState.doMainAction();
     }
 
     /**

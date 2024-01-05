@@ -65,9 +65,11 @@ export default class Player implements IPlayer {
                         bodyId: string
                     ) {
                         const body = this.getObject(bodyId) as PlayerBody;
-                        // Shoot in the direction faced by the character.
+                        // Make the body do its main action.
+                        // Depending on the current state of the body 
+                        // this may be either shooting or placing a block.
                         const direction = (body.body.as("MouseRotatable") as MouseRotatable).direction;
-                        body.shoot(direction);
+                        body.doMainAction();
                         return {
                             direction: {x: direction.x, y: direction.y},
                             body: body.state()
@@ -186,7 +188,7 @@ export default class Player implements IPlayer {
                         disableControls: boolean
                     ) {
                         const playerBody = this.getObject(playerBodyId) as PlayerBody;
-;
+
                         // If the player service should be disconnected 
                         // from any controls (such as the keyboard or mouse) 
                         // then we do not want to set the related event listeners.
