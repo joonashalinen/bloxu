@@ -5,17 +5,20 @@ import EventEmitter from "../../events/pub/EventEmitter";
 import IObject from "./IObject";
 import IRotatable from "./IRotatable";
 import IEventable from "../../events/pub/IEventable";
+import IAutoUpdatable from "./IAutoUpdatable";
 
 /**
  * Wrapper for a mesh to make it always face 
  * the mouse pointer.
  */
-export default class MouseRotatable implements IObject, IRotatable, IEventable {
+export default class MouseRotatable implements IAutoUpdatable, IObject, IRotatable {
     leash: MeshLeash3D;
     angle: number = 0;
     direction: Vector2 = new Vector2(0, 0);
     emitter = new EventEmitter();
     pickPlane: GroundMesh;
+    endTurnTimeout: unknown;
+    autoUpdateEnabled: boolean = false;
 
     constructor(public transformNode: TransformNode) {
         if (this.transformNode.getScene() === null) {
@@ -42,13 +45,43 @@ export default class MouseRotatable implements IObject, IRotatable, IEventable {
      * the mesh rotation whenever the mouse moves.
      */
     enableAutoUpdate() {
-        // Make the leash rotate when the mouse moves.
-        this.leash.enableAutoUpdate();
-        // Update the mesh when the leash changes (i.e. the mouse moves).
-        this.leash.onChange((leash: DMeshLeash3D) => {
-            this.setMeshRotation(leash.leash);
-            this.emitter.trigger("rotate", [leash]);
-        });
+        if (!this.autoUpdateEnabled) {
+            // Make the leash rotate when the mouse moves.
+            this.leash.enableAutoUpdate();
+            // Update the mesh when the leash changes (i.e. the mouse moves).
+            this.leash.onChange((leash: DMeshLeash3D) => {
+                if (this.autoUpdateEnabled) {
+                    // Clear timeout meant to end turning once 
+                    // no turning is happening anymore. We want to reset 
+                    // the timeout, since because we are here, then 
+                    // turning is clearly still happening.
+                    if (this.endTurnTimeout !== undefined) {
+                        clearTimeout(this.endTurnTimeout as number);
+                    }
+
+                    // Timeout that successfully goes once there has been no
+                    // turning for 0.1 seconds.
+                    this.endTurnTimeout = setTimeout(() => {
+                        this.emitter.trigger("rotateEnd");
+                    }, 100);
+
+                    this.setMeshRotation(leash.leash);
+                    this.emitter.trigger("rotate", [leash]);   
+                }
+            });
+        }
+        return this;
+    }
+
+    disableAutoUpdate() {
+        if (this.autoUpdateEnabled) {
+            // Clear the timeout that tells us when 
+            // turning has ended.
+            if (this.endTurnTimeout !== undefined) {
+                clearTimeout(this.endTurnTimeout as number);
+            }
+            this.autoUpdateEnabled = false;
+        }
         return this;
     }
 

@@ -20,27 +20,31 @@ export default class AnimatedRotatable implements IObject, IRotatable, IAutoUpda
     autoUpdateEnabled: boolean = false;
     autoUpdateInitialized: boolean = false;
     
-    endTurnTimeout: unknown;
     angle: number;
-    currentAnimation: AnimationGroup;
+    direction: Vector2;
+
+    currentAnimation: AnimationGroup | undefined;
     animationsEnabled: boolean = true;
+    rotationEnabled: boolean = true;
     originalAnimationSpeed: number;
     currentAnimationSpeed: number;
     turnAngleDifference = new TimeAdjustedDifference();
     turnAngleMovingAverage = new MovingAverage(300);
 
     constructor(
-        public rotatable: IRotatable & IObject, 
-        public animations: {left: AnimationGroup, right: AnimationGroup},
-        public restAnimation: AnimationGroup
+        public rotatable: IRotatable & IAutoUpdatable & IObject, 
+        public animations: {left: AnimationGroup, right: AnimationGroup}
     ) {
         this.angle = rotatable.angle;
+        this.direction = rotatable.direction;
         this.transformNode = rotatable.transformNode;
+
         // Enable animation blending.
-        [animations.left, animations.right, restAnimation].map((animation) => {
+        [animations.left, animations.right].map((animation) => {
             animation.enableBlending = true;
             animation.blendingSpeed = 0.2;
         });
+        
         this.originalAnimationSpeed = animations.left.speedRatio;
         this.currentAnimationSpeed = animations.left.speedRatio;
     }
@@ -78,40 +82,39 @@ export default class AnimatedRotatable implements IObject, IRotatable, IAutoUpda
         // Adjust the difference based on the passed time between updates.
         this.turnAngleDifference.observe(this.rotatable.angle, Date.now());
         const timeAdjustedAngleDifference = Math.abs(this.turnAngleDifference.get());
+
         // Average the last N turn observations.
         const averagedAngleDifference = this.turnAngleMovingAverage
                                                                     .observe(timeAdjustedAngleDifference).get();
+
         // 80 is a magic number found via trial and error for making the turn animation look correct.
         const newAnimationSpeed = this.originalAnimationSpeed * averagedAngleDifference * 80;
 
         const animation = this.animations[direction];
 
-        // If there is not enough of a different in the turn speed, we 
-        // do not update it.
-        if (Math.abs(newAnimationSpeed - this.currentAnimationSpeed) > 0.2) {
-            this.currentAnimationSpeed = newAnimationSpeed;
-            animation.speedRatio = this.currentAnimationSpeed;
+        if (this.rotationEnabled) {
+            // If there is not enough of a different in the turn speed, we 
+            // do not update it.
+            if (Math.abs(newAnimationSpeed - this.currentAnimationSpeed) > 0.2) {
+                this.currentAnimationSpeed = newAnimationSpeed;
+                animation.speedRatio = this.currentAnimationSpeed;
+            }
+
+            this.angle = this.rotatable.angle;
+            this.direction = this.rotatable.direction;
         }
 
-        this.angle = this.rotatable.angle;
-
         if (this.animationsEnabled) {
-
-            // Clear timeout meant to end turning once 
-            // no turning is happening anymore. We want to reset 
-            // the timeout, since because we are here, then 
-            // turning is clearly still happening.
-            if (this.endTurnTimeout !== undefined) {
-                clearTimeout(this.endTurnTimeout as number);
-            }
-            // Timeout that successfully goes once there has been no
-            // turning for 0.1 seconds.
-            this.endTurnTimeout = setTimeout(() => {
-                // Go back to rest animation.
+            // When the rotatable is no longer rotating.
+            this.rotatable.emitter.on("rotateEnd", () => {
+                // End the current animation if we are in one.
                 if (this.currentAnimation !== undefined) {this.currentAnimation.stop();}
-                this.currentAnimation = this.restAnimation;
-                this.restAnimation.play(true);
-            }, 100);
+                this.currentAnimation = undefined;
+                
+                if (this.rotationEnabled) {
+                    this.emitter.trigger("rotateEnd");
+                }
+            });
 
             // No change if we are still turning in the same direction.
             if (this.currentAnimation !== animation) {
@@ -125,6 +128,7 @@ export default class AnimatedRotatable implements IObject, IRotatable, IAutoUpda
 
     setAngle(angle: number) {
         this.rotatable.setAngle(angle);
+        this.direction = this.rotatable.direction;
         return this;
     }
 
@@ -132,16 +136,9 @@ export default class AnimatedRotatable implements IObject, IRotatable, IAutoUpda
      * Disable rotation animations.
      */
     disableAnimations() {
-        if (this.endTurnTimeout !== undefined) {
-            clearTimeout(this.endTurnTimeout as number);
+        if (this.currentAnimation !== undefined) {
+            this.currentAnimation.stop();
         }
-        // Go to the rest animation that 
-        // it will be the animation we continue from once 
-        // animations are enabled again.
-        this.goToRestAnimation();
-        // However, we want the animation to not play
-        // while animations are disabled.
-        this.currentAnimation.stop();
         this.animationsEnabled = false;
     }
 
@@ -158,15 +155,18 @@ export default class AnimatedRotatable implements IObject, IRotatable, IAutoUpda
     }
 
     /**
-     * Transition to idle animation.
+     * Enable rotation. Does not enable animations.
      */
-    goToRestAnimation() {
-        if (this.currentAnimation !== this.restAnimation) {
-            if (this.currentAnimation !== undefined) {
-                this.currentAnimation.stop();
-            }
-            this.restAnimation.play(true);
-            this.currentAnimation = this.restAnimation;
-        }
+    enableRotation() {
+        this.rotatable.enableAutoUpdate();
+        this.rotationEnabled = true;
+    }
+
+    /**
+     * Disable rotation. Does not disable animations.
+     */
+    disableRotation() {
+        this.rotatable.disableAutoUpdate();
+        this.rotationEnabled = false;
     }
 }

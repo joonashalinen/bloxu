@@ -1,84 +1,65 @@
-import { GlowLayer, Mesh, MeshBuilder, Vector2, Vector3 } from "@babylonjs/core";
-import Characterized from "../../../../components/classes/pub/Characterized";
-import IObject from "../../../../components/objects3d/pub/IObject";
-import { AnimatedMesh } from "../meshConstructors";
-import EventEmitter from "../../../../components/events/pub/EventEmitter";
-import ProjectileWeapon from "../../../../components/objects3d/pub/ProjectileWeapon";
-import Glow from "../../../../components/graphics3d/pub/effects/Glow";
-import AnimatedMovable from "../../../../components/objects3d/pub/AnimatedMovable";
-import MouseRotatable from "../../../../components/objects3d/pub/MouseRotatable";
+import { Vector2, Vector3 } from "@babylonjs/core";
+import ShootState from "./ShootState";
+import ActionModeState from "./ActionModeState";
+import ResourcedStateMachine from "../../../../components/computation/pub/ResourceStateMachine";
+import TStateResource from "../../../../components/objects3d/pub/creatures/TStateResource";
+import IActionableState, { isIActionableState } from "../../../../components/objects3d/pub/creatures/IActionableState";
+import IOwningState from "../../../../components/computation/pub/IOwningState";
+import OwningState from "../../../../components/computation/pub/OwningState";
+import IActionModeState from "./IActionModeState";
+import RotateState from "../../../../components/objects3d/pub/creatures/RotateState";
+import IMovableState from "../../../../components/objects3d/pub/creatures/IMovableState";
+import IRotatableState from "../../../../components/objects3d/pub/creatures/IRotatableState";
+import PermissionStateMachine from "../../../../components/computation/pub/PermissionStateMachine";
+import IState from "../../../../components/computation/pub/IState";
 
 /**
  * State where the player's body is battle-ready.
  */
-export default class BattleModeState {
-    gun: ProjectileWeapon;
-    emitter = new EventEmitter();
-    glowLayer: GlowLayer;
+export default class BattleModeState implements IActionModeState {
+    get angle() {
+        return (this.actionModeState.stateMachine.states["rotate"] as RotateState).rotatable.angle;
+    }
+
+    get isActive() {
+        return this.actionModeState.isActive;
+    }
+    set setIsActive(isActive: boolean) {
+        this.actionModeState.isActive = isActive;
+    }
 
     constructor(
-        public id: string,
-        public character: AnimatedMesh,
-        public body: Characterized<IObject>,
-        public pistolMesh: Mesh
+        public actionModeState: ActionModeState
     ) {
-        const scene = this.character.mesh.getScene();
-        this.glowLayer = new GlowLayer(`BattleModeState:glowLayer?${this.id}`, scene);
-
-        pistolMesh.attachToBone(this.character.skeleton.bones[23], this.character.mesh.getChildren()[0] as Mesh);
-
-        this.gun = new ProjectileWeapon(
-            pistolMesh,
-            "plasmaPistol",
-            (id: string) => {
-                const ball = MeshBuilder.CreateSphere(
-                    `PlayerBody:ball?${this.id}`, 
-                    {diameter: 0.3}, 
-                    scene
-                );
-
-                // Add glow effect to ball.
-                const ballGlow = new Glow(this.glowLayer, scene);
-                ballGlow.apply(ball);
-                
-                return ball
-            }
-        );
     }
-
-    /**
-     * Do the main action in this state. A main action is typically 
-     * what pressing the left mouse button does. For BattleModeState 
-     * the main action will shoot with the player's gun.
-     */
-    doMainAction() {
-        const direction = (this.body.as("MouseRotatable") as MouseRotatable).direction;
-        this.shoot(direction);
+    
+    start(): unknown {
+        this.actionModeState.start();
+        return this;
     }
-
-    /**
-     * Shoot in the given direction. The direction is a 2D 
-     * vector where the y-component corresponds 
-     * with the z-coordinate in world space.
-     */
-    shoot(direction: Vector2) {
-        // Apply needed transformations to make the ball shoot out correctly.
-        // These values were found by manual testing and a more in-depth 
-        // exploration of why this is needed should be done.
-        const transformedDirection = new Vector3(direction.x * (-1), 0, direction.y);
-        this.gun.shoot(transformedDirection);
-
-        const currentAnimation = (this.body.as("AnimatedMovable") as AnimatedMovable).currentAnimation;
-        if (currentAnimation !== undefined) {
-            currentAnimation.stop();
-        }
-        this.character.animations["shoot"].enableBlending = true;
-        this.character.animations["shoot"].blendingSpeed = 0.2;
-        this.character.animations["shoot"].start();
-        this.character.animations["shoot"].onAnimationEndObservable.add(() => {
-            this.character.animations["idle"].start();
-            (this.body.as("AnimatedMovable") as AnimatedMovable).currentAnimation = this.character.animations["idle"];
-        });
+    
+    end(): unknown {
+        this.actionModeState.end();
+        return this;
     }
-
+    
+    onEnd(callback: (nextStateId: string, ...args: unknown[]) => void): IState {
+        this.actionModeState.onEnd(callback);
+        return this;
+    }
+    
+    move(direction: Vector3): IMovableState {
+        this.actionModeState.move(direction);
+        return this;
+    }
+    
+    setAngle(angle: number): IRotatableState {
+        this.actionModeState.setAngle(angle);
+        return this;
+    }
+    
+    doMainAction(): IActionableState {
+        this.actionModeState.redirectAction<ShootState>("shoot", (state) => state.doMainAction());
+        return this;
+    }
 }

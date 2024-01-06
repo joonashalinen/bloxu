@@ -1,4 +1,4 @@
-import { GlowLayer, Mesh, MeshBuilder, PhysicsAggregate, PhysicsShapeType, Scene, Skeleton, Vector2, Vector3 } from "@babylonjs/core";
+import { GlowLayer, Mesh, Scene, Vector2, Vector3 } from "@babylonjs/core";
 import Movable from "../../../../components/objects3d/pub/Movable";
 import Pointer from "../../../../components/objects3d/pub/Pointer";
 import Follower from "../../../../components/objects3d/pub/Follower";
@@ -11,7 +11,6 @@ import Characterized from "../../../../components/classes/pub/Characterized";
 import IObject from "../../../../components/objects3d/pub/IObject";
 import CompassPointMovable from "../../../../components/objects3d/pub/CompassPointMovable";
 import RelativeMovable from "../../../../components/objects3d/pub/RelativeMovable";
-import AnimatedMovable from "../../../../components/objects3d/pub/AnimatedMovable";
 import { AnimatedMesh, ICharacterAnimations } from "../meshConstructors";
 import ControllableBuilder from "../../../../components/objects3d/pub/ControllableBuilder";
 import Physical from "../../../../components/objects3d/pub/Physical";
@@ -19,6 +18,23 @@ import AnimatedRotatable from "../../../../components/objects3d/pub/AnimatedRota
 import AnimatedMovableRotatable from "../../../../components/objects3d/pub/AnimatedMovableRotatable";
 import ProjectileWeapon from "../../../../components/objects3d/pub/ProjectileWeapon";
 import BattleModeState from "./BattleModeState";
+import IOwningState from "../../../../components/computation/pub/IOwningState";
+import PermissionStateMachine from "../../../../components/computation/pub/PermissionStateMachine";
+import TStateResource from "../../../../components/objects3d/pub/creatures/TStateResource";
+import ResourceStateMachine from "../../../../components/computation/pub/ResourceStateMachine";
+import IActionModeState from "./IActionModeState";
+import StateMachine from "../../../../components/computation/pub/StateMachine";
+import IdleState from "../../../../components/objects3d/pub/creatures/IdleState";
+import MoveState from "../../../../components/objects3d/pub/creatures/MoveState";
+import RotateState from "../../../../components/objects3d/pub/creatures/RotateState";
+import AnimatedMovable from "../../../../components/objects3d/pub/AnimatedMovable";
+import ShootState from "./ShootState";
+import ActionModeState from "./ActionModeState";
+import CompassPointVector from "../../../../components/graphics3d/pub/CompassPointVector";
+import IAutoUpdatable from "../../../../components/objects3d/pub/IAutoUpdatable";
+import IMovable from "../../../../components/objects3d/pub/IMovable";
+import IEventable from "../../../../components/events/pub/IEventable";
+import ToggleableMovable from "../../../../components/objects3d/pub/ToggleableMovable";
 
 /**
  * The body that the Player service owns and controls.
@@ -26,7 +42,13 @@ import BattleModeState from "./BattleModeState";
 export default class PlayerBody {
     body: Characterized<IObject> = new Characterized();
     ui: Characterized<IObject> = new Characterized();
-    currentState: BattleModeState;
+    bodyBuilder: ControllableBuilder;
+
+    actionStateMachine: PermissionStateMachine<
+        IOwningState<TStateResource>,
+        ResourceStateMachine<TStateResource>
+    >;
+    actionModeStateMachine: StateMachine<IActionModeState>;
 
     mainMesh: Mesh;
     characterAnimations: ICharacterAnimations;
@@ -102,8 +124,7 @@ export default class PlayerBody {
         // Make AntiRelativeMovable to make character animations relative to the orientation.
         controllableBuilder.makeAntiRelativeMovable();
         controllableBuilder.makeCameraRelativeMovable();
-        controllableBuilder.makeCompassPointMovable();
-        controllableBuilder.makeAnimatedMovableRotatable();
+        this.bodyBuilder = controllableBuilder;
         this.body = controllableBuilder.result;
         this.mainMesh = this.body.as("Physical").transformNode as Mesh;
 
@@ -146,14 +167,50 @@ export default class PlayerBody {
 
         // Hide the aim arrow for now. We may want to remove the aim arrow completely.
         this.disableUI();
+        
+        // vvv Create state machine for the character's action states. vvv
 
+        // Pistol mesh for the shooting state.
         const pistolMesh = meshConstructors["PlasmaPistol"]("test");
-        this.currentState = new BattleModeState(
-            this.id,
-            character,
-            this.body,
-            pistolMesh
+
+        // Vanilla state machine for switching between the action states.
+        const stateMachine = new StateMachine(
+            {
+                idle: new IdleState(character.animations.idle),
+                run: new MoveState(
+                    new ToggleableMovable(this.bodyBuilder.topMovable as unknown as IMovable & IEventable)
+                    , this.body.as("AnimatedMovable") as AnimatedMovable
+                ),
+                rotate: new RotateState(this.body.as("AnimatedRotatable") as AnimatedRotatable),
+                shoot: new ShootState(this.id, character, this.body.as("MouseRotatable") as MouseRotatable, pistolMesh)
+            }
         );
+
+        // Add the ability to transfer resources between the states.
+        const resourceStateMachine = new ResourceStateMachine(
+            stateMachine,
+            new Set<TStateResource>(["animation", "movement", "mainAction", "rotation"])
+        );
+
+        // Add override permission checks to the state machine. 
+        // Now forcing a state to change from one to another 
+        // will succeed only if it is in the set table of allowed overrides.
+        this.actionStateMachine = new PermissionStateMachine(resourceStateMachine)
+        this.actionStateMachine.overridePermissions = {
+            "shoot": ["rotate", "run", "idle"],
+            "run": ["idle", "rotate"],
+            "rotate": ["idle"],
+            "idle": []
+        };
+
+        // vvv Create state machine for the character's action mode states (such as build vs. battle mode) vvv
+
+        this.actionModeStateMachine = new StateMachine({
+            "battle": new BattleModeState(new ActionModeState(this.actionStateMachine))
+        });
+
+        // Activate battle mode by default.
+        this.actionModeStateMachine.activateState("battle");
     }
 
     /**
@@ -169,7 +226,8 @@ export default class PlayerBody {
      * Redirects the command to the current state.
      */
     doMainAction() {
-        this.currentState.doMainAction();
+        const activeState = Object.values(this.actionModeStateMachine.activeStates)[0];
+        activeState.doMainAction();
     }
 
     /**
@@ -207,7 +265,6 @@ export default class PlayerBody {
         this.arrowMeshRotatable.enableAutoUpdate();
         (this.body.as("MouseRotatable") as MouseRotatable).enableAutoUpdate();
         (this.body.as("AnimatedRotatable") as AnimatedRotatable).enableAutoUpdate();
-        (this.body.as("AnimatedMovableRotatable") as AnimatedMovableRotatable).enableAutoUpdate();
         (this.body.as("Physical") as Physical).physicsAggregate.body.getCollisionObservable().add((event) => {
             const bodyId = event.collidedAgainst.transformNode.id;
             if (bodyId.includes("PlayerBody:ball") && !bodyId.includes(this.id)) {
@@ -221,7 +278,20 @@ export default class PlayerBody {
      * Move in given compass point direction.
      */
     move(direction: TCompassPoint) {
-        (this.body.as("CompassPointMovable") as CompassPointMovable).move(direction);
+        // Transform compass direction into vector.
+        const directionVector = (new CompassPointVector(direction)).vector;
+        // Transform to 3D vector.
+        const direction3D = new Vector3(directionVector.x, 0, directionVector.y);
+        // Redirect action to the currently active state.
+        const activeState = Object.values(this.actionModeStateMachine.activeStates)[0];
+        activeState.move(direction3D);
+    }
+
+    /**
+     * Shoot in the given direction.
+     */
+    shoot(direction: Vector2) {
+        
     }
 
     /**

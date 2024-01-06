@@ -42,7 +42,7 @@ export default class ProjectileWeapon implements IProjectileWeapon {
         // Create projectile.
         const projectile = this.makeProjectileMesh(`ProjectileWeapon:projectile?${this.transformNode.id}`);
 
-        // Position the ball in front of the weapon holder.
+        // Position the projectile in front of the weapon.
         projectile.setAbsolutePosition(
             this.transformNode.absolutePosition.add(
                 new Vector3(normalizedDirection.x, 0, normalizedDirection.z)

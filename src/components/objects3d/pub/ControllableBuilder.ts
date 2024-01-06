@@ -13,6 +13,9 @@ import AntiRelativeMovable from "./AntiRelativeMovable";
 import AnimatedRotatable from "./AnimatedRotatable";
 import AnimatedMovableRotatable from "./AnimatedMovableRotatable";
 import CameraRelativeMovable from "./CameraRelativeMovable";
+import { isAutoUpdatable } from "./IAutoUpdatable";
+import { isEventable } from "../../events/pub/IEventable";
+import EventableMovable from "./EventableMovable";
 
 /**
  * A builder for objects that can be controlled.
@@ -69,7 +72,11 @@ export default class ControllableBuilder {
             throw new Error("The object must first be a rotatable before it can become an AnimatedRotatable");
         } 
 
-        const animatedRotatable = new AnimatedRotatable(this.topRotatable, animations, restAnimation);
+        if (!isAutoUpdatable(this.topRotatable)) {
+            throw new Error("The latest created rotatable must be an IAutoUpdatable.");
+        }
+
+        const animatedRotatable = new AnimatedRotatable(this.topRotatable, animations);
         this.result.is(animatedRotatable);
         this.topRotatable = animatedRotatable;
         return this;
@@ -186,7 +193,7 @@ export default class ControllableBuilder {
             throw new Error("The object must be made a movable before it can be made an animated movable.");
         }
 
-        const animatedMovable = new AnimatedMovable(this.topMovable, directions, animationGroups);
+        const animatedMovable = new AnimatedMovable(new EventableMovable(this.topMovable), directions, animationGroups);
         animatedMovable.currentAnimation = defaultAnimation;
         this.result.is(animatedMovable);
         this.topMovable = animatedMovable;
