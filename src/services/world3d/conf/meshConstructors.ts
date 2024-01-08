@@ -57,7 +57,6 @@ export default async function(babylonjs: typeof BABYLON, scene: BABYLON.Scene) {
             const rootMesh = entries.rootNodes[0] as BABYLON.Mesh;
             const characterMesh = rootMesh.getChildren()[0] as BABYLON.Mesh;
 
-            console.log(characterMesh)
             rootMesh!.rotate(babylonjs.Vector3.Up(), (-1) * Math.PI / 2);
             characterMesh!.rotate(babylonjs.Vector3.Forward(), Math.PI / 2);
             rootMesh!.position = new BABYLON.Vector3(0, 0, 0);

@@ -59,8 +59,8 @@ export default class PermissionStateMachine
     }
 
     changeState(from: string, to: string, args: unknown[]): IStateMachine<TState> {
-        const permissions = this.overridePermissions[from];
-        if (permissions.includes(to)) {
+        const permissions = this.overridePermissions[to];
+        if (permissions.includes(from)) {
             this._stateMachine.changeState(from, to, args);
         }
         return this;

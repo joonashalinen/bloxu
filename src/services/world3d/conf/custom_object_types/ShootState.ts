@@ -55,6 +55,8 @@ export default class ShootState extends OwningState<TStateResource> implements I
     }
 
     give(resources: Set<TStateResource>): Set<TStateResource> {
+        const givenResources = super.give(resources);
+
         if (resources.has("animation")) {
             this.pistolMesh.attachToBone(
                 this.character.skeleton.bones[23], 
@@ -62,7 +64,7 @@ export default class ShootState extends OwningState<TStateResource> implements I
             );
         }
 
-        return super.give(resources);
+        return givenResources;
     }
 
     take(resources: Set<TStateResource>): Set<TStateResource> {
@@ -81,8 +83,10 @@ export default class ShootState extends OwningState<TStateResource> implements I
      * the main action will shoot with the player's gun.
      */
     doMainAction() {
-        const direction = this.rotatable.direction;
-        this.shoot(direction);
+        if (this.isActive) {
+            const direction = this.rotatable.direction;
+            this.shoot(direction);
+        }
         return this;
     }
 
@@ -102,14 +106,20 @@ export default class ShootState extends OwningState<TStateResource> implements I
      * with the z-coordinate in world space.
      */
     shoot(direction: Vector2) {
-        // Apply needed transformations to make the ball shoot out correctly.
-        // These values were found by manual testing and a more in-depth 
-        // exploration of why this is needed should be done.
-        const transformedDirection = new Vector3(direction.x * (-1), 0, direction.y);
-        this.gun.shoot(transformedDirection);
+        if (this.isActive) {
+            if (this.ownedResources.has("mainAction")) {
+                // Apply needed transformations to make the ball shoot out correctly.
+                // These values were found by manual testing and a more in-depth 
+                // exploration of why this is needed should be done.
+                const transformedDirection = new Vector3(direction.x * (-1), 0, direction.y);
+                this.gun.shoot(transformedDirection);
+            }
 
-        this.character.animations["shoot"].enableBlending = true;
-        this.character.animations["shoot"].blendingSpeed = 0.2;
-        this.character.animations["shoot"].start();
+            if (this.ownedResources.has("animation")) {
+                this.character.animations["shoot"].enableBlending = true;
+                this.character.animations["shoot"].blendingSpeed = 0.2;
+                this.character.animations["shoot"].start();
+            }
+        }
     }
 }

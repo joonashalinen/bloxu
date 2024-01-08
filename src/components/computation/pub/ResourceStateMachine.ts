@@ -2,87 +2,149 @@ import IOwningState from "./IOwningState";
 import IState from "./IState";
 import IStateMachine from "./IStateMachine";
 
+interface TResourceOwner<TResource> {
+    id: string;
+    resource: TResource;
+}
+
 /**
  * A non-deterministic state machine that owns resources and gives 
- * exclusive control of them to the active states.
+ * exclusive control of them to the active states. ResourceStateMachine is 
+ * not concerned with the activation status of states but rather 
+ * cares about the ownership of resources. Consequently, calling 
+ * .activateState for an active state for example is valid and allowed, since 
+ * doing so may give it some resources even if it is not currently active. 
+ * Similarly, calling .activateState may not result in the state becoming active, 
+ * since if no resources are available, it will not take anything and 
+ * will thus not become active either.
  */
 export default class ResourceStateMachine<TResource> implements IStateMachine<IOwningState<TResource>> {
     availableResources: Set<TResource>;
     doBeforeChangeState: (nextStateId: string, ...args: unknown[]) => undefined = () => undefined;
-
-    get transformStateResult(): (...args: unknown[]) => unknown[] {
-        return this._stateMachine.transformStateResult;
-    }
-    set transformStateResult(f: (...args: unknown[]) => unknown[]) {
-        this._stateMachine.transformStateResult = f;
-    }
-
-    get states() {
-        return this._stateMachine.states;
-    }
-    set setStates(states: {[id: string]: IOwningState<TResource>}) {
-        this._stateMachine.states = states;
-    }
-
-    get activeStates() {
-        return this._stateMachine.activeStates;
-    }
-    set setActiveStates(states: {[id: string]: IOwningState<TResource>}) {
-        this._stateMachine.activeStates = states;
-    }
+    activeStates: { [id: string]: IOwningState<TResource>; } = {};
+    transformStateResult: (...args: unknown[]) => unknown[] = (...args: unknown[]) => args;
+    /**
+     * Stack that stores the information of which 
+     * state has owned which resource in which order.
+     * The record is kept only for resource transfers 
+     * where resources are forcibly taken from another state. Thanks to 
+     * the stack, once the receiving state ends, their resources can be returned 
+     * to the previous owner.
+     */
+    transferOwnershipStack: TResourceOwner<TResource>[] = [];
 
     constructor(
-        private _stateMachine: IStateMachine<IOwningState<TResource>>,
-        public allResources: Set<TResource>
+        public states: {[id: string]: IOwningState<TResource>},
+        public allResources: Set<TResource>,
+        public startingStateId?: string,
     ) {
         this.availableResources = allResources;
-        _stateMachine.doBeforeChangeState = (nextStateId: string, ...args: unknown[]) => {
-            const freedResources = args[0] as Set<TResource>;
-            freedResources.forEach((r) => this.availableResources.add(r));
-            this.doBeforeChangeState(nextStateId, args);
-        };
+        for (let id in states) {
+            let state = states[id];
+            this._listenToStateEnd(id, state);
+        }
+
+        if (startingStateId !== undefined) {
+            this.activateState(startingStateId);
+        }
     }
 
+    /**
+     * In ResourceStateMachine, changing state is interpreted as 
+     * moving resources from a state to another. The receiving state 
+     * has priority over the transferred resources, as opposed to 
+     * the behaviour of .deactivateState, where the released resources 
+     * may be distributed to other states that were waiting 
+     * to get them back.
+     */
     changeState(from: string, to: string, args: unknown[]): IStateMachine<IOwningState<TResource>> {
+        if (!(from in this.activeStates)) {
+            throw new Error("Trying to change from non-active state '" + from + "'.");
+        }
         const resources = args[0] as Set<TResource>;
         this.transferResources(from, to, resources);
         return this;
     }
 
-    activateState(id: string): IStateMachine<IOwningState<TResource>> {
-        this.giveResources(id, this.availableResources);
-        return this;
+    /**
+     * Let the state with the given id take all the resources 
+     * it wants from the list of available resources.
+     */
+    activateState(id: string): Set<TResource> {
+        if (this.availableResources.size !== 0) {
+            return this.giveResources(id, this.availableResources);
+        } else {
+            return new Set();
+        }
     }
 
-    deactivateState(id: string): IStateMachine<IOwningState<TResource>> {
-        const state = this._stateMachine.states[id];
-        state.ownedResources.forEach((r) => this.availableResources.add(r));
-        this._stateMachine.deactivateState(id);
-        return this;
+    /**
+     * Takes all owned resources from the state with the given id. 
+     * The freed resources are either returned to active states 
+     * that previously owned the resources and were waiting to get 
+     * them back or added to the list of available resources.
+     */
+    deactivateState(id: string): Set<TResource> {
+        const state = this.states[id];
+        if (state.ownedResources.size !== 0) {
+            return this.takeResources(id, state.ownedResources);
+        } else {
+            return new Set();
+        }
     }
 
     /**
      * Takes control of the given resources from one state and gives 
-     * them to another.
+     * them to another. States that previously had control over 
+     * the transferred resources are bypassed and not allowed 
+     * to hijack the resources.
      */
     transferResources(fromStateId: string, toStateId: string, resources: Set<TResource>) {
-        this.takeResources(fromStateId, resources);
+        // Take the resources from the resource-giving state.
+        const takenResources = this.takeResources(fromStateId, resources, true);
+        // Give resources to the receiving state.
         this.giveResources(toStateId, resources);
+        return takenResources;
     }
 
     /**
      * Free the specified resources from the given state.
      */
-    takeResources(stateId: string, resources: Set<TResource>) {
-        const state = this.activeStates[stateId];
-        const freedResources = state.take(resources);
-        freedResources.forEach((r) => this.availableResources.add(r));
-        
-        // If the state no longer has any resources, 
-        // we want to deactivate it, since it is not doing anything 
-        // anyway.
-        if (state.ownedResources.size === 0) {
-            this._stateMachine.deactivateState(stateId);
+    takeResources(stateId: string, resources: Set<TResource>, stealing: boolean = false) {
+        if (stateId in this.activeStates) {
+            const state = this.activeStates[stateId];
+            if (!(state.isActive)) {
+                throw new Error(
+                    "State '" + stateId + "' is in the list of " + 
+                    "active states but is not active."
+                );
+            }
+            // Filter out resources that the state does not have.
+            const resourcesToTake = Array.from(resources).filter((r) => state.ownedResources.has(r));
+            // Take the resources from the state.
+            const freedResources = state.take(new Set(resourcesToTake));
+            
+            // If the state is no longer active.
+            if (state.ownedResources.size === 0) {
+                delete this.activeStates[stateId];
+            }
+
+            // If we are forcibly taking the resources 
+            // in order to give them to another state.
+            if (stealing) {
+                Array.from(freedResources).forEach((r) => {
+                    // Save the information that the resource-giving state 
+                    // owned the resource last before having it forcibly taken.
+                    this.transferOwnershipStack.push({id: stateId, resource: r});
+                    // Add back the resource to the available resources.
+                    this.availableResources.add(r)
+                });
+                return freedResources;
+            } else {
+                return this.redirectFreedResources(freedResources);
+            }
+        } else {
+            return new Set<TResource>();
         }
     }
 
@@ -100,10 +162,10 @@ export default class ResourceStateMachine<TResource> implements IStateMachine<IO
         
         const givenResources = state.give(availableToGive);
         givenResources.forEach((r) => this.availableResources.delete(r));
-        
+
         // If we gave resources to the state, then 
-        // it becomes active.
-        if (givenResources.size !== 0) {
+        // it becomes active if it was no already.
+        if (givenResources.size !== 0 && !(stateId in this.activeStates)) {
             this.activeStates[stateId] = this.states[stateId];
         }
 
@@ -137,6 +199,89 @@ export default class ResourceStateMachine<TResource> implements IStateMachine<IO
     ownerOfResource(resource: TResource) {
         return Object.values(this.activeStates).find((state) => {
             return state.ownedResources.has(resource);
+        });
+    }
+
+    /**
+     * Either give back the freed resources to the states that previously owned 
+     * them or add them to the list of available resources. Giving back 
+     * the resources is prioritized and if no state is waiting to get the 
+     * a resource back, then it will be added to available resources. 
+     */
+    redirectFreedResources(resources: Set<TResource>) {
+        // Return resources to possible previous owners
+        // from whom the resources were forcibly taken from.
+        const returnedResources = this.returnResources(resources);
+        // Resources that were not returned.
+        const unreturnedResources = new Set(Array.from(resources).filter((r) => !returnedResources.has(r)));
+        // Return unreturned resources to the pool of available resources.
+        unreturnedResources.forEach((r) => this.availableResources.add(r));
+        return unreturnedResources;
+    }
+
+    /**
+     * Return ownership of resources 
+     * to the state that last owned them before 
+     * having them forcibly taken.
+     */
+    returnResources(resources: Set<TResource>) {
+        const returnedResources = new Set<TResource>();
+        // Copy stack of ownerships.
+        const ownerships = [...this.transferOwnershipStack];
+        // Give back resources to previous owners. 
+        // Returns the indices of the ownerships that were returned.
+        // -1 means that no ownership was returned for that ownership record.
+        const ownershipRemovals = ownerships.map((ownership, index) => {
+            if (resources.has(ownership.resource)) {
+                const state = this.states[ownership.id];
+                // Give back the resource only if the state is still active.
+                // Otherwise, we do not wish to reactivate it.
+                if (state.isActive) {
+                    this.giveResources(ownership.id, new Set([ownership.resource]));
+                }
+                returnedResources.add(ownership.resource);
+                resources.delete(ownership.resource);
+                return index;
+            } else {
+                return -1;
+            }
+        });
+        // Filter out the -1's so that we have only the list of indices of 
+        // ownerships returned.
+        const ownershipIndicesToRemove = ownershipRemovals.filter((i) => i !== -1);
+        // Remove the ownership records of the ownerships that were returned.
+        // We remove them in descending order since the removals are done in-place.
+        ownershipIndicesToRemove.reverse().forEach((i) => this.transferOwnershipStack.splice(i, 1));
+        return returnedResources;
+    }
+
+    /**
+     * Add a listener for a state ending itself on its own.
+     */
+    private _listenToStateEnd(stateId: string, state: IOwningState<TResource>) {
+        state.onEnd((nextStateId: string, ...args: unknown[]) => {
+            if (nextStateId in this.activeStates) {
+                throw new Error("Trying to move to a state that is already active.");
+            }
+            const freedResources = args[0] as Set<TResource>;
+            // If there is a next state to go to.
+            if (nextStateId in this.states) {
+                // Next state.
+                const state = this.states[nextStateId] as IOwningState<TResource>;
+                // Resources the next state does not want.
+                const unwantedResources = new Set(Array.from(freedResources).filter((r) => !state.wantedResources.has(r)));
+                // Redirect the unwanted resources either to other states 
+                // or add them back to the list of available resources.
+                this.redirectFreedResources(unwantedResources);
+
+                this.doBeforeChangeState(nextStateId, args);
+                // Activate the next state.
+                this.activateState(nextStateId);
+            } else {
+                // Redirect all the resources either to other states 
+                // or add them back to the list of available resources.
+                this.redirectFreedResources(freedResources);
+            }
         });
     }
 }

@@ -60,5 +60,4 @@ export default class Movable implements IObject, IMovable, DMovable, IPhysical, 
         }
         return this;
     }
-
 }

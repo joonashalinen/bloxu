@@ -16,12 +16,10 @@ export default abstract class OwningState<TResource> implements IOwningState<TRe
     }
 
     start(availableResources: Set<TResource>): Set<TResource> {
-        this.isActive = true;
         return this.give(availableResources);
     }
 
     end(): Set<TResource> {
-        this.isActive = false;
         return this.take(this.ownedResources);
     }
 
@@ -54,7 +52,7 @@ export default abstract class OwningState<TResource> implements IOwningState<TRe
     protected _endSelf(nextStateId: string) {
         if (this.isActive) {
             const freedResources = this.end();
-            this.emitter.trigger("end", [nextStateId, freedResources]);
+            this.emitter.trigger("end", [nextStateId, [freedResources]]);
         }
     }
 }

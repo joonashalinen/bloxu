@@ -30,6 +30,8 @@ export default class RotateState extends OwningState<TStateResource> implements 
     }
     
     give(resources: Set<TStateResource>): Set<TStateResource> {
+        const givenResources = super.give(resources);
+
         if (resources.has("animation")) {
             this.rotatable.enableAnimations();
         }
@@ -37,7 +39,7 @@ export default class RotateState extends OwningState<TStateResource> implements 
             this.rotatable.enableRotation();
         }
 
-        return super.give(resources);
+        return givenResources;
     }
 
     take(resources: Set<TStateResource>): Set<TStateResource> {

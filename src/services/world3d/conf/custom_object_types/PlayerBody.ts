@@ -173,8 +173,9 @@ export default class PlayerBody {
         // Pistol mesh for the shooting state.
         const pistolMesh = meshConstructors["PlasmaPistol"]("test");
 
-        // Vanilla state machine for switching between the action states.
-        const stateMachine = new StateMachine(
+        // State machine that handles ownership of resources 
+        // between the character action states.
+        const resourceStateMachine = new ResourceStateMachine(
             {
                 idle: new IdleState(character.animations.idle),
                 run: new MoveState(
@@ -183,12 +184,7 @@ export default class PlayerBody {
                 ),
                 rotate: new RotateState(this.body.as("AnimatedRotatable") as AnimatedRotatable),
                 shoot: new ShootState(this.id, character, this.body.as("MouseRotatable") as MouseRotatable, pistolMesh)
-            }
-        );
-
-        // Add the ability to transfer resources between the states.
-        const resourceStateMachine = new ResourceStateMachine(
-            stateMachine,
+            },
             new Set<TStateResource>(["animation", "movement", "mainAction", "rotation"])
         );
 
@@ -217,8 +213,6 @@ export default class PlayerBody {
      * Update player's body for the current render iteration.
      */
     doOnTick(time: number) {
-        ((this.body.as("RelativeMovable") as RelativeMovable).movable as Movable).doOnTick(time);
-        this.arrowFollower.doOnTick(time);
     }
 
     /**
@@ -262,7 +256,7 @@ export default class PlayerBody {
      * relevant events (i.e. collision).
      */
     enableAutoUpdate() {
-        this.arrowMeshRotatable.enableAutoUpdate();
+        (this.body.as("Movable") as Movable).enableAutoUpdate();
         (this.body.as("MouseRotatable") as MouseRotatable).enableAutoUpdate();
         (this.body.as("AnimatedRotatable") as AnimatedRotatable).enableAutoUpdate();
         (this.body.as("Physical") as Physical).physicsAggregate.body.getCollisionObservable().add((event) => {

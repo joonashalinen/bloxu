@@ -32,13 +32,12 @@ export default class MoveState extends OwningState<TStateResource> implements IM
         if (this.isActive) {
             this.movable.move(direction);
         }
-        if (direction.equals(new Vector3(0, 0, 0))) {
-            this.emitter.trigger("end", [this.end()])
-        }
         return this;
     }
 
     give(resources: Set<TStateResource>): Set<TStateResource> {
+        const givenResources = super.give(resources);
+        
         if (resources.has("animation")) {
             this.animatedMovable.enableAnimations();
         }
@@ -46,7 +45,7 @@ export default class MoveState extends OwningState<TStateResource> implements IM
             this.movable.enable();
         }
 
-        return super.give(resources);
+        return givenResources;
     }
 
     take(resources: Set<TStateResource>): Set<TStateResource> {

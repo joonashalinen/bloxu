@@ -51,8 +51,10 @@ describe('ResourceStateMachine', () => {
     beforeEach(() => {
         mockState1 = createMockState();
         mockState2 = createMockState();
-        stateMachine = new StateMachine({"state1": mockState1, "state2": mockState2});
-        resourceStateMachine = new ResourceStateMachine(stateMachine, allResources);
+        resourceStateMachine = new ResourceStateMachine(
+            {"state1": mockState1, "state2": mockState2}, 
+            allResources
+        );
     });
 
     afterEach(() => {

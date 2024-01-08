@@ -24,22 +24,20 @@ export default class StateMachine<TState extends IState> implements IStateMachin
         }
     }
     
-    deactivateState(id: string): IStateMachine<TState> {
-        const state = this.activeStates[id];
-        if (state !== undefined) {
-            delete this.activeStates[id];
-            state.end();
+    deactivateState(id: string) {
+        if (!(id in this.activeStates)) {
+            throw new Error("Trying to deactivate state that is not active.");
         }
-        return this;
+        const state = this.activeStates[id];
+        delete this.activeStates[id];
+        return state.end();
     }
 
     changeState(from: string, to: string, args: unknown[] = []) {
         const fromState = this.states[from];
 
         if (fromState !== undefined) {
-            const endResult = fromState.end();
-            delete this.activeStates[from];
-
+            const endResult = this.deactivateState(from);
             this.doBeforeChangeState(to, [endResult]);
             this.activateState(to, this.transformStateResult([endResult]));
         } else {
@@ -53,10 +51,12 @@ export default class StateMachine<TState extends IState> implements IStateMachin
      * Start given state with given args.
      */
     activateState(id: string, args: unknown[] = []) {
+        if (id in this.activeStates) {
+            throw new Error("Trying to activate state that is already active.");
+        }
         const state = this.states[id];
         this.activeStates[id] = state;
-        state.start(...args);
-        return this;
+        return state.start(...args);
     }
 
     /**
@@ -64,9 +64,12 @@ export default class StateMachine<TState extends IState> implements IStateMachin
      */
     private _listenToStateEnd(stateId: string, state: TState) {
         state.onEnd((nextState: string, ...args: unknown[]) => {
+            if (!(stateId in this.activeStates)) {
+                throw new Error("Trying to end a state that is not active.");
+            }
             delete this.activeStates[stateId];
             this.doBeforeChangeState(nextState, args);
-            this.activateState(nextState, this.transformStateResult(args));
+            this.activateState(nextState, this.transformStateResult(...args));
         });
     }
 }

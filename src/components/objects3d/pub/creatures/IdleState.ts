@@ -17,11 +17,13 @@ export default class IdleState extends OwningState<TStateResource> {
     }
 
     give(resources: Set<TStateResource>): Set<TStateResource> {
+        const givenResources = super.give(resources);
+
         if (resources.has("animation")) {
             this.idleAnimation.play(true);
         }
 
-        return super.give(resources);
+        return givenResources;
     }
 
     take(resources: Set<TStateResource>): Set<TStateResource> {

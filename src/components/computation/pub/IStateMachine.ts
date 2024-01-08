@@ -10,12 +10,12 @@ export default interface IStateMachine<TState extends IState> {
     /**
      * Enter a state with given id.
      */
-    activateState(id: string, args: unknown[]): IStateMachine<TState>;
+    activateState(id: string, args: unknown[]): unknown;
 
     /**
      * Leave a state with given id.
      */
-    deactivateState(id: string): IStateMachine<TState>;
+    deactivateState(id: string): unknown;
 
     /**
      * Change activation from one state to another. The end result 
