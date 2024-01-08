@@ -52,10 +52,6 @@ export default class ActionModeState implements IActionModeState {
     }
 
     move(direction: Vector3): IMovableState {
-        console.log("");
-        console.log(this.stateMachine.activeStates);
-        console.log(this.stateMachine.resourceStateMachine.availableResources);
-        console.log("");
         return this.redirectAction<IMovableState>("run", (state) => state.move(direction));
     }
 
@@ -76,15 +72,28 @@ export default class ActionModeState implements IActionModeState {
      */
     redirectAction<TState>(stateId: string, doAction: (state: TState) => unknown) {
         const state = this.stateMachine.states[stateId] as unknown as TState & IOwningState<TStateResource>;
-        if (stateId in this.stateMachine.activeStates) {
+        if (state.ownedResources.size === state.wantedResources.size) {
+            // If state has all the resources it wants 
+            // then we can simply redirect the action to it.
             doAction(state);
         } else {
+            // Otherwise, the state does not 
+            // have some resources that it wants. In this case, 
+            // we want to attempt to gain control of those 
+            // resources.
             Object.keys(this.stateMachine.activeStates).forEach((activeStateId) => {
                 if (activeStateId !== stateId) {
                     this.stateMachine.changeState(activeStateId, stateId, [state.wantedResources]);
                 }
             });
-            doAction(state);
+            // If the state became active by gaining control 
+            // of some resources it wants, then we can 
+            // redirect the action to it. Otherwise, 
+            // the state has no control of any resources, 
+            // and thus it cannot do anything.
+            if (state.isActive) {
+                doAction(state);
+            }
         }
         return this;
     }
