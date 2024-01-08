@@ -1,17 +1,21 @@
 import IDirectionController from "../../../components/controls/pub/IDirectionController";
 import ProxyMessenger from "../../../components/messaging/pub/ProxyMessenger";
 import { DMessage } from "../../../components/messaging/pub/DMessage";
-import TCompassPoint from "../../../components/geometry/pub/TCompassPoint";
+import IPointerController from "../../../components/controls/pub/IPointerController";
+import MessageFactory from "../../../components/messaging/pub/MessageFactory";
+import DVector2 from "../../../components/graphics3d/pub/DVector2";
 
 /**
  * Class responsible for managing keyboard events and other input/output operations.
  */
 export default class IOService {
     proxyMessenger: ProxyMessenger<DMessage, DMessage>;
-    directionController: IDirectionController;
+    messageFactory: MessageFactory = new MessageFactory("ioService");
 
-    constructor(directionController: IDirectionController) {
-        this.directionController = directionController;
+    constructor(
+        public directionControllers: IDirectionController[],
+        public pointerControllers: IPointerController[]
+    ) {
         this.proxyMessenger = new ProxyMessenger<DMessage, DMessage>();
     }
 
@@ -19,40 +23,27 @@ export default class IOService {
      * Initialize the IOService.
      */
     initialize(): void {
-        this.directionController.onCompassPointChange(
-            this._handleCompassPointChange.bind(this)
+        this.directionControllers.forEach((controller, index) => {
+            controller.onDirectionChange((direction: DVector2) => {
+                this._notifyAll("IOService:<event>directionChange", [direction, index]);
+            });
+        });
+        this.pointerControllers.forEach((controller, index) => {
+            controller.onPoint((position: DVector2) => {
+                this._notifyAll("IOService:<event>point", [position, index]);
+            });
+            controller.onTrigger((position: DVector2, button: number) => {
+                this._notifyAll("IOService:<event>pointerTrigger", [position, button, index]);
+            });
+        });
+    }
+
+    /**
+     * Send and event to everyone in the service's environment.
+     */
+    private _notifyAll(event: string, args: unknown[]) {
+        this.proxyMessenger.postMessage(
+            this.messageFactory.createEvent("*", event, args)
         );
-    }
-
-    /**
-     * Handle the compassPointChange event from the direction controller.
-     */
-    private _handleCompassPointChange(compassPoint: TCompassPoint): void {
-        // Trigger an event with the direction information
-        this.proxyMessenger.postMessage({
-            sender: "ioService",
-            recipient: "*",
-            type: "event",
-            message: {
-                type: "IOService:<event>controllerCompassPointChange",
-                args: [compassPoint]
-            }
-        });
-    }
-
-    /**
-     * Handle the directionChange event from the direction controller.
-     */
-    private _handleDirectionChange(direction: { x: number; y: number }): void {
-        // Trigger an event with the direction information
-        this.proxyMessenger.postMessage({
-            sender: "ioService",
-            recipient: "*",
-            type: "event",
-            message: {
-                type: "controllerDirectionChange",
-                args: [direction]
-            }
-        });
     }
 }

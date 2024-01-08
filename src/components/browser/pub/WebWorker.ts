@@ -6,7 +6,7 @@ import EncodeableFunction from "../../types/EncodeableFunction";
 
 export interface BrowserWebWorker {
     postMessage(msg: unknown): void;
-    onmessage: Function;
+    onmessage: ((ev: MessageEvent<unknown>) => unknown) | null;
 }
 
 /**
@@ -89,7 +89,7 @@ export default class WebWorker<I, R> implements IMessenger<I, R> {
     }
 
     offMessage(handler: Function): WebWorker<I, R> {
-        this.worker.onmessage = undefined;
+        this.worker.onmessage = null;
         return this;
     }
 }

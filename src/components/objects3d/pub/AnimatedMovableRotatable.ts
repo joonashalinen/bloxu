@@ -1,13 +1,10 @@
 import { TransformNode } from "@babylonjs/core";
 import EventEmitter from "../../events/pub/EventEmitter";
 import IEventable from "../../events/pub/IEventable";
-import AnimatedMovable from "./AnimatedMovable";
 import AnimatedRotatable from "./AnimatedRotatable";
 import IAutoUpdatable from "./IAutoUpdatable";
 import IMovable from "./IMovable";
 import IObject from "./IObject";
-import IRotatable from "./IRotatable";
-import Movable from "./Movable";
 
 /**
  * An object that is both movable and rotatable with animations.
@@ -21,7 +18,7 @@ export default class AnimatedMovableRotatable implements IAutoUpdatable, IObject
     transformNode: TransformNode;
     
     constructor(
-        public movable: Movable, 
+        public movable: IMovable & IEventable, 
         public rotatable: AnimatedRotatable
     ) {
         this.transformNode = rotatable.transformNode;

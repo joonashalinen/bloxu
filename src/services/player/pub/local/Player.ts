@@ -8,11 +8,9 @@ import PlayerBody from "../../../world3d/conf/custom_object_types/PlayerBody";
 import SyncMessenger from "../../../../components/messaging/pub/SyncMessenger";
 import DPlayerBody from "../../../world3d/conf/custom_object_types/DPlayerBody";
 import DVector2 from "../../../../components/graphics3d/pub/DVector2";
-import TCompassPoint from "../../../../components/geometry/pub/TCompassPoint";
 import MouseRotatable from "../../../../components/objects3d/pub/MouseRotatable";
 
 export type DirectionEvent = {direction: DVector2, body: DPlayerBody};
-export type CompassPointEvent = {compassPoint: TCompassPoint, body: DPlayerBody};
 
 /**
  * Class that contains the operations and state 
@@ -30,8 +28,9 @@ export default class Player implements IPlayer {
 
     constructor(public playerId: string) {
         this.eventHandlers = {
-            "IOService:<event>controllerCompassPointChange": this.onControllerCompassPointChange.bind(this),
-            "World3D:<event>mouseDown": this.onMouseDown.bind(this),
+            "IOService:<event>directionChange": this.onControllerDirectionChange.bind(this),
+            "IOService:<event>pointerTrigger": this.onControllerPointerTrigger.bind(this),
+            "IOService:<event>point": this.onControllerPoint.bind(this),
             "World3D:Player:<event>rotate": this.onBodyRotate.bind(this),
             "World3D:Player:<event>projectileHit": this.onBodyProjectileHit.bind(this)
         };
@@ -52,9 +51,23 @@ export default class Player implements IPlayer {
     }
 
     /**
-     * When a mouse button has been pressed down on the game world's screen.
+     * When the controller's pointer has changed position.
      */
-    async onMouseDown(event: {x: number, y: number}) {
+    async onControllerPoint(position: DVector2, controllerIndex: number) {
+        this._modifyWorld(
+            [this.playerBodyId(), position], 
+            function(this: World3D, bodyId: string, position: DVector2) {
+                const body = this.getObject(bodyId) as PlayerBody;
+                body.point(new this.babylonjs.Vector2(position.x, position.y));
+        });
+    }
+
+    /**
+     * When a pointer control has been pressed down (e.g. a mouse button).
+     */
+    async onControllerPointerTrigger(position: DVector2, buttonIndex: number, controllerIndex: number) {
+        if (buttonIndex !== 0) {return}
+        if (controllerIndex !== 0) {return}
         // Shoot gun.
         const state = (await this.syncMessenger.postSyncMessage(
             this.messageFactory.createRequest("world3d", "modify", [
@@ -86,11 +99,12 @@ export default class Player implements IPlayer {
     }
 
     /**
-     * Does what Player wants to do when the controller's 
+     * Does what Player wants to do when the controller's main
      * direction control has changed (for example, the thumb joystick or WASD keys).
      */
-    async onControllerCompassPointChange(compassPoint: TCompassPoint) {
+    async onControllerDirectionChange(direction: DVector2, controllerIndex: number) {
         if (this.disableControls) {return}
+        if (controllerIndex !== 0) {return}
         if (this.initialized && this.spawned) {
             // Move the player's body in the controller's direction.
             const directionEvent = (await this.syncMessenger.postSyncMessage({
@@ -100,12 +114,13 @@ export default class Player implements IPlayer {
                 message: {
                     type: "modify",
                     args: [{
-                        boundArgs: [this.playerBodyId(), compassPoint],
-                        f: function(this: World3D, bodyId: string, compassPoint: TCompassPoint) {
+                        boundArgs: [this.playerBodyId(), direction],
+                        f: function(this: World3D, bodyId: string, direction: DVector2) {
                             const body = this.getObject(bodyId) as PlayerBody;
-                            body.move(compassPoint);
+                            const directionVector = new this.babylonjs.Vector2(direction.x, direction.y);
+                            body.move(directionVector);
                             return {
-                                compassPoint: compassPoint,
+                                direction: direction,
                                 body: body.state()
                             };
                         }
@@ -261,5 +276,19 @@ export default class Player implements IPlayer {
                 this.messageFactory.createEvent("*", "Player:<event>die", [this.playerId])
             );
         }
+    }
+
+    /**
+     * Call 'modify' on world3d.
+     */
+    private async _modifyWorld(boundArgs: unknown[], f: Function) {
+        return this.syncMessenger.postSyncMessage(
+            this.messageFactory.createRequest("world3d", "modify", [
+                {
+                    boundArgs: boundArgs,
+                    f: f
+                }
+            ])
+        );
     }
 }

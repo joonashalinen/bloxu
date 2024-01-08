@@ -40,6 +40,7 @@ export default class ToggleableMovable implements IMovable, IToggleable, IEventa
 
     disable(): IToggleable {
         this.isEnabled = false;
+        this.movable.move(new Vector3(0, 0, 0));
         return this;
     }
 }

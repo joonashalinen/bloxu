@@ -13,30 +13,33 @@ import MovingAverage from "../../statistics/pub/MovingAverage";
  * An IRotatable that has an animation associated with each 
  * rotation direction.
  */
-export default class AnimatedRotatable implements IObject, IRotatable, IAutoUpdatable, IEventable {
-    emitter = new EventEmitter();
+export default class AnimatedRotatable implements IObject, IRotatable {
     transformNode: TransformNode;
     
-    autoUpdateEnabled: boolean = false;
-    autoUpdateInitialized: boolean = false;
-    
-    angle: number;
-    direction: Vector2;
-
     currentAnimation: AnimationGroup | undefined;
     animationsEnabled: boolean = true;
     rotationEnabled: boolean = true;
+
     originalAnimationSpeed: number;
     currentAnimationSpeed: number;
+
     turnAngleDifference = new TimeAdjustedDifference();
     turnAngleMovingAverage = new MovingAverage(300);
 
+    get angle() {
+        return this.rotatable.angle;
+    }
+    get direction() {
+        return this.rotatable.direction;
+    }
+    set setDirection(direction: Vector2) {
+        this.rotatable.direction = direction;
+    }
+
     constructor(
-        public rotatable: IRotatable & IAutoUpdatable & IObject, 
+        public rotatable: IRotatable & IObject, 
         public animations: {left: AnimationGroup, right: AnimationGroup}
     ) {
-        this.angle = rotatable.angle;
-        this.direction = rotatable.direction;
         this.transformNode = rotatable.transformNode;
 
         // Enable animation blending.
@@ -49,38 +52,14 @@ export default class AnimatedRotatable implements IObject, IRotatable, IAutoUpda
         this.currentAnimationSpeed = animations.left.speedRatio;
     }
 
-    enableAutoUpdate() {
-        if (isAutoUpdatable(this.rotatable)) {
-            if (!this.autoUpdateInitialized) {
-                this.rotatable.emitter.on("rotate", () => {
-                    if (this.autoUpdateEnabled) {
-                        this.update();
-                    }
-                });
-                this.autoUpdateInitialized = true;
-            }
-        }
-        this.autoUpdateEnabled = true;
-        return this;
-    }
-
-    disableAutoUpdate() {
-        this.autoUpdateEnabled = false;
-        return this;
-    }
-
-    /**
-     * Update animations.
-     */
-    update() {
-        if (this.rotatable.angle.toPrecision(3) === this.angle.toPrecision(3)) {return}
-
+    setAngle(angle: number) {
+        if (angle.toPrecision(3) === this.angle.toPrecision(3)) {return this}
         // Determine turn direction.
-        const direction = this.rotatable.angle < this.angle ? "left" : "right";
+        const direction = angle < this.angle ? "left" : "right";
 
         // Determine turn speed.
         // Adjust the difference based on the passed time between updates.
-        this.turnAngleDifference.observe(this.rotatable.angle, Date.now());
+        this.turnAngleDifference.observe(angle, Date.now());
         const timeAdjustedAngleDifference = Math.abs(this.turnAngleDifference.get());
 
         // Average the last N turn observations.
@@ -100,22 +79,10 @@ export default class AnimatedRotatable implements IObject, IRotatable, IAutoUpda
                 animation.speedRatio = this.currentAnimationSpeed;
             }
 
-            this.angle = this.rotatable.angle;
-            this.direction = this.rotatable.direction;
+            this.rotatable.setAngle(angle);
         }
 
         if (this.animationsEnabled) {
-            // When the rotatable is no longer rotating.
-            this.rotatable.emitter.on("rotateEnd", () => {
-                // End the current animation if we are in one.
-                if (this.currentAnimation !== undefined) {this.currentAnimation.stop();}
-                this.currentAnimation = undefined;
-                
-                if (this.rotationEnabled) {
-                    this.emitter.trigger("rotateEnd");
-                }
-            });
-
             // No change if we are still turning in the same direction.
             if (this.currentAnimation !== animation) {
                 // Change the animation.
@@ -124,11 +91,7 @@ export default class AnimatedRotatable implements IObject, IRotatable, IAutoUpda
                 animation.play(true);
             }
         }
-    }
-
-    setAngle(angle: number) {
-        this.rotatable.setAngle(angle);
-        this.direction = this.rotatable.direction;
+        
         return this;
     }
 
@@ -158,7 +121,6 @@ export default class AnimatedRotatable implements IObject, IRotatable, IAutoUpda
      * Enable rotation. Does not enable animations.
      */
     enableRotation() {
-        this.rotatable.enableAutoUpdate();
         this.rotationEnabled = true;
     }
 
@@ -166,7 +128,6 @@ export default class AnimatedRotatable implements IObject, IRotatable, IAutoUpda
      * Disable rotation. Does not disable animations.
      */
     disableRotation() {
-        this.rotatable.disableAutoUpdate();
         this.rotationEnabled = false;
     }
 }

@@ -10,6 +10,7 @@ import OwningState from "../../../computation/pub/OwningState";
 import IEventable from "../../../events/pub/IEventable";
 import IAutoUpdatable from "../IAutoUpdatable";
 import IToggleable from "../../../misc/pub/IToggleable";
+import EventableMovable from "../EventableMovable";
 
 /**
  * State of a creature where the creature is currently moving in a direction.
@@ -18,12 +19,13 @@ export default class MoveState extends OwningState<TStateResource> implements IM
     wantedResources: Set<TStateResource> = new Set(["animation", "movement"]);
 
     constructor(
-        public movable: IMovable & IEventable & IToggleable,
-        public animatedMovable: AnimatedMovable
+        public movable: IMovable & IToggleable,
+        public animatedMovable: AnimatedMovable,
+        public eventableMovable: EventableMovable
     ) {
         super();
 
-        movable.emitter.on("moveEnd", () => {
+        eventableMovable.emitter.on("moveEnd", () => {
             this._endSelf("idle");
         });
     }
@@ -49,7 +51,7 @@ export default class MoveState extends OwningState<TStateResource> implements IM
     }
 
     take(resources: Set<TStateResource>): Set<TStateResource> {
-        const takenResources = super.give(resources);
+        const takenResources = super.take(resources);
 
         if (takenResources.has("animation")) {
             this.animatedMovable.disableAnimations();

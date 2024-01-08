@@ -9,11 +9,4 @@ export default interface IDirectionController {
 
   // Method to unsubscribe from direction movement events
   offDirectionChange(callback: (direction: Vector2) => void): void;
-
-  /**
-   * When a discrete direction change event has occurred 
-   * in one of 8 compass point directions. A D-pad controller 
-   * could for example implement this for the main 4 cardinal directions.
-   */
-  onCompassPointChange(callback: (direction: TCompassPoint) => void): void;
 }

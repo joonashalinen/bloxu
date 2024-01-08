@@ -10,6 +10,7 @@ import IActionableState from "../../../../components/objects3d/pub/creatures/IAc
 import IActionModeState from "./IActionModeState";
 import PermissionStateMachine from "../../../../components/computation/pub/PermissionStateMachine";
 import EventEmitter from "../../../../components/events/pub/EventEmitter";
+import PermissionResourceStateMachine from "../../../../components/computation/pub/PermissionResourceStateMachine";
 
 /**
  * Contains the common functionalities between different action 
@@ -25,10 +26,7 @@ export default class ActionModeState implements IActionModeState {
     }
 
     constructor(
-        public stateMachine: PermissionStateMachine<
-            IOwningState<TStateResource>,
-            ResourceStateMachine<TStateResource>
-        >
+        public stateMachine: PermissionResourceStateMachine<TStateResource>
     ) {
     }
     
@@ -39,7 +37,7 @@ export default class ActionModeState implements IActionModeState {
                 this.stateMachine.deactivateState(stateId);
             }
         });
-        this.stateMachine.activateState("idle", [["animation"]]);
+        this.stateMachine.activateState("idle");
         return this;
     }
 
@@ -54,6 +52,10 @@ export default class ActionModeState implements IActionModeState {
     }
 
     move(direction: Vector3): IMovableState {
+        console.log("");
+        console.log(this.stateMachine.activeStates);
+        console.log(this.stateMachine.resourceStateMachine.availableResources);
+        console.log("");
         return this.redirectAction<IMovableState>("run", (state) => state.move(direction));
     }
 

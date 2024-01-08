@@ -51,8 +51,9 @@ export default abstract class OwningState<TResource> implements IOwningState<TRe
      */
     protected _endSelf(nextStateId: string) {
         if (this.isActive) {
+            console.log(nextStateId);
             const freedResources = this.end();
-            this.emitter.trigger("end", [nextStateId, [freedResources]]);
+            this.emitter.trigger("end", [nextStateId, freedResources]);
         }
     }
 }

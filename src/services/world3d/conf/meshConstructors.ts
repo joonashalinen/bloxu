@@ -116,7 +116,6 @@ export default async function(babylonjs: typeof BABYLON, scene: BABYLON.Scene) {
             mesh!.rotate(babylonjs.Vector3.Up(), (-1) * Math.PI/2);
             mesh!.scaling = new BABYLON.Vector3(5, 5, 5);
             mesh.position = new BABYLON.Vector3(0, 10, 0);
-            mesh!.setEnabled(true);
             mesh.id = id;
 
             return mesh;

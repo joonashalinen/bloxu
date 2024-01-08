@@ -1,13 +1,18 @@
-import { AbstractMesh, Mesh, TransformNode } from "@babylonjs/core";
-import Movable from "./Movable";
+import { TransformNode } from "@babylonjs/core";
 import ITickable from "./ITickable";
+import IEventable from "../../events/pub/IEventable";
+import IMovable from "./IMovable";
 
 /**
  * An object that follows a Movable, always 
  * keeping itself at the same position as the Movable.
  */
 export default class Follower implements ITickable {
-    constructor(public mesh: TransformNode, public movable: Movable) {
+    constructor(
+        public mesh: TransformNode, 
+        public trackedMesh: TransformNode,
+        public movable: IMovable & IEventable
+        ) {
     }
 
     /**
@@ -25,7 +30,7 @@ export default class Follower implements ITickable {
      * position of the tracked object.
      */
     update() {
-        this.mesh.position = this.movable.physicsAggregate.transformNode.position.clone();
+        this.mesh.position = this.trackedMesh.position.clone();
     }
 
     /**

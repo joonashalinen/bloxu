@@ -13,6 +13,7 @@ import UI from "../services/ui/pub/UI";
 import SyncMessenger from "../components/messaging/pub/SyncMessenger";
 import Mixin from "../components/classes/pub/Mixin";
 import OpenService from "../components/services/pub/OpenService";
+import MouseController from "../components/controls/pub/MouseController";
 
 class App {
 
@@ -53,7 +54,10 @@ class App {
         ) as (World3D & OpenService);
         
         // Create IOService.
-        var ioService = new IOService(new KeyboardController(document));
+        var ioService = new IOService(
+            [new KeyboardController(document)],
+            [new MouseController(world3d.canvas)]
+        );
 
         // Create UI service.
         var ui = new UI(document);

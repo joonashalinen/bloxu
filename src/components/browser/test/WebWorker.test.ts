@@ -4,7 +4,7 @@ import {describe, expect, test, jest, beforeEach} from '@jest/globals';
 // Mock BrowserWebWorker
 class MockWorker implements BrowserWebWorker {
     postMessage = jest.fn();
-    onmessage: Function = () => {};
+    onmessage: ((ev: unknown) => unknown) | null;
 }
 
 describe('WebWorker', () => {

@@ -23,10 +23,10 @@ export default class EventableMovable implements IMovable, IEventable, IObject {
     }
 
     move(direction: Vector3, onlyInDirection?: boolean | undefined): IMovable {
+        this.movable.move(direction, onlyInDirection);
         if (direction.equals(new Vector3(0, 0, 0))) {
             this.emitter.trigger("moveEnd");
         } else {
-            this.movable.move(direction, onlyInDirection);
             this.emitter.trigger("move", [direction]);
         }
         return this;

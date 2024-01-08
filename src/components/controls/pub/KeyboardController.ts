@@ -21,8 +21,9 @@ export default class KeyboardController implements IDirectionController {
     }
 
     /**
-     * Listen to direction events in the direction of one of 8 discrete 
-     * compass points.
+     * When a discrete direction change event has occurred 
+     * in one of 8 compass point directions. A D-pad controller 
+     * could for example implement this for the main 4 cardinal directions.
      */
     onCompassPointChange(callback: (direction: TCompassPoint) => void): void {
         this.emitter.on("compassPointChange", callback);
@@ -40,7 +41,7 @@ export default class KeyboardController implements IDirectionController {
         const compassPoint = this.determineCompassPoint();
 
         // Trigger an event with the direction information
-        this.emitter.trigger("directionChange", [{ direction }]);
+        this.emitter.trigger("directionChange", [direction]);
         this.emitter.trigger("compassPointChange", [compassPoint]);
     }
 
@@ -56,7 +57,7 @@ export default class KeyboardController implements IDirectionController {
         const compassPoint = this.determineCompassPoint();
 
         // Trigger an event with the direction information
-        this.emitter.trigger("directionChange", [{ direction }]);
+        this.emitter.trigger("directionChange", [direction]);
         this.emitter.trigger("compassPointChange", [compassPoint]);
     }
 

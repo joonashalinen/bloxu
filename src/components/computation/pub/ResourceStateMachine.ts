@@ -2,7 +2,7 @@ import IOwningState from "./IOwningState";
 import IState from "./IState";
 import IStateMachine from "./IStateMachine";
 
-interface TResourceOwner<TResource> {
+export interface TResourceOwner<TResource> {
     id: string;
     resource: TResource;
 }
@@ -225,6 +225,7 @@ export default class ResourceStateMachine<TResource> implements IStateMachine<IO
      * having them forcibly taken.
      */
     returnResources(resources: Set<TResource>) {
+        const resourcesClone = new Set([...Array.from(resources)]);
         const returnedResources = new Set<TResource>();
         // Copy stack of ownerships.
         const ownerships = [...this.transferOwnershipStack];
@@ -232,17 +233,22 @@ export default class ResourceStateMachine<TResource> implements IStateMachine<IO
         // Returns the indices of the ownerships that were returned.
         // -1 means that no ownership was returned for that ownership record.
         const ownershipRemovals = ownerships.map((ownership, index) => {
-            if (resources.has(ownership.resource)) {
-                const state = this.states[ownership.id];
-                // Give back the resource only if the state is still active.
-                // Otherwise, we do not wish to reactivate it.
-                if (state.isActive) {
-                    this.giveResources(ownership.id, new Set([ownership.resource]));
-                }
+            const state = this.states[ownership.id];
+            if (!state.isActive) {
+                // If the state is not active then 
+                // we do not want to return resources to it.
+                // We also want to remove it from 
+                // future consideration of regaining the resource.
+                return index;
+            } else if (resourcesClone.has(ownership.resource)) {
+                // Give back the resource.
+                this.giveResources(ownership.id, new Set([ownership.resource]));
                 returnedResources.add(ownership.resource);
-                resources.delete(ownership.resource);
+                resourcesClone.delete(ownership.resource);
                 return index;
             } else {
+                // Do not give back the resource but also 
+                // do not remove the state from the list of previous owners.
                 return -1;
             }
         });
@@ -260,21 +266,30 @@ export default class ResourceStateMachine<TResource> implements IStateMachine<IO
      */
     private _listenToStateEnd(stateId: string, state: IOwningState<TResource>) {
         state.onEnd((nextStateId: string, ...args: unknown[]) => {
-            if (nextStateId in this.activeStates) {
-                throw new Error("Trying to move to a state that is already active.");
-            }
             const freedResources = args[0] as Set<TResource>;
+            // Mark the state as no longer active.
+            delete this.activeStates[stateId];
             // If there is a next state to go to.
             if (nextStateId in this.states) {
                 // Next state.
-                const state = this.states[nextStateId] as IOwningState<TResource>;
+                const nextState = this.states[nextStateId] as IOwningState<TResource>;
                 // Resources the next state does not want.
-                const unwantedResources = new Set(Array.from(freedResources).filter((r) => !state.wantedResources.has(r)));
+                const unwantedResources = new Set(Array.from(freedResources).filter((r) => !nextState.wantedResources.has(r)));
                 // Redirect the unwanted resources either to other states 
                 // or add them back to the list of available resources.
                 this.redirectFreedResources(unwantedResources);
-
+                // Add the wanted resources to available resources 
+                // so that the next state can take control of them.
+                const wantedResourcesFreed = Array.from(freedResources).filter((r) => nextState.wantedResources.has(r));
+                wantedResourcesFreed.forEach((r) => this.availableResources.add(r));
                 this.doBeforeChangeState(nextStateId, args);
+                
+                console.log("");
+                console.log(stateId);
+                console.log(nextStateId);
+                console.log(unwantedResources);
+                console.log("");
+
                 // Activate the next state.
                 this.activateState(nextStateId);
             } else {

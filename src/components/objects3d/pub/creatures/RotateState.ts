@@ -8,6 +8,7 @@ import IRotatableState from "./IRotatableState";
 import TStateResource from "./TStateResource";
 import AnimatedRotatable from "../AnimatedRotatable";
 import OwningState from "../../../computation/pub/OwningState";
+import EventableRotatable from "../EventableRotatable";
 
 /**
  * State of a creature where the creature is currently rotating.
@@ -20,11 +21,11 @@ export default class RotateState extends OwningState<TStateResource> implements 
     }
 
     constructor(
-        public rotatable: AnimatedRotatable
+        public rotatable: EventableRotatable<AnimatedRotatable>
     ) {
         super();
 
-        rotatable.emitter.on("moveEnd", () => {
+        rotatable.emitter.on("rotateEnd", () => {
             this._endSelf("idle");
         });
     }
@@ -33,10 +34,10 @@ export default class RotateState extends OwningState<TStateResource> implements 
         const givenResources = super.give(resources);
 
         if (resources.has("animation")) {
-            this.rotatable.enableAnimations();
+            this.rotatable.rotatable.enableAnimations();
         }
         if (resources.has("rotation")) {
-            this.rotatable.enableRotation();
+            this.rotatable.rotatable.enableRotation();
         }
 
         return givenResources;
@@ -46,10 +47,10 @@ export default class RotateState extends OwningState<TStateResource> implements 
         const takenResources = super.take(resources);
 
         if (takenResources.has("animation")) {
-            this.rotatable.disableAnimations();
+            this.rotatable.rotatable.disableAnimations();
         }
         if (takenResources.has("rotation")) {
-            this.rotatable.disableRotation();
+            this.rotatable.rotatable.disableRotation();
         }
 
         return takenResources;

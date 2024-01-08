@@ -89,7 +89,7 @@ export default class ControllableBuilder {
     makeAnimatedMovableRotatable() {
         if (this.result.as("Movable") === undefined) {
             throw new Error(
-                "The object must first be an Movable before it can be made " + 
+                "The object must first be a Movable before it can be made " + 
                 "an AnimatedMovableRotatable"
             );
         }
@@ -100,11 +100,29 @@ export default class ControllableBuilder {
             );
         }
 
-        const movable = this.result.as("Movable") as Movable;
+        const movable = this.result.as("EventableMovable") as EventableMovable;
         const animatedRotatable = this.result.as("AnimatedRotatable") as AnimatedRotatable;
         const animatedMovableRotatable = new AnimatedMovableRotatable(movable, animatedRotatable);
         
         this.result.is(animatedMovableRotatable);
+        return this;
+    }
+
+    /**
+     * Make the movable have events.
+     */
+    makeEventableMovable() {
+        if (this.result.as("Movable") === undefined) {
+            throw new Error(
+                "The object must first be a Movable before it can be made " + 
+                "an EventableMovable"
+            );
+        }
+
+        const eventableMovable = new EventableMovable(this.topMovable);
+        this.topMovable = eventableMovable;
+
+        this.result.is(eventableMovable);
         return this;
     }
 
@@ -189,11 +207,11 @@ export default class ControllableBuilder {
         animationGroups: AnimationGroup[],
         defaultAnimation: AnimationGroup
     ) {
-        if (this.topMovable === undefined) {
-            throw new Error("The object must be made a movable before it can be made an animated movable.");
+        if (!(this.topMovable instanceof EventableMovable)) {
+            throw new Error("The object must be made last an EventableMovable before it can be made an animated movable.");
         }
 
-        const animatedMovable = new AnimatedMovable(new EventableMovable(this.topMovable), directions, animationGroups);
+        const animatedMovable = new AnimatedMovable(this.topMovable as EventableMovable, directions, animationGroups);
         animatedMovable.currentAnimation = defaultAnimation;
         this.result.is(animatedMovable);
         this.topMovable = animatedMovable;

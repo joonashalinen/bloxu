@@ -3,15 +3,12 @@ import DMovable from "./DMovable";
 import { TransformNode, Vector3 } from "@babylonjs/core";
 import { PhysicsAggregate } from "@babylonjs/core/Physics";
 import IObject from "./IObject";
-import EventEmitter from "../../events/pub/EventEmitter";
 import IPhysical from "./IPhysical";
-import IEventable from "../../events/pub/IEventable";
 
-export default class Movable implements IObject, IMovable, DMovable, IPhysical, IEventable {
+export default class Movable implements IObject, IMovable, DMovable, IPhysical {
     direction = new Vector3(0, 0, 0);
     transformNode: TransformNode;
     physicsAggregate: PhysicsAggregate;
-    emitter = new EventEmitter();
     speed: number = 10;
 
     constructor(physicsAggregate: PhysicsAggregate) {
@@ -39,9 +36,6 @@ export default class Movable implements IObject, IMovable, DMovable, IPhysical, 
             }
             this.updateVelocity();
         }
-        if (this.direction.equals(new Vector3(0, 0, 0))) {
-            this.emitter.trigger("moveEnd");
-        }
         return this;
     }
 
@@ -51,7 +45,6 @@ export default class Movable implements IObject, IMovable, DMovable, IPhysical, 
     updateVelocity() {
         const mass = this.physicsAggregate.body.getMassProperties().mass;
         this.physicsAggregate.body.setLinearVelocity(this.direction.normalize().scale(mass! * this.speed));
-        this.emitter.trigger("move");
     }
 
     doOnTick(time: number): IObject {

@@ -49,9 +49,6 @@ export default class AnimatedMovable implements IMovable, IObject, IEventable {
 
         if (this.movementEnabled) {
             this.movable.move(direction);
-            if (direction.equals(new Vector3(0, 0, 0))) {
-                this.emitter.trigger("moveEnd");
-            }
         }
 
         return this;

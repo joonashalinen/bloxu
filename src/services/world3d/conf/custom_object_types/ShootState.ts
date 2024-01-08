@@ -1,11 +1,7 @@
-import { GlowLayer, Mesh, MeshBuilder, Skeleton, TransformNode, Vector2, Vector3 } from "@babylonjs/core";
-import Characterized from "../../../../components/classes/pub/Characterized";
-import IObject from "../../../../components/objects3d/pub/IObject";
+import { GlowLayer, Mesh, MeshBuilder, Vector2, Vector3 } from "@babylonjs/core";
 import { AnimatedMesh } from "../meshConstructors";
 import ProjectileWeapon from "../../../../components/objects3d/pub/ProjectileWeapon";
 import Glow from "../../../../components/graphics3d/pub/effects/Glow";
-import AnimatedMovable from "../../../../components/objects3d/pub/AnimatedMovable";
-import MouseRotatable from "../../../../components/objects3d/pub/MouseRotatable";
 import IMovableState from "../../../../components/objects3d/pub/creatures/IMovableState";
 import IActionableState from "../../../../components/objects3d/pub/creatures/IActionableState";
 import TStateResource from "../../../../components/objects3d/pub/creatures/TStateResource";
@@ -49,7 +45,7 @@ export default class ShootState extends OwningState<TStateResource> implements I
             }
         );
 
-        this.character.animations["shoot"].onAnimationEndObservable.add(() => {
+        this.character.animations["shoot"].onAnimationGroupEndObservable.add(() => {
             this._endSelf("idle");
         });
     }
@@ -62,6 +58,7 @@ export default class ShootState extends OwningState<TStateResource> implements I
                 this.character.skeleton.bones[23], 
                 this.character.mesh.getChildren()[0] as Mesh
             );
+            this.pistolMesh.setEnabled(true);
         }
 
         return givenResources;
@@ -72,6 +69,7 @@ export default class ShootState extends OwningState<TStateResource> implements I
 
         if (resources.has("animation")) {
             this.pistolMesh.detachFromBone(true);
+            this.pistolMesh.setEnabled(false);
         }
 
         return takenResources;
@@ -83,7 +81,7 @@ export default class ShootState extends OwningState<TStateResource> implements I
      * the main action will shoot with the player's gun.
      */
     doMainAction() {
-        if (this.isActive) {
+        if (this.ownedResources.has("animation")) {
             const direction = this.rotatable.direction;
             this.shoot(direction);
         }
