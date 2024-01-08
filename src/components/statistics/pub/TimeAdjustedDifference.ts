@@ -34,10 +34,16 @@ export default class TimeAdjustedDifference {
             const observation1 = this.observationPair[0]!;
             const observation2 = this.observationPair[1]!;
             
-            return (
-                (Math.abs(observation2.value - observation1.value)) / 
-                (Math.abs(observation2.time - observation1.time))
-            );
+            const timeDifference = Math.abs(observation2.time - observation1.time);
+            if (timeDifference >= 0.0001) {
+                return (
+                    (Math.abs(observation2.value - observation1.value)) / 
+                    timeDifference
+                );
+            } else {
+                return 0;
+            }
+            
         } else {
             return 0;
         }
