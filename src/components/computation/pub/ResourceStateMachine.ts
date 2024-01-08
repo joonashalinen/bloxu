@@ -72,7 +72,7 @@ export default class ResourceStateMachine<TResource> implements IStateMachine<IO
      */
     activateState(id: string): Set<TResource> {
         if (this.availableResources.size !== 0) {
-            return this.giveResources(id, this.availableResources);
+            return this.giveResources(id, new Set(Array.from(this.availableResources)));
         } else {
             return new Set();
         }
@@ -87,7 +87,7 @@ export default class ResourceStateMachine<TResource> implements IStateMachine<IO
     deactivateState(id: string): Set<TResource> {
         const state = this.states[id];
         if (state.ownedResources.size !== 0) {
-            return this.takeResources(id, state.ownedResources);
+            return this.takeResources(id, new Set(Array.from(state.ownedResources)));
         } else {
             return new Set();
         }
@@ -283,12 +283,6 @@ export default class ResourceStateMachine<TResource> implements IStateMachine<IO
                 const wantedResourcesFreed = Array.from(freedResources).filter((r) => nextState.wantedResources.has(r));
                 wantedResourcesFreed.forEach((r) => this.availableResources.add(r));
                 this.doBeforeChangeState(nextStateId, args);
-                
-                console.log("");
-                console.log(stateId);
-                console.log(nextStateId);
-                console.log(unwantedResources);
-                console.log("");
 
                 // Activate the next state.
                 this.activateState(nextStateId);

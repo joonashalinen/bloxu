@@ -20,7 +20,7 @@ export default abstract class OwningState<TResource> implements IOwningState<TRe
     }
 
     end(): Set<TResource> {
-        return this.take(this.ownedResources);
+        return this.take(new Set(Array.from(this.ownedResources)));
     }
 
     onEnd(callback: (nextStateId: string, freedResources: Set<TResource>) => void): IOwningState<TResource> {
@@ -51,7 +51,6 @@ export default abstract class OwningState<TResource> implements IOwningState<TRe
      */
     protected _endSelf(nextStateId: string) {
         if (this.isActive) {
-            console.log(nextStateId);
             const freedResources = this.end();
             this.emitter.trigger("end", [nextStateId, freedResources]);
         }

@@ -83,7 +83,7 @@ export default class ActionModeState implements IActionModeState {
             // resources.
             Object.keys(this.stateMachine.activeStates).forEach((activeStateId) => {
                 if (activeStateId !== stateId) {
-                    this.stateMachine.changeState(activeStateId, stateId, [state.wantedResources]);
+                    this.stateMachine.changeState(activeStateId, stateId, [new Set(Array.from(state.wantedResources))]);
                 }
             });
             // If the state became active by gaining control 

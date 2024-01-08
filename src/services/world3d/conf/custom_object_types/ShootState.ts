@@ -15,6 +15,7 @@ export default class ShootState extends OwningState<TStateResource> implements I
     gun: ProjectileWeapon;
     glowLayer: GlowLayer;
     wantedResources: Set<TStateResource> = new Set(["animation", "rotation", "movement", "mainAction", "secondaryAction"]);
+    private _ignoreNextAnimationEnd = false;
 
     constructor(
         public id: string,
@@ -46,7 +47,11 @@ export default class ShootState extends OwningState<TStateResource> implements I
         );
 
         this.character.animations["shoot"].onAnimationGroupEndObservable.add(() => {
-            this._endSelf("idle");
+            if (!this._ignoreNextAnimationEnd) {
+                this._endSelf("idle");
+            } else {
+                this._ignoreNextAnimationEnd = false;
+            }
         });
     }
 
@@ -68,7 +73,7 @@ export default class ShootState extends OwningState<TStateResource> implements I
         const takenResources = super.take(resources);
 
         if (resources.has("animation")) {
-            this.pistolMesh.detachFromBone(true);
+            this.pistolMesh.detachFromBone();
             this.pistolMesh.setEnabled(false);
         }
 
@@ -116,7 +121,11 @@ export default class ShootState extends OwningState<TStateResource> implements I
             if (this.ownedResources.has("animation")) {
                 this.character.animations["shoot"].enableBlending = true;
                 this.character.animations["shoot"].blendingSpeed = 0.2;
-                this.character.animations["shoot"].start();
+                if (this.character.animations["shoot"].isPlaying) {
+                    this._ignoreNextAnimationEnd = true;
+                    this.character.animations["shoot"].stop();
+                }
+                this.character.animations["shoot"].play();
             }
         }
     }

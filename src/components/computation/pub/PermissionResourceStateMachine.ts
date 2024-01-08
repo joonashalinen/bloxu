@@ -96,11 +96,6 @@ export default class PermissionResourceStateMachine<TResource>
         
         this.resourceStateMachine.changeState(from, to, [nextStateResources]);
 
-        /* console.log("");
-        console.log(this.resourceStateMachine.states["shoot"].ownedResources);
-        console.log(this.resourceStateMachine.states["run"].ownedResources);
-        console.log(""); */
-
         return this;
     }
 }
