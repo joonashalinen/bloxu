@@ -76,6 +76,18 @@ export default class GameMaster {
             this.messageFactory.createRequest("player-2", "spawn", [{x: 0, y: 1.85, z: 20}])
         );
 
+        // Create skybox.
+        this.proxyMessenger.postMessage(
+            this.messageFactory.createRequest("world3d", "modify", [
+                {
+                    boundArgs: [],
+                    f: function(this: World3D) {
+                        const skybox = this.meshConstructors["SkyBox"]();
+                    }
+                }
+            ])
+        );
+
         // Center camera on the local player.
         setTimeout(() => {
                 this.proxyMessenger.postMessage(

@@ -166,7 +166,7 @@ export default class World3D implements IService {
 
         // Setup camera.
         this.camera = new babylonjs.ArcRotateCamera("camera1", (-1)*Math.PI/2, Math.PI/4, 20, new this.babylonjs.Vector3(0, 0, 0), this.scene);
-        // this.camera.attachControl(true);
+        this.camera.fov = 1.2;
 
         // Setup lighting.
         var light1: HemisphericLight = new HemisphericLight("light1", new Vector3(1, 1, 0), this.scene);

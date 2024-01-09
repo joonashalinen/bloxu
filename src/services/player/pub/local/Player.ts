@@ -31,6 +31,8 @@ export default class Player implements IPlayer {
             "IOService:<event>directionChange": this.onControllerDirectionChange.bind(this),
             "IOService:<event>pointerTrigger": this.onControllerPointerTrigger.bind(this),
             "IOService:<event>point": this.onControllerPoint.bind(this),
+            "IOService:<event>keyDown": this.onControllerKeyDown.bind(this),
+            "IOService:<event>keyUp": this.onControllerKeyUp.bind(this),
             "World3D:Player:<event>rotate": this.onBodyRotate.bind(this),
             "World3D:Player:<event>projectileHit": this.onBodyProjectileHit.bind(this)
         };
@@ -62,6 +64,34 @@ export default class Player implements IPlayer {
         });
     }
 
+    /**
+     * When a key has been pressed down on the controller.
+     */
+    async onControllerKeyDown(key: string, controllerIndex: number) {
+        if (controllerIndex !== 0) {return}
+
+        this._modifyWorld(
+            [this.playerBodyId(), key], 
+            function(this: World3D, bodyId: string, key: string) {
+                const body = this.getObject(bodyId) as PlayerBody;
+                body.pressFeatureKey(key);
+        });
+    }
+
+    /**
+     * When a pressed down key has been released on the controller.
+     */
+    async onControllerKeyUp(key: string, controllerIndex: number) {
+        if (controllerIndex !== 0) {return}
+
+        this._modifyWorld(
+            [this.playerBodyId(), key], 
+            function(this: World3D, bodyId: string, key: string) {
+                const body = this.getObject(bodyId) as PlayerBody;
+                body.releaseFeatureKey(key);
+        });
+    }
+    
     /**
      * When a pointer control has been pressed down (e.g. a mouse button).
      */

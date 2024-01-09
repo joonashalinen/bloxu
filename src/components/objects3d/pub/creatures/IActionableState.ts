@@ -9,5 +9,4 @@ export function isIActionableState(obj: Object): obj is IActionableState {
  */
 export default interface IActionableState extends IState {
     doMainAction(): IActionableState;
-    // doSecondaryAction(): IActionableState;
 }

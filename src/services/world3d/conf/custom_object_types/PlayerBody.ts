@@ -1,4 +1,4 @@
-import { GlowLayer, Mesh, Scene, Vector2, Vector3 } from "@babylonjs/core";
+import { Color3, GlowLayer, Mesh, MeshBuilder, Scene, StandardMaterial, Vector2, Vector3 } from "@babylonjs/core";
 import Movable from "../../../../components/objects3d/pub/Movable";
 import Pointer from "../../../../components/objects3d/pub/Pointer";
 import Follower from "../../../../components/objects3d/pub/Follower";
@@ -28,6 +28,9 @@ import ToggleableMovable from "../../../../components/objects3d/pub/ToggleableMo
 import EventableMovable from "../../../../components/objects3d/pub/EventableMovable";
 import EventableRotatable from "../../../../components/objects3d/pub/EventableRotatable";
 import PermissionResourceStateMachine from "../../../../components/computation/pub/PermissionResourceStateMachine";
+import BuildModeState from "./BuildModeState";
+import PlaceMeshInGridState from "./PlaceMeshInGridState";
+import MeshGrid from "../../../../components/objects3d/pub/MeshGrid";
 
 /**
  * The body that the Player service owns and controls.
@@ -71,6 +74,24 @@ export default class PlayerBody {
         // Load character mesh and animations.
         const character = meshConstructors["Player"](`PlayerBody:characterMesh?${this.id}`);
         this.characterAnimations = character.animations;
+
+        // Set character mesh color.
+        const characterMaterial = new StandardMaterial("PlayerBody:mesh:material?" + this.id, scene);
+        
+        if (this.id.includes("player-1")) {
+            const color = new Color3(0.8, 0.54, 0.54);
+            characterMaterial.diffuseColor = color;
+            characterMaterial.ambientColor = color;
+            characterMaterial.specularColor = color;
+            characterMaterial.emissiveColor = new Color3(0.32, 0.11, 0.11);
+        } else {
+            const color = new Color3(0.49, 0.59, 0.75);
+            characterMaterial.diffuseColor = color;
+            characterMaterial.ambientColor = color;
+            characterMaterial.specularColor = color;
+            characterMaterial.emissiveColor = new Color3(0.04, 0.09, 0.16);
+        }
+        character.mesh.getChildMeshes().forEach((m) => m.material = characterMaterial);
 
         // Configure character controls.
         const controllableBuilder = new ControllableBuilder(character.mesh);
@@ -203,7 +224,22 @@ export default class PlayerBody {
         // vvv Create state machine for the character's action mode states (such as build vs. battle mode) vvv
 
         this.actionModeStateMachine = new StateMachine({
-            "battle": new BattleModeState(new ActionModeState(this.actionStateMachine))
+            "battle": new BattleModeState(new ActionModeState(this.actionStateMachine, this.body)),
+            "build": new BuildModeState(
+                this.id, 
+                new ActionModeState(this.actionStateMachine, this.body), 
+                new PlaceMeshInGridState(
+                    this.id,
+                    this.body.as("EventableMovable") as EventableMovable,
+                    (this.body.as("Physical") as Physical).physicsAggregate.transformNode,
+                    new MeshGrid(
+                        MeshBuilder.CreateBox(this.id, {size: 1.4}, this.scene),
+                        1.5,
+                        {x: 3, y: 1, z: 3}
+                    )
+                ),
+                this.scene
+            )
         });
 
         // Activate battle mode by default.
@@ -297,8 +333,22 @@ export default class PlayerBody {
      * is pointing at a new position.
      */
     point(position: Vector2) {
-        const angle = (this.body.as("MouseRotatable") as MouseRotatable).calculateAngle(position);
-        this.setAngle(angle);
+        this.actionModeStateMachine.firstActiveState()!.point(position);
+    }
+
+    /**
+     * Press a key that may result in special actions 
+     * for the body.
+     */
+    pressFeatureKey(key: string) {
+        this.actionModeStateMachine.firstActiveState()!.pressFeatureKey(key);
+    }
+
+    /**
+     * Release a previously pressed down feature key.
+     */
+    releaseFeatureKey(key: string) {
+        this.actionModeStateMachine.firstActiveState()!.releaseFeatureKey(key);
     }
 
     /**

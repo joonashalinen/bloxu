@@ -54,9 +54,11 @@ class App {
         ) as (World3D & OpenService);
         
         // Create IOService.
+        const keyboardController = new KeyboardController(document);
         var ioService = new IOService(
-            [new KeyboardController(document)],
-            [new MouseController(world3d.canvas)]
+            [keyboardController],
+            [new MouseController(world3d.canvas)],
+            [keyboardController]
         );
 
         // Create UI service.

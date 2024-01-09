@@ -4,6 +4,7 @@ import { DMessage } from "../../../components/messaging/pub/DMessage";
 import IPointerController from "../../../components/controls/pub/IPointerController";
 import MessageFactory from "../../../components/messaging/pub/MessageFactory";
 import DVector2 from "../../../components/graphics3d/pub/DVector2";
+import IKeyController from "../../../components/controls/pub/IKeyController";
 
 /**
  * Class responsible for managing keyboard events and other input/output operations.
@@ -14,7 +15,8 @@ export default class IOService {
 
     constructor(
         public directionControllers: IDirectionController[],
-        public pointerControllers: IPointerController[]
+        public pointerControllers: IPointerController[],
+        public keyControllers: IKeyController[]
     ) {
         this.proxyMessenger = new ProxyMessenger<DMessage, DMessage>();
     }
@@ -28,12 +30,22 @@ export default class IOService {
                 this._notifyAll("IOService:<event>directionChange", [direction, index]);
             });
         });
+
         this.pointerControllers.forEach((controller, index) => {
             controller.onPoint((position: DVector2) => {
                 this._notifyAll("IOService:<event>point", [position, index]);
             });
             controller.onTrigger((position: DVector2, button: number) => {
                 this._notifyAll("IOService:<event>pointerTrigger", [position, button, index]);
+            });
+        });
+
+        this.keyControllers.forEach((controller, index) => {
+            controller.onKeyDown((key: string) => {
+                this._notifyAll("IOService:<event>keyDown", [key, index]);
+            });
+            controller.onKeyUp((key: string) => {
+                this._notifyAll("IOService:<event>keyUp", [key, index]);
             });
         });
     }

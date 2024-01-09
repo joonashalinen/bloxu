@@ -1,17 +1,13 @@
-import { Vector2, Vector3 } from "@babylonjs/core";
+import { Vector3 } from "@babylonjs/core";
 import ShootState from "./ShootState";
 import ActionModeState from "./ActionModeState";
-import ResourcedStateMachine from "../../../../components/computation/pub/ResourceStateMachine";
-import TStateResource from "../../../../components/objects3d/pub/creatures/TStateResource";
-import IActionableState, { isIActionableState } from "../../../../components/objects3d/pub/creatures/IActionableState";
-import IOwningState from "../../../../components/computation/pub/IOwningState";
-import OwningState from "../../../../components/computation/pub/OwningState";
+import IActionableState from "../../../../components/objects3d/pub/creatures/IActionableState";
 import IActionModeState from "./IActionModeState";
 import RotateState from "../../../../components/objects3d/pub/creatures/RotateState";
 import IMovableState from "../../../../components/objects3d/pub/creatures/IMovableState";
 import IRotatableState from "../../../../components/objects3d/pub/creatures/IRotatableState";
-import PermissionStateMachine from "../../../../components/computation/pub/PermissionStateMachine";
 import IState from "../../../../components/computation/pub/IState";
+import { IPointable } from "../../../../components/graphics2d/pub/IPointable";
 
 /**
  * State where the player's body is battle-ready.
@@ -32,14 +28,23 @@ export default class BattleModeState implements IActionModeState {
         public actionModeState: ActionModeState
     ) {
     }
+
+    point(pointerPosition: { x: number; y: number; }): IPointable {
+        this.actionModeState.point(pointerPosition);
+        return this;
+    }
     
     start(): unknown {
-        this.actionModeState.start();
+        if (!this.isActive) {
+            this.actionModeState.start();
+        }
         return this;
     }
     
     end(): unknown {
-        this.actionModeState.end();
+        if (this.isActive) {
+            this.actionModeState.end();
+        }
         return this;
     }
     
@@ -49,17 +54,37 @@ export default class BattleModeState implements IActionModeState {
     }
     
     move(direction: Vector3): IMovableState {
-        this.actionModeState.move(direction);
+        if (this.isActive) {
+            this.actionModeState.move(direction);
+        }
         return this;
     }
     
     setAngle(angle: number): IRotatableState {
-        this.actionModeState.setAngle(angle);
+        if (this.isActive) {
+            this.actionModeState.setAngle(angle);
+        }
         return this;
     }
     
     doMainAction(): IActionableState {
-        this.actionModeState.redirectAction<ShootState>("shoot", (state) => state.doMainAction());
+        if (this.isActive) {
+            this.actionModeState.redirectAction<ShootState>("shoot", (state) => state.doMainAction());
+        }
+        return this;
+    }
+
+    pressFeatureKey(key: string): BattleModeState {
+        if (this.isActive) {
+            if (key === "q") {
+                this.end();
+                this.actionModeState.emitter.trigger("end", ["build"]);
+            }
+        }
+        return this;
+    }
+
+    releaseFeatureKey(key: string): BattleModeState {
         return this;
     }
 }

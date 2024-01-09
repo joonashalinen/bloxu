@@ -38,6 +38,13 @@ export default async function(babylonjs: typeof BABYLON, scene: BABYLON.Scene) {
     ));
     playerMeshImport.rootNodes[0].setEnabled(false);
 
+    const skyboxMesh: BABYLON.AbstractMesh = (await babylonjs.SceneLoader.ImportMeshAsync(
+        null,
+        "assets/models/",
+        "skybox.glb",
+        scene
+    )).meshes[0];
+
     const gunMeshImport = (await babylonjs.SceneLoader.LoadAssetContainerAsync(
         "assets/models/",
         "plasma_pistol.glb",
@@ -119,6 +126,16 @@ export default async function(babylonjs: typeof BABYLON, scene: BABYLON.Scene) {
             mesh.id = id;
 
             return mesh;
+        },
+        "SkyBox": () => {
+            // skyboxMesh.material!.backFaceCulling = false;
+            // skyboxMesh.material!.disableLighting = true;
+            // skyboxMesh.scaling = new BABYLON.Vector3(1, 1, -1);
+            // skyboxMesh.rotate(BABYLON.Vector3.Right(), -0.5);
+            skyboxMesh.rotate(BABYLON.Vector3.Up(), 1.7);
+            skyboxMesh.translate(BABYLON.Vector3.Up(), -200);
+            // skyboxMesh.infiniteDistance = true;
+            return skyboxMesh;
         }
     };
 }

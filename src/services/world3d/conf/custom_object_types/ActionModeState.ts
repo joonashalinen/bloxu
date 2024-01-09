@@ -1,16 +1,18 @@
-import { Vector3 } from "@babylonjs/core";
+import { Vector2, Vector3 } from "@babylonjs/core";
 import IOwningState from "../../../../components/computation/pub/IOwningState";
 import IState from "../../../../components/computation/pub/IState";
-import ResourceStateMachine from "../../../../components/computation/pub/ResourceStateMachine";
 import IMovableState from "../../../../components/objects3d/pub/creatures/IMovableState";
 import IRotatableState from "../../../../components/objects3d/pub/creatures/IRotatableState";
 import RotateState from "../../../../components/objects3d/pub/creatures/RotateState";
 import TStateResource from "../../../../components/objects3d/pub/creatures/TStateResource";
 import IActionableState from "../../../../components/objects3d/pub/creatures/IActionableState";
 import IActionModeState from "./IActionModeState";
-import PermissionStateMachine from "../../../../components/computation/pub/PermissionStateMachine";
 import EventEmitter from "../../../../components/events/pub/EventEmitter";
 import PermissionResourceStateMachine from "../../../../components/computation/pub/PermissionResourceStateMachine";
+import { IPointable } from "../../../../components/graphics2d/pub/IPointable";
+import Characterized from "../../../../components/classes/pub/Characterized";
+import IObject from "../../../../components/objects3d/pub/IObject";
+import MouseRotatable from "../../../../components/objects3d/pub/MouseRotatable";
 
 /**
  * Contains the common functionalities between different action 
@@ -26,24 +28,44 @@ export default class ActionModeState implements IActionModeState {
     }
 
     constructor(
-        public stateMachine: PermissionResourceStateMachine<TStateResource>
+        public stateMachine: PermissionResourceStateMachine<TStateResource>,
+        public body: Characterized<IObject>
     ) {
+        
+    }
+
+    point(pointerPosition: { x: number; y: number; }): IPointable {
+        // Redirect the point event as a rotation event.
+        const angle = (this.body.as("MouseRotatable") as MouseRotatable).calculateAngle(
+            new Vector2(pointerPosition.x, pointerPosition.y)
+        );
+        this.setAngle(angle); 
+        return this;
+    }
+
+    triggerPointer(pointerPosition: { x: number; y: number; }, buttonIndex: number): IPointable {
+        // Do nothing.
+        return this;
     }
     
     start(): unknown {
-        this.isActive = true;
-        Object.keys(this.stateMachine.activeStates).forEach((stateId) => {
-            if (!this.knownStates.includes(stateId)) {
-                this.stateMachine.deactivateState(stateId);
-            }
-        });
-        this.stateMachine.activateState("idle");
+        if (!this.isActive) {
+            this.isActive = true;
+            Object.keys(this.stateMachine.activeStates).forEach((stateId) => {
+                if (!this.knownStates.includes(stateId)) {
+                    this.stateMachine.deactivateState(stateId);
+                }
+            });
+            this.stateMachine.activateState("idle");
+        }
         return this;
     }
 
     end(): unknown {
-        this.isActive = false;
-        return this;
+        if (this.isActive) {
+            this.isActive = false;
+            return this;
+        }
     }
 
     onEnd(callback: (nextStateId: string, ...args: unknown[]) => void): IState {
@@ -52,15 +74,40 @@ export default class ActionModeState implements IActionModeState {
     }
 
     move(direction: Vector3): IMovableState {
-        return this.redirectAction<IMovableState>("run", (state) => state.move(direction));
+        if (this.isActive) {
+            return this.redirectAction<IMovableState>("run", (state) => state.move(direction));
+        } else {
+            return this;
+        }
     }
 
     setAngle(angle: number): IRotatableState {
-        return this.redirectAction<IRotatableState>("rotate", (state) => state.setAngle(angle));
+        if (this.isActive) {
+            return this.redirectAction<IRotatableState>("rotate", (state) => state.setAngle(angle));
+        } else {
+            return this;
+        }
     }
 
     doMainAction(): IActionableState {
         // We have no main action.
+        return this;
+    }
+
+    /**
+     * Press a key that may result in special actions 
+     * for the body.
+     */
+    pressFeatureKey(key: string) {
+        // We do nothing.
+        return this;
+    }
+
+    /**
+     * Release a previously pressed down feature key.
+     */
+    releaseFeatureKey(key: string) {
+        // We do nothing.
         return this;
     }
 

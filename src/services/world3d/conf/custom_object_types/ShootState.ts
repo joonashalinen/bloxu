@@ -27,6 +27,11 @@ export default class ShootState extends OwningState<TStateResource> implements I
 
         const scene = this.character.mesh.getScene();
         this.glowLayer = new GlowLayer(`ShootState:glowLayer?${this.id}`, scene);
+        scene.meshes.forEach((m) => {
+            if (m instanceof Mesh) {
+                this.glowLayer.addExcludedMesh(m)
+            }
+        });
 
         this.gun = new ProjectileWeapon(
             pistolMesh,

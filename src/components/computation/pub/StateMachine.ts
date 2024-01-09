@@ -60,6 +60,21 @@ export default class StateMachine<TState extends IState> implements IStateMachin
     }
 
     /**
+     * Returns the first active state if such exists. If 
+     * the StateMachine is used as a deterministic state machine (i.e. there 
+     * can be only one active state at a time) then the returned value 
+     * is the currently active state.
+     */
+    firstActiveState() {
+        const activeStates = Object.values(this.activeStates);
+        if (activeStates.length !== 0) {
+            return activeStates[0];
+        } else {
+            return undefined;
+        }
+    }
+
+    /**
      * Add a listener for a state ending itself on its own.
      */
     private _listenToStateEnd(stateId: string, state: TState) {

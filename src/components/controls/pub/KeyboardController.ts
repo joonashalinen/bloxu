@@ -2,11 +2,12 @@ import { Vector2 } from "@babylonjs/core";
 import IDirectionController from "./IDirectionController";
 import EventEmitter from "../../../components/events/pub/EventEmitter";
 import TCompassPoint from "../../geometry/pub/TCompassPoint";
+import IKeyController from "./IKeyController";
 
 /**
  * Class responsible for managing keyboard events and implementing IDirectionController.
  */
-export default class KeyboardController implements IDirectionController {
+export default class KeyboardController implements IDirectionController, IKeyController {
     emitter: EventEmitter;
     document: Document;
     pressedKeys: Set<string>;
@@ -18,6 +19,14 @@ export default class KeyboardController implements IDirectionController {
 
         this.document.addEventListener("keydown", this.handleKeyDown.bind(this));
         this.document.addEventListener("keyup", this.handleKeyUp.bind(this));
+    }
+
+    onKeyDown(callback: (key: string) => void): void {
+        this.emitter.on("keyDown", callback);
+    }
+
+    onKeyUp(callback: (key: string) => void): void {
+        this.emitter.on("keyUp", callback);
     }
 
     /**
@@ -34,7 +43,7 @@ export default class KeyboardController implements IDirectionController {
      */
     handleKeyDown(event: KeyboardEvent): void {
         // Add the pressed key to the set
-        this.pressedKeys.add(event.key);
+        this.pressedKeys.add(event.key.toLowerCase());
 
         // Calculate the direction based on the pressed keys
         const direction = this.calculateDirection();
@@ -42,7 +51,7 @@ export default class KeyboardController implements IDirectionController {
 
         // Trigger an event with the direction information
         this.emitter.trigger("directionChange", [direction]);
-        this.emitter.trigger("compassPointChange", [compassPoint]);
+        this.emitter.trigger("keyDown", [event.key.toLowerCase()]);
     }
 
     /**
@@ -50,7 +59,7 @@ export default class KeyboardController implements IDirectionController {
      */
     handleKeyUp(event: KeyboardEvent): void {
         // Remove the released key from the set
-        this.pressedKeys.delete(event.key);
+        this.pressedKeys.delete(event.key.toLowerCase());
 
         // Calculate the direction based on the remaining pressed keys
         const direction = this.calculateDirection();
@@ -58,7 +67,7 @@ export default class KeyboardController implements IDirectionController {
 
         // Trigger an event with the direction information
         this.emitter.trigger("directionChange", [direction]);
-        this.emitter.trigger("compassPointChange", [compassPoint]);
+        this.emitter.trigger("keyUp", [event.key.toLowerCase()]);
     }
 
     /**
