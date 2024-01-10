@@ -63,13 +63,15 @@ export default class World3D implements IService {
 
         // Setup canvas element.
         this.canvas = document.createElement("canvas");
-        this.canvas.style.width = "90%";
-        this.canvas.style.height = "90%";
+        this.canvas.style.width = "100%";
+        this.canvas.style.height = "100%";
         this.canvas.id = "gameCanvas";
         this.hide();
         const canvasWrapper = document.createElement("div");
         canvasWrapper.appendChild(this.canvas);
         canvasWrapper.style.cursor = "crosshair";
+        canvasWrapper.style.width = "100%";
+        canvasWrapper.style.height = "100%";
         document.body.appendChild(canvasWrapper);
 
         this.engine = new Engine(this.canvas, true);
@@ -169,7 +171,8 @@ export default class World3D implements IService {
         this.camera.fov = 1.2;
 
         // Setup lighting.
-        var light1: HemisphericLight = new HemisphericLight("light1", new Vector3(1, 1, 0), this.scene);
+        var light: HemisphericLight = new HemisphericLight("light", new Vector3(-1, 1, 1), this.scene);
+        this.scene.ambientColor = new babylonjs.Color3(0.15, 0.3, 0.6);
 
         // hide/show the Inspector
         window.addEventListener("keydown", (ev) => {

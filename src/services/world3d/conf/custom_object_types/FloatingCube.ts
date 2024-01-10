@@ -23,7 +23,7 @@ export default class FloatingCube {
         material.diffuseColor = color;
         material.ambientColor = color;
         material.specularColor = color;
-        material.emissiveColor = new Color3(0.04, 0.09, 0.16);
+        // material.emissiveColor = new Color3(0.04, 0.09, 0.16);
         this.mesh.material = material;
         // Enable collision physics.
         this.physicsAggregate = new PhysicsAggregate(

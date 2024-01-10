@@ -1,6 +1,7 @@
 import { DMessage } from "../../../components/messaging/pub/DMessage";
 import ProxyMessenger from "../../../components/messaging/pub/ProxyMessenger";
 import SyncMessenger from "../../../components/messaging/pub/SyncMessenger";
+import MainMenu from "../prv/MainMenu";
 
 /**
  * Contains the state and operations of the UI service.
@@ -8,15 +9,27 @@ import SyncMessenger from "../../../components/messaging/pub/SyncMessenger";
 export default class UI {
     proxyMessenger = new ProxyMessenger<DMessage, DMessage>();
     syncMessenger: SyncMessenger;
-    codeText: HTMLParagraphElement;
+    codeText: HTMLSpanElement;
     eventHandlers: {[event: string]: Function}
+    mainMenu: MainMenu;
+    codeWrapper: HTMLElement;
 
-    constructor(public document: Document) {
+    constructor(
+        public document: Document,
+        public wrapper?: HTMLElement
+    ) {
         this.syncMessenger = new SyncMessenger(this.proxyMessenger);
 
-        const hostGameButton = document.createElement("button");
-        hostGameButton.innerText = "Host Game";
-        hostGameButton.addEventListener("click", async () => {
+        if (wrapper === undefined) {
+            this.wrapper = document.createElement("div");
+            this.wrapper.classList.add("overlay");
+            this.wrapper.id = "ui-main-menu-wrapper";
+            document.body.appendChild(this.wrapper);
+        }
+
+        this.mainMenu = new MainMenu(this.wrapper!, document);
+
+        this.mainMenu.onHostGame(async () => {
             const code = (await this.syncMessenger.postSyncMessage({
                 recipient: "gameMaster",
                 sender: "ui",
@@ -27,35 +40,32 @@ export default class UI {
                 }
             }))[0] as string;
             this.codeText.innerText = this.codeText.innerText + code;
-        });
-        document.body.appendChild(hostGameButton);
-
-        const joinGameTitle = document.createElement("p");
-        joinGameTitle.innerText = "Join game:";
-        document.body.appendChild(joinGameTitle);
-
-        const joinGameCodeInput = document.createElement("input");
-        document.body.appendChild(joinGameCodeInput);
-        joinGameCodeInput.addEventListener('keydown', async (event) => {
-            if (event.key === 'Enter') {
-                const joined = (await this.syncMessenger.postSyncMessage({
-                    recipient: "gameMaster",
-                    sender: "ui",
-                    type: "request",
-                    message: {
-                        type: "joinGame",
-                        args: [joinGameCodeInput.value]
-                    }
-                }))[0] as boolean;
-            }
+            this.codeWrapper.style.display = "block";
         });
 
-        const codeTitle = document.createElement("p");
-        codeTitle.innerText = "Code: ";
-        document.body.appendChild(codeTitle);
+        this.mainMenu.onJoinGame(async (code: string) => {
+            (await this.syncMessenger.postSyncMessage({
+                recipient: "gameMaster",
+                sender: "ui",
+                type: "request",
+                message: {
+                    type: "joinGame",
+                    args: [code]
+                }
+            }))[0] as boolean;
+        });
 
-        this.codeText = document.createElement("p");
-        document.body.appendChild(this.codeText);
+        this.codeWrapper = document.createElement("div");
+        this.codeWrapper.classList.add("ui-code-wrapper");
+        document.body.appendChild(this.codeWrapper);
+        this.codeWrapper.style.display = "none";
+
+        const codeTitle = document.createElement("span");
+        codeTitle.innerText = "Game Code: ";
+        this.codeWrapper.appendChild(codeTitle);
+
+        this.codeText = document.createElement("span");
+        this.codeWrapper.appendChild(this.codeText);
 
         this.eventHandlers = {
             "GameMaster:<event>loseGame": this.onGameLose.bind(this),
