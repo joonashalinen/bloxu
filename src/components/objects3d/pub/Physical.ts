@@ -37,7 +37,7 @@ export default class Physical implements IPhysical, IObject {
         );
         
         // Hide the box wrapper.
-        this.transformNode.visibility = 0.5;
+        this.transformNode.visibility = 0;
 
         this.transformNode.addChild(wrappable);
 
