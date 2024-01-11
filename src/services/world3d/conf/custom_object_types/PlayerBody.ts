@@ -86,11 +86,14 @@ export default class PlayerBody {
 
         // Configure character controls.
         const controllableBuilder = new ControllableBuilder(character.mesh);
-        controllableBuilder.makeMovable(0.001, {
-            width: characterWidth, 
-            height: characterHeight, 
-            depth: characterWidth
-        });
+        controllableBuilder.makeMovable(
+            0.001, 
+            {
+                width: characterWidth, 
+                height: characterHeight, 
+                depth: characterWidth
+            }
+        );
         controllableBuilder.makeMouseRotatable();
         controllableBuilder.makeAnimatedRotatable(
             {

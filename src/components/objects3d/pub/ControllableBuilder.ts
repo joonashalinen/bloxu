@@ -1,4 +1,4 @@
-import { AbstractMesh, AnimationGroup, Mesh, TransformNode, Vector2 } from "@babylonjs/core";
+import { AbstractMesh, AnimationGroup, Mesh, TransformNode, Vector2, Vector3 } from "@babylonjs/core";
 import Characterized from "../../classes/pub/Characterized";
 import IObject from "./IObject";
 import Movable from "./Movable";
@@ -31,7 +31,7 @@ export default class ControllableBuilder {
     /**
      * Make the object movable.
      */
-    makeMovable(speed: number, hitboxSize?: {width: number, height: number, depth: number}) {
+    makeMovable(speed: number, hitboxSize: {width: number, height: number, depth: number}) {
         const physical = new Physical(this.topNode, 1, hitboxSize);
         const movable = new Movable(physical.physicsAggregate);
         movable.speed = speed;

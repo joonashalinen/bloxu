@@ -44,7 +44,7 @@ export default class Physical implements IPhysical, IObject {
         this.physicsAggregate = new PhysicsAggregate(
             this.transformNode, 
             PhysicsShapeType.BOX, 
-            { mass: mass,  }, 
+            { mass: mass, friction: 1000000000 }, 
             wrappable.getScene()
         );
     }

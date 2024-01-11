@@ -40,6 +40,7 @@ export default class World3D implements IService {
     engine: babylonjs.Engine;
     canvas: HTMLCanvasElement;
     camera: babylonjs.ArcRotateCamera;
+    gravity: Vector3;
 
     constructor(document: Document) {
         this.objects = {};
@@ -188,8 +189,9 @@ export default class World3D implements IService {
 
         // Enable physics.
         const havokInstance = await HavokPhysics();
+        this.gravity = new Vector3(0, -9.81, 0);
         this.scene.enablePhysics(
-            new Vector3(0, -9.81, 0),
+            this.gravity,
             new HavokPlugin(true, havokInstance)
         );
 
