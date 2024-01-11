@@ -33,6 +33,7 @@ export default class MeshGrid implements IObject {
                         `MeshGrid:meshes:${x}:${y}:${z}?${meshPrototype.name}`, 
                         this.transformNode
                     )!;
+                    mesh.setEnabled(true);
 
                     this.meshes[x][y].push(mesh);
                 }

@@ -29,6 +29,7 @@ export default class PlaceMeshInGridState implements IState, IEventable, IPointa
     shiftableGrid: Shiftable;
     gridFollower: GridFollower;
     shiftableFollower: ShiftableFollower;
+    characterHeight: number = 1.8;
 
     constructor(
         public baseId: string,
@@ -38,11 +39,9 @@ export default class PlaceMeshInGridState implements IState, IEventable, IPointa
     ) {
         grid.transformNode.setEnabled(false);
 
-        // Calculate the initial shift of the grid to make it be located at the 
-        // base of the character.
-        const characterBoundingPoints = this.movedMesh.getHierarchyBoundingVectors();
-        const characterHeight = characterBoundingPoints.max.y - characterBoundingPoints.min.y;
-        const characterWidth = characterBoundingPoints.max.x - characterBoundingPoints.min.x;
+        // Calculate size of the block that is being used.
+        const blockBoundingPoints = grid.meshPrototype.getHierarchyBoundingVectors();
+        this.blockSize = blockBoundingPoints.max.x - blockBoundingPoints.min.x;
 
         // Make a GridFollower to implement making the 
         // grid follow the character.
@@ -50,12 +49,11 @@ export default class PlaceMeshInGridState implements IState, IEventable, IPointa
             this.grid.transformNode,
             this.movedMesh,
             this.grid.cellSize,
-            new Vector3((-1) * this.grid.cellSize, (-1) * characterHeight/2, (-1) * this.grid.cellSize * (1/2))
+            // y-value is minused by an extra 0.1 to make shifting work. Otherwise 
+            // shifting will result in an offset that is as far away from the neutral block level 
+            // as it is from the lower one that we want to snap to.
+            new Vector3((-1) * this.grid.cellSize, (-1) * this.characterHeight/2 - 0.1, (-1) * this.grid.cellSize * (1/2))
         );
-
-        // Calculate size of the block that is being used.
-        const blockBoundingPoints = grid.meshPrototype.getHierarchyBoundingVectors();
-        this.blockSize = blockBoundingPoints.max.x - blockBoundingPoints.min.x;
 
         // Make a Shiftable from the grid so that we can implement shifting 
         // it up / down.
@@ -96,7 +94,6 @@ export default class PlaceMeshInGridState implements IState, IEventable, IPointa
     pressFeatureKey(key: string): IKeyableState {
         if (this.isActive) {
             if (key === "shift") {
-                console.log("shifting");
                 this.shiftableFollower.shiftNegative();
             } else if (key === " ") {
                 this.shiftableFollower.shiftPositive();

@@ -208,6 +208,7 @@ export default class PlayerBody {
             `PlayerBody:cubePrototype?${this.id}`, 
             blockSize
         );
+        cubePrototype.setEnabled(false);
 
         this.actionModeStateMachine = new StateMachine({
             "battle": new BattleModeState(new ActionModeState(this.actionStateMachine, this.body)),

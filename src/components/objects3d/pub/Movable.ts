@@ -19,7 +19,6 @@ export default class Movable implements IObject, IMovable, DMovable, IPhysical, 
     ) {
         this.transformNode = physicsAggregate.transformNode;
         this.physicsAggregate = physicsAggregate;
-        // this.physicsAggregate.material.friction = 100000;
     }
 
     /**
@@ -91,7 +90,6 @@ export default class Movable implements IObject, IMovable, DMovable, IPhysical, 
      * Update the velocity of the physics body.
      */
     updateVelocity() {
-        console.log("updating velocity");
         const mass = this.physicsAggregate.body.getMassProperties().mass;
         this.movementVelocity = this.direction.normalize().scale(mass! * this.speed);
         this.physicsAggregate.body.setLinearVelocity(this.movementVelocity);
