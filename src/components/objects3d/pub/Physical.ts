@@ -17,7 +17,7 @@ export default class Physical implements IPhysical, IObject {
         const boundingPoints = wrappable.getHierarchyBoundingVectors();
         const width = boundingPoints.max.x - boundingPoints.min.x;
         const height = boundingPoints.max.y - boundingPoints.min.y;
-        wrappable.position.y = wrappable.position.y - height/2;
+        // wrappable.position.y = wrappable.position.y - height/2;
 
         // Create box wrapper for the given mesh.
         // This is so that physics behaves well 

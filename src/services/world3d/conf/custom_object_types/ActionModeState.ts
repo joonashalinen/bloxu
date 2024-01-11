@@ -13,6 +13,8 @@ import { IPointable } from "../../../../components/graphics2d/pub/IPointable";
 import Characterized from "../../../../components/classes/pub/Characterized";
 import IObject from "../../../../components/objects3d/pub/IObject";
 import MouseRotatable from "../../../../components/objects3d/pub/MouseRotatable";
+import ITickable from "../../../../components/objects3d/pub/ITickable";
+import MoveState from "../../../../components/objects3d/pub/creatures/MoveState";
 
 /**
  * Contains the common functionalities between different action 
@@ -32,6 +34,11 @@ export default class ActionModeState implements IActionModeState {
         public body: Characterized<IObject>
     ) {
         
+    }
+    
+    doOnTick(time: number): ITickable {
+        (this.stateMachine.states["run"] as MoveState).doOnTick(time);
+        return this;
     }
 
     point(pointerPosition: { x: number; y: number; }): IPointable {

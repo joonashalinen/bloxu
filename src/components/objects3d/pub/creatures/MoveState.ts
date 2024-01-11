@@ -11,15 +11,17 @@ import IEventable from "../../../events/pub/IEventable";
 import IAutoUpdatable from "../IAutoUpdatable";
 import IToggleable from "../../../misc/pub/IToggleable";
 import EventableMovable from "../EventableMovable";
+import ITickable from "../ITickable";
 
 /**
  * State of a creature where the creature is currently moving in a direction.
  */
-export default class MoveState extends OwningState<TStateResource> implements IMovableState {
+export default class MoveState extends OwningState<TStateResource> implements IMovableState, ITickable {
     wantedResources: Set<TStateResource> = new Set(["animation", "movement"]);
 
     constructor(
         public movable: IMovable & IToggleable,
+        public tickableMovable: ITickable,
         public animatedMovable: AnimatedMovable,
         public eventableMovable: EventableMovable
     ) {
@@ -28,6 +30,13 @@ export default class MoveState extends OwningState<TStateResource> implements IM
         eventableMovable.emitter.on("moveEnd", () => {
             this._endSelf("idle");
         });
+    }
+
+    doOnTick(time: number): ITickable {
+        if (this.ownedResources.has("movement")) {
+            this.tickableMovable.doOnTick(time);
+        }
+        return this;
     }
 
     move(direction: Vector3): IMovableState {

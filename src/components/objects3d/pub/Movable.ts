@@ -4,8 +4,9 @@ import { TransformNode, Vector3 } from "@babylonjs/core";
 import { PhysicsAggregate } from "@babylonjs/core/Physics";
 import IObject from "./IObject";
 import IPhysical from "./IPhysical";
+import ITickable from "./ITickable";
 
-export default class Movable implements IObject, IMovable, DMovable, IPhysical {
+export default class Movable implements IObject, IMovable, DMovable, IPhysical, ITickable {
     direction = new Vector3(0, 0, 0);
     transformNode: TransformNode;
     physicsAggregate: PhysicsAggregate;
@@ -47,7 +48,7 @@ export default class Movable implements IObject, IMovable, DMovable, IPhysical {
         this.physicsAggregate.body.setLinearVelocity(this.direction.normalize().scale(mass! * this.speed));
     }
 
-    doOnTick(time: number): IObject {
+    doOnTick(time: number): Movable {
         if (!this.direction.equals(new Vector3(0, 0, 0))) {
             this.updateVelocity();
         }

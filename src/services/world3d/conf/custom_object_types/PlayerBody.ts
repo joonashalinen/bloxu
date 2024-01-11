@@ -45,11 +45,6 @@ export default class PlayerBody {
 
     mainMesh: Mesh;
     characterAnimations: ICharacterAnimations;
-
-    arrowMesh: Mesh;
-    arrowPointer: Pointer;
-    arrowFollower: Follower;
-    arrowMeshRotatable: MouseRotatable;
     
     ballMovable: Movable;
     ballGlow: Glow;
@@ -64,7 +59,6 @@ export default class PlayerBody {
         public startingPosition: Vector3, 
         public scene: Scene,
         public meshConstructors: {
-            "DirectionArrow": (id: string) => Mesh,
             "Player": (id: string) => AnimatedMesh,
             "PlasmaPistol": (id: string) => Mesh
         }
@@ -151,35 +145,6 @@ export default class PlayerBody {
         physicsAggregate.body.setMassProperties({
             inertia: new Vector3(0, 0, 0)
         });
-
-        // Create mesh of pointer arrow shown when aiming that is attached to the player character.
-        this.arrowMesh = this.meshConstructors.DirectionArrow(`PlayerBody:arrowMesh?${this.id}`);
-
-        // Scale the mesh, since the model is too big by default.
-        this.arrowMesh.scaling = this.arrowMesh.scaling.multiplyByFloats(0.5, 0.5, 0.5);
-
-        // Shift the arrow so that its tail starts from the player mesh.
-        const maxBound = this.arrowMesh.getHierarchyBoundingVectors().max;
-        this.arrowMesh.position.x = maxBound.x * (-1);
-        this.arrowMesh.position.y = this.mainMesh.getBoundingInfo().minimum.y;
-        
-        // Create a Pointer object with the arrow mesh. The Pointer 
-        // object is used for rotating the arrow around the player mesh.
-        this.arrowPointer = new Pointer(this.arrowMesh, this.mainMesh);
-
-        // Make a MouseRotatable from the arrow pointer mesh 
-        // so that it follows the mouse pointer.
-        this.arrowMeshRotatable = new MouseRotatable(this.arrowPointer.centerOfRotation);
-
-        // Make the arrow follow the position of the player character.
-        this.arrowFollower = new Follower(
-            this.arrowPointer.centerOfRotation, 
-            (this.body.as("Physical") as Physical).physicsAggregate.transformNode,
-            new EventableMovable(this.body.as("Movable") as Movable)
-        );
-
-        // Hide the aim arrow for now. We may want to remove the aim arrow completely.
-        this.disableUI();
         
         // vvv Create state machine for the character's action states. vvv
 
@@ -193,6 +158,7 @@ export default class PlayerBody {
                 idle: new IdleState(character.animations.idle),
                 run: new MoveState(
                     new ToggleableMovable(this.bodyBuilder.topMovable),
+                    (this.body.as("Movable") as Movable),
                     this.body.as("AnimatedMovable") as AnimatedMovable,
                     this.body.as("EventableMovable") as EventableMovable
                 ),
@@ -250,7 +216,8 @@ export default class PlayerBody {
      * Update player's body for the current render iteration.
      */
     doOnTick(time: number) {
-        (this.body.as("Movable") as Movable).doOnTick(time);
+        const activeState = this.actionModeStateMachine.firstActiveState();
+        activeState!.doOnTick(time);
     }
 
     /**
@@ -325,7 +292,7 @@ export default class PlayerBody {
      * Disable any objects related to UI, such as the aiming arrow.
      */
     disableUI() {
-        this.arrowMesh.setEnabled(false);
+        
     }
 
     /**

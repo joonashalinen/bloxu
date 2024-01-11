@@ -6,6 +6,10 @@ import MeshGrid from "../MeshGrid";
  * A cubic grid for placing objects in.
  */
 export default class PlacementGrid {
+    setPosition: (obj: IObject, position: Vector3) => void = (obj, position) => {
+        obj.transformNode.setAbsolutePosition(position);
+    }
+
     constructor(
         public grid: MeshGrid,
         public createObject: () => IObject
@@ -19,6 +23,6 @@ export default class PlacementGrid {
     place(cell: Vector3) {
         const absolutePosition = this.grid.meshes[cell.x][cell.y][cell.z].absolutePosition;
         const object = this.createObject();
-        object.transformNode.setAbsolutePosition(absolutePosition);
+        this.setPosition(object, absolutePosition);
     }
 }

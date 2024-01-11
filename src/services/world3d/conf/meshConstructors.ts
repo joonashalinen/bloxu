@@ -108,6 +108,7 @@ export default async function(babylonjs: typeof BABYLON, scene: BABYLON.Scene) {
             animationGroups.moveBackwardRight.speedRatio = 1.25;
             animationGroups.turnLeft.speedRatio = 2;
             animationGroups.turnRight.speedRatio = 2;
+            animationGroups.shoot.speedRatio = 2;
 
             return {
                 mesh: rootMesh,

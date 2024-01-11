@@ -1,5 +1,6 @@
 import IState from "../../../../components/computation/pub/IState";
 import { IPointable } from "../../../../components/graphics2d/pub/IPointable";
+import ITickable from "../../../../components/objects3d/pub/ITickable";
 import IActionableState from "../../../../components/objects3d/pub/creatures/IActionableState";
 import IKeyableState from "../../../../components/objects3d/pub/creatures/IKeyableState";
 import IMovableState from "../../../../components/objects3d/pub/creatures/IMovableState";
@@ -11,7 +12,8 @@ export default interface IActionModeState extends
     IRotatableState, 
     IActionableState,
     IKeyableState,
-    IPointable
+    IPointable,
+    ITickable
 {
     
 }

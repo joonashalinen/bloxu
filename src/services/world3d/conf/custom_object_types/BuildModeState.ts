@@ -10,6 +10,7 @@ import IState from "../../../../components/computation/pub/IState";
 import MeshGrid from "../../../../components/objects3d/pub/MeshGrid";
 import PlaceMeshInGridState from "./PlaceMeshInGridState";
 import { IPointable } from "../../../../components/graphics2d/pub/IPointable";
+import ITickable from "../../../../components/objects3d/pub/ITickable";
 
 /**
  * State where the player's body is in building mode and 
@@ -33,6 +34,12 @@ export default class BuildModeState implements IActionModeState {
         public placeMeshState: PlaceMeshInGridState,
         public scene: Scene
     ) {
+    }
+
+    doOnTick(time: number): ITickable {
+        this.actionModeState.doOnTick(time);
+        this.placeMeshState.doOnTick(time);
+        return this;
     }
 
     point(pointerPosition: { x: number; y: number; }): IPointable {

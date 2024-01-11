@@ -8,6 +8,7 @@ import IMovableState from "../../../../components/objects3d/pub/creatures/IMovab
 import IRotatableState from "../../../../components/objects3d/pub/creatures/IRotatableState";
 import IState from "../../../../components/computation/pub/IState";
 import { IPointable } from "../../../../components/graphics2d/pub/IPointable";
+import ITickable from "../../../../components/objects3d/pub/ITickable";
 
 /**
  * State where the player's body is battle-ready.
@@ -27,6 +28,11 @@ export default class BattleModeState implements IActionModeState {
     constructor(
         public actionModeState: ActionModeState
     ) {
+    }
+
+    doOnTick(time: number): ITickable {
+        this.actionModeState.doOnTick(time);
+        return this;
     }
 
     point(pointerPosition: { x: number; y: number; }): IPointable {
