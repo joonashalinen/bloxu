@@ -41,6 +41,7 @@ export default class PlaceMeshInGridState implements IState, IEventable, IPointa
         // base of the character.
         const characterBoundingPoints = this.movedMesh.getHierarchyBoundingVectors();
         const characterHeight = characterBoundingPoints.max.y - characterBoundingPoints.min.y;
+        const characterWidth = characterBoundingPoints.max.x - characterBoundingPoints.min.x;
 
         // Make a GridFollower to implement making the 
         // grid follow the character.
@@ -48,7 +49,7 @@ export default class PlaceMeshInGridState implements IState, IEventable, IPointa
             this.grid.transformNode,
             this.movedMesh,
             this.grid.cellSize,
-            new Vector3(0, (-1) * characterHeight/2, 0)
+            new Vector3((-1) * this.grid.cellSize, (-1) * characterHeight/2, (-1) * this.grid.cellSize * (1/2))
         );
 
         // Calculate size of the block that is being used.
