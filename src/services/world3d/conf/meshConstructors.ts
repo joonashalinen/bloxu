@@ -68,6 +68,7 @@ export default async function(babylonjs: typeof BABYLON, scene: BABYLON.Scene) {
             characterMesh!.rotate(babylonjs.Vector3.Forward(), Math.PI / 2);
             rootMesh!.position = new BABYLON.Vector3(0, 0, 0);
             rootMesh!.scaling = rootMesh!.scaling.scale(0.3);
+            rootMesh.position.y = characterMesh.position.y - 0.8;
             // entries.skeletons[0].bones.map((bone) => bone.scale(0.3, 0.3, 0.3, true));
             rootMesh!.setEnabled(true);
             characterMesh.id = id;

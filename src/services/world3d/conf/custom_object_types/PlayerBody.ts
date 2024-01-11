@@ -1,7 +1,5 @@
 import { Color3, GlowLayer, Mesh, MeshBuilder, Scene, StandardMaterial, Vector2, Vector3 } from "@babylonjs/core";
 import Movable from "../../../../components/objects3d/pub/Movable";
-import Pointer from "../../../../components/objects3d/pub/Pointer";
-import Follower from "../../../../components/objects3d/pub/Follower";
 import Glow from "../../../../components/graphics3d/pub/effects/Glow";
 import DPlayerBody from "./DPlayerBody";
 import MouseRotatable from "../../../../components/objects3d/pub/MouseRotatable";
@@ -45,12 +43,6 @@ export default class PlayerBody {
 
     mainMesh: Mesh;
     characterAnimations: ICharacterAnimations;
-    
-    ballMovable: Movable;
-    ballGlow: Glow;
-    glowLayer: GlowLayer;
-
-    gun: ProjectileWeapon;
 
     emitter = new EventEmitter();
 
@@ -64,6 +56,9 @@ export default class PlayerBody {
         }
     ) {
         this.startingPosition = startingPosition;
+
+        const characterHeight = 1.8;
+        const characterWidth = 0.8;
 
         // Load character mesh and animations.
         const character = meshConstructors["Player"](`PlayerBody:characterMesh?${this.id}`);
@@ -89,7 +84,11 @@ export default class PlayerBody {
 
         // Configure character controls.
         const controllableBuilder = new ControllableBuilder(character.mesh);
-        controllableBuilder.makeMovable(0.001);
+        controllableBuilder.makeMovable(0.001, {
+            width: characterWidth, 
+            height: characterHeight, 
+            depth: characterWidth
+        });
         controllableBuilder.makeMouseRotatable();
         controllableBuilder.makeAnimatedRotatable(
             {
@@ -199,8 +198,8 @@ export default class PlayerBody {
                     this.body.as("EventableMovable") as EventableMovable,
                     (this.body.as("Physical") as Physical).physicsAggregate.transformNode,
                     new MeshGrid(
-                        MeshBuilder.CreateBox(this.id, {size: 1.4}, this.scene),
-                        1.5,
+                        MeshBuilder.CreateBox(this.id, {size: characterHeight * 0.8 - 0.1}, this.scene),
+                        characterHeight * 0.8,
                         {x: 3, y: 1, z: 3}
                     )
                 ),

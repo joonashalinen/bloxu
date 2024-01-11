@@ -11,12 +11,20 @@ export default class Physical implements IPhysical, IObject {
 
     constructor(
         wrappable: AbstractMesh,
-        mass: number
+        mass: number,
+        hitboxSize?: {width: number, height: number, depth: number}
     ) {
         // Calculate the size for the box wrapper.
-        const boundingPoints = wrappable.getHierarchyBoundingVectors();
-        const width = boundingPoints.max.x - boundingPoints.min.x;
-        const height = boundingPoints.max.y - boundingPoints.min.y;
+        if (hitboxSize === undefined) {
+            const boundingPoints = wrappable.getHierarchyBoundingVectors();
+            const width = boundingPoints.max.x - boundingPoints.min.x;
+            const height = boundingPoints.max.y - boundingPoints.min.y;
+            hitboxSize = {
+                width,
+                height,
+                depth: width
+            };
+        }
         // wrappable.position.y = wrappable.position.y - height/2;
 
         // Create box wrapper for the given mesh.
@@ -24,15 +32,12 @@ export default class Physical implements IPhysical, IObject {
         // for meshes of all shapes.
         this.transformNode = MeshBuilder.CreateBox(
             `Physical:transformNode?${wrappable.id}`, 
-            {
-                width: width,
-                height: height
-            },
+            hitboxSize,
             wrappable.getScene()
         );
         
         // Hide the box wrapper.
-        this.transformNode.visibility = 0;
+        this.transformNode.visibility = 0.5;
 
         this.transformNode.addChild(wrappable);
 
