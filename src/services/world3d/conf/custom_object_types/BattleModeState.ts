@@ -1,4 +1,4 @@
-import { Vector3 } from "@babylonjs/core";
+import { Mesh, Vector3 } from "@babylonjs/core";
 import ShootState from "./ShootState";
 import ActionModeState from "./ActionModeState";
 import IActionableState from "../../../../components/objects3d/pub/creatures/IActionableState";
@@ -43,6 +43,7 @@ export default class BattleModeState implements IActionModeState {
     start(): unknown {
         if (!this.isActive) {
             this.actionModeState.start();
+            this.equipGun();
         }
         return this;
     }
@@ -50,6 +51,7 @@ export default class BattleModeState implements IActionModeState {
     end(): unknown {
         if (this.isActive) {
             this.actionModeState.end();
+            this.unequipGun();
         }
         return this;
     }
@@ -92,5 +94,26 @@ export default class BattleModeState implements IActionModeState {
 
     releaseFeatureKey(key: string): BattleModeState {
         return this;
+    }
+
+    /**
+     * Equip the gun on the main player character.
+     */
+    equipGun() {
+        const shootState = this.actionModeState.stateMachine.states["shoot"] as ShootState;
+        shootState.pistolMesh.attachToBone(
+            shootState.character.skeleton.bones[23], 
+            shootState.character.mesh.getChildren()[0] as Mesh
+        );
+        shootState.pistolMesh.setEnabled(true);
+    }
+
+    /**
+     * Equip the gun on the main player character.
+     */
+    unequipGun() {
+        const shootState = this.actionModeState.stateMachine.states["shoot"] as ShootState;
+        shootState.pistolMesh.detachFromBone();
+        shootState.pistolMesh.setEnabled(false);
     }
 }

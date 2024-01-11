@@ -65,11 +65,7 @@ export default class ShootState extends OwningState<TStateResource> implements I
         const givenResources = super.give(resources);
 
         if (resources.has("animation")) {
-            this.pistolMesh.attachToBone(
-                this.character.skeleton.bones[23], 
-                this.character.mesh.getChildren()[0] as Mesh
-            );
-            this.pistolMesh.setEnabled(true);
+            
         }
 
         return givenResources;
@@ -79,8 +75,7 @@ export default class ShootState extends OwningState<TStateResource> implements I
         const takenResources = super.take(resources);
 
         if (resources.has("animation")) {
-            this.pistolMesh.detachFromBone();
-            this.pistolMesh.setEnabled(false);
+            this.character.animations["shoot"].stop();
         }
 
         return takenResources;
