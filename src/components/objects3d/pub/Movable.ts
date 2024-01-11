@@ -100,7 +100,9 @@ export default class Movable implements IObject, IMovable, DMovable, IPhysical, 
     doOnTick(time: number): Movable {
         if (!this.direction.equals(new Vector3(0, 0, 0))) {
             this.lastPosition = this.physicsAggregate.body.transformNode.position.clone();
-            this.applyForce();
+            if (this.physicsAggregate.body.getLinearVelocity().length() < this.movementVelocity.length()) {
+                this.applyForce();
+            }
         }
         return this;
     }

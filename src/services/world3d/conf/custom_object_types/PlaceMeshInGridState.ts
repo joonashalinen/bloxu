@@ -96,6 +96,7 @@ export default class PlaceMeshInGridState implements IState, IEventable, IPointa
     pressFeatureKey(key: string): IKeyableState {
         if (this.isActive) {
             if (key === "shift") {
+                console.log("shifting");
                 this.shiftableFollower.shiftNegative();
             } else if (key === " ") {
                 this.shiftableFollower.shiftPositive();
