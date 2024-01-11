@@ -13,6 +13,7 @@ export default class MeshLeash3D {
     emitter = new EventEmitter();
     lastLeash: Vector2;
     lastMeshPositionOnScreen: Vector2;
+    lastLeash3D: Vector3;
     scene: Scene;
     engine: Engine;
 
@@ -50,6 +51,8 @@ export default class MeshLeash3D {
         const pickedPoint = this.scene.pick(mousePosition.x, mousePosition.y, (mesh: AbstractMesh) => {
             return mesh === this.leashPlane;
         }).pickedPoint;
+        this.lastLeash3D = pickedPoint!;
+
         const pickedPoint2D = new Vector2(pickedPoint!.x, pickedPoint!.z);
         const meshPosition2D = new Vector2(
             this.transformNode.getAbsolutePosition().x,

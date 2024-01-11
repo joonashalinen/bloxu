@@ -7,6 +7,7 @@ import IActionableState from "../../../../components/objects3d/pub/creatures/IAc
 import TStateResource from "../../../../components/objects3d/pub/creatures/TStateResource";
 import OwningState from "../../../../components/computation/pub/OwningState";
 import IRotatable from "../../../../components/objects3d/pub/IRotatable";
+import MouseRotatable from "../../../../components/objects3d/pub/MouseRotatable";
 
 /**
  * State where the player's body is battle-ready.
@@ -20,7 +21,7 @@ export default class ShootState extends OwningState<TStateResource> implements I
     constructor(
         public id: string,
         public character: AnimatedMesh,
-        public rotatable: IRotatable,
+        public rotatable: MouseRotatable,
         public pistolMesh: Mesh
     ) {
         super();
@@ -92,7 +93,7 @@ export default class ShootState extends OwningState<TStateResource> implements I
      */
     doMainAction() {
         if (this.ownedResources.has("animation")) {
-            const direction = this.rotatable.direction;
+            const direction = this.rotatable.leash.lastLeash3D;
             this.shoot(direction);
         }
         return this;
@@ -111,15 +112,17 @@ export default class ShootState extends OwningState<TStateResource> implements I
     /**
      * Shoot in the given direction. The direction is a 2D 
      * vector where the y-component corresponds 
-     * with the z-coordinate in world space.
+     * with the z-coordinate in world space. The given direction vector 
+     * is assumed to not be normalized. The head of the vector 
+     * is assumed to be at the point that the projectile 
+     * is expected to hit.
      */
-    shoot(direction: Vector2) {
+    shoot(direction: Vector3) {
         if (this.isActive) {
             if (this.ownedResources.has("mainAction")) {
-                // Apply needed transformations to make the ball shoot out correctly.
-                // These values were found by manual testing and a more in-depth 
-                // exploration of why this is needed should be done.
-                const transformedDirection = new Vector3(direction.x * (-1), 0, direction.y);
+                const gunPosition = this.gun.transformNode.absolutePosition;
+                const directionFromGun = direction.subtract(gunPosition);
+                const transformedDirection = new Vector3(directionFromGun.x, 0, directionFromGun.z);
                 this.gun.shoot(transformedDirection);
             }
 
