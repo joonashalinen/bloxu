@@ -56,10 +56,12 @@ export default class ProjectileWeapon implements IProjectileWeapon {
             { mass: 0.1 }, 
             this.transformNode.getScene()
         );
+        physicsAggregate.body.setLinearDamping(0);
 
         // Make the projectile movable.
         const movableProjectile = new Movable(physicsAggregate);
         movableProjectile.speed = 80;
+        movableProjectile.gravityEnabled = false;
         
         // Make the projectile keep itself in motion.
         movableProjectile.enableAutoUpdate();

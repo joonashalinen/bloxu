@@ -10,9 +10,9 @@ export default class Movable implements IObject, IMovable, DMovable, IPhysical, 
     direction = new Vector3(0, 0, 0);
     transformNode: TransformNode;
     speed: number = 10;
-    gravity: Vector3 = new Vector3(0, -9.81, 0);
     movementVelocity: Vector3;
     lastPosition: Vector3;
+    gravityEnabled: boolean = true;
     
     constructor(
         public physicsAggregate: PhysicsAggregate
@@ -39,10 +39,14 @@ export default class Movable implements IObject, IMovable, DMovable, IPhysical, 
             } else {
                 this.direction = this.direction.add(direction).normalize();
             }
-            if (!this.isFalling()) {
-                this.updateVelocity();
+            if (this.gravityEnabled) {
+                if (!this.isFalling()) {
+                    this.updateVelocity();
+                } else {
+                    this.applyForce();
+                }
             } else {
-                this.applyForce();
+                this.updateVelocity();
             }
         }
         return this;
@@ -97,9 +101,13 @@ export default class Movable implements IObject, IMovable, DMovable, IPhysical, 
 
     doOnTick(time: number): Movable {
         if (!this.direction.equals(new Vector3(0, 0, 0))) {
-            this.lastPosition = this.physicsAggregate.body.transformNode.position.clone();
-            if (this.physicsAggregate.body.getLinearVelocity().length() < this.movementVelocity.length()) {
-                this.applyForce();
+            if (this.gravityEnabled) {
+                this.lastPosition = this.physicsAggregate.body.transformNode.position.clone();
+                if (this.physicsAggregate.body.getLinearVelocity().length() < this.movementVelocity.length()) {
+                    this.applyForce();
+                }
+            } else {
+                this.updateVelocity();
             }
         }
         return this;
