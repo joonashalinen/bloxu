@@ -23,6 +23,8 @@ export default class GameMaster {
     messageFactory = new MessageFactory("gameMaster");
     localPlayerId: string;
     gameRunning: boolean = false;
+    cubeSize: number = 1.34;
+    characterHeight: number = 1.8;
     
     constructor() {
         this.syncMessenger = new SyncMessenger(this.proxyMessenger);
@@ -48,7 +50,6 @@ export default class GameMaster {
         // Create the cube islands the players will spawn on.
         this.createCubeIsland("GameMaster:FloatingCube?1", {x: 0, y: 0, z: 0});
         this.createCubeIsland("GameMaster:FloatingCube?2", {x: 0, y: 0, z: 20});
-        this.createCubeIsland("GameMaster:FloatingCube?3", {x: -10, y: -10, z: 0});
 
         // vvv Setup players. vvv        
 
@@ -70,10 +71,10 @@ export default class GameMaster {
 
         // Spawn players.
         this.proxyMessenger.postMessage(
-            this.messageFactory.createRequest("player-1", "spawn", [{x: 0, y: 1.85, z: 0}])
+            this.messageFactory.createRequest("player-1", "spawn", [{x: 0, y: 0, z: 0}])
         );
         this.proxyMessenger.postMessage(
-            this.messageFactory.createRequest("player-2", "spawn", [{x: 0, y: 1.85, z: 20}])
+            this.messageFactory.createRequest("player-2", "spawn", [{x: 0, y: 0, z: 20}])
         );
 
         // Create skybox.
@@ -126,11 +127,11 @@ export default class GameMaster {
             message: {
                 type: "createObject",
                 args: [id, "FloatingCube", {
-                    boundArgs: [id, position],
-                    f: function(this: World3D, id:string, position: Vector3D) {
+                    boundArgs: [id, position, this.cubeSize],
+                    f: function(this: World3D, id:string, position: Vector3D, cubeSize: number) {
                         return [
                             id,
-                            10, 
+                            cubeSize,
                             new this.babylonjs.Vector3(position.x, position.y, position.z),
                             this.scene
                         ];

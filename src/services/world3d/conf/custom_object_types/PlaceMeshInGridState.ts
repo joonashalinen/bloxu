@@ -1,4 +1,4 @@
-import { MeshBuilder, TransformNode, Vector3 } from "@babylonjs/core";
+import { Mesh, MeshBuilder, TransformNode, Vector3 } from "@babylonjs/core";
 import IState from "../../../../components/computation/pub/IState";
 import EventEmitter from "../../../../components/events/pub/EventEmitter";
 import IEventable from "../../../../components/events/pub/IEventable";
@@ -14,6 +14,7 @@ import ITickable from "../../../../components/objects3d/pub/ITickable";
 import Shiftable from "../../../../components/objects3d/pub/Shiftable";
 import GridFollower from "../../../../components/objects3d/pub/GridFollower";
 import ShiftableFollower from "../../../../components/objects3d/pub/ShiftableFollower";
+import IObject from "../../../../components/objects3d/pub/IObject";
 
 /**
  * A state of a movable creature where they can place 
@@ -31,9 +32,9 @@ export default class PlaceMeshInGridState implements IState, IEventable, IPointa
 
     constructor(
         public baseId: string,
-        public movable: EventableMovable, 
         public movedMesh: TransformNode,
-        public grid: MeshGrid
+        public grid: MeshGrid,
+        public makeObject: (id: string) => IObject | Physical
     ) {
         grid.transformNode.setEnabled(false);
 
@@ -66,17 +67,13 @@ export default class PlaceMeshInGridState implements IState, IEventable, IPointa
         const placementGrid = new PlacementGrid(
             grid,
             () => {
-                const physical = new Physical(
-                    MeshBuilder.CreateBox(
-                        `PlaceMeshInGridState:mesh?${this.baseId}`, {size: this.blockSize},
-                        this.movable.transformNode.getScene()
-                    ),
-                    0
-                );
-                // We need to do this so that the position of the mesh can 
-                // be updated afterwards.
-                physical.physicsAggregate.body.disablePreStep = false;
-                return physical;
+                const obj = this.makeObject(`PlaceMeshInGridState:object?${this.baseId}`);
+                if ("physicsAggregate" in obj) {
+                    // We need to do this so that the position of the mesh can 
+                    // be updated afterwards.
+                    obj.physicsAggregate.body.disablePreStep = false;
+                }
+                return obj;
             }
         );
         placementGrid.setPosition = (obj, position) => {

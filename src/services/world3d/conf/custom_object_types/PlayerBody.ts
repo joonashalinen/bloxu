@@ -29,6 +29,7 @@ import PermissionResourceStateMachine from "../../../../components/computation/p
 import BuildModeState from "./BuildModeState";
 import PlaceMeshInGridState from "./PlaceMeshInGridState";
 import MeshGrid from "../../../../components/objects3d/pub/MeshGrid";
+import FloatingCube from "./FloatingCube";
 
 /**
  * The body that the Player service owns and controls.
@@ -52,7 +53,8 @@ export default class PlayerBody {
         public scene: Scene,
         public meshConstructors: {
             "Player": (id: string) => AnimatedMesh,
-            "PlasmaPistol": (id: string) => Mesh
+            "PlasmaPistol": (id: string) => Mesh,
+            "Cube": (id: string, size: number) => Mesh
         }
     ) {
         this.startingPosition = startingPosition;
@@ -188,6 +190,22 @@ export default class PlayerBody {
 
         // vvv Create state machine for the character's action mode states (such as build vs. battle mode) vvv
 
+        // The ratio of the block's size to the player character's width.
+        const blockSizeFactor = 0.8;
+        const blockSize = characterHeight * blockSizeFactor - 0.1;
+
+        const makeCube = (id: string) => new FloatingCube(
+            id,
+            blockSize,
+            new Vector3(0, 0, 0),
+            this.scene
+        );
+
+        const cubePrototype = this.meshConstructors.Cube(
+            `PlayerBody:cubePrototype?${this.id}`, 
+            blockSize
+        );
+
         this.actionModeStateMachine = new StateMachine({
             "battle": new BattleModeState(new ActionModeState(this.actionStateMachine, this.body)),
             "build": new BuildModeState(
@@ -195,13 +213,13 @@ export default class PlayerBody {
                 new ActionModeState(this.actionStateMachine, this.body), 
                 new PlaceMeshInGridState(
                     this.id,
-                    this.body.as("EventableMovable") as EventableMovable,
                     (this.body.as("Physical") as Physical).physicsAggregate.transformNode,
                     new MeshGrid(
-                        MeshBuilder.CreateBox(this.id, {size: characterHeight * 0.8 - 0.1}, this.scene),
-                        characterHeight * 0.8,
+                        cubePrototype,
+                        characterHeight * blockSizeFactor,
                         {x: 3, y: 1, z: 3}
-                    )
+                    ),
+                    makeCube
                 ),
                 this.scene
             )

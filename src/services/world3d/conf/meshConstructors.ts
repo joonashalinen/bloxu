@@ -107,8 +107,8 @@ export default async function(babylonjs: typeof BABYLON, scene: BABYLON.Scene) {
             animationGroups.moveForwardRight.speedRatio = 1.2;
             animationGroups.moveBackwardLeft.speedRatio = 1.25;
             animationGroups.moveBackwardRight.speedRatio = 1.25;
-            animationGroups.turnLeft.speedRatio = 2;
-            animationGroups.turnRight.speedRatio = 2;
+            animationGroups.turnLeft.speedRatio = 2.5;
+            animationGroups.turnRight.speedRatio = 2.5;
             animationGroups.shoot.speedRatio = 2;
 
             return {
@@ -138,6 +138,19 @@ export default async function(babylonjs: typeof BABYLON, scene: BABYLON.Scene) {
             skyboxMesh.translate(BABYLON.Vector3.Up(), -200);
             // skyboxMesh.infiniteDistance = true;
             return skyboxMesh;
+        },
+        "Cube": (id: string, size: number) => {
+            // Create cube mesh.
+            const cube = BABYLON.MeshBuilder.CreateBox(id, {size: size}, scene);
+            // Set mesh color.
+            const material = new BABYLON.StandardMaterial("FloatingCube:mesh:material?" + id, scene);
+            const color = new BABYLON.Color3(1, 1, 1);
+            material.diffuseColor = color;
+            material.ambientColor = color;
+            material.specularColor = color;
+            // material.emissiveColor = new Color3(0.04, 0.09, 0.16);
+            cube.material = material;
+            return cube;
         }
     };
 }
