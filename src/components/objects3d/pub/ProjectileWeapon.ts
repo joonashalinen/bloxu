@@ -63,6 +63,27 @@ export default class ProjectileWeapon implements IProjectileWeapon {
         movableProjectile.speed = 80;
         movableProjectile.gravityEnabled = false;
         
+        // Make the projetile destroy blocks.
+        // This should not really be here
+        // and should be refactored to be elsewhere.
+        physicsAggregate.body.setCollisionCallbackEnabled(true);
+        physicsAggregate.body.getCollisionObservable().add((event) => {
+            const otherMesh = event.collidedAgainst.transformNode;
+            // Destroy block.
+            if (
+                otherMesh.id.includes("PlaceMeshInGridState:object") || 
+                otherMesh.id.includes("FloatingCube")
+            ) {
+                event.collidedAgainst.disablePreStep = true;
+                otherMesh.setEnabled(false);
+                event.collidedAgainst.dispose();
+            }
+            // Destroy projectile.
+            movableProjectile.move(new Vector3(0, 0, 0));
+            physicsAggregate.body.transformNode.setEnabled(false);
+            physicsAggregate.body.dispose();
+        });
+
         // Make the projectile keep itself in motion.
         movableProjectile.enableAutoUpdate();
 
