@@ -1,4 +1,4 @@
-import { PhysicsAggregate, Vector3 } from "@babylonjs/core";
+import { AnimationGroup, PhysicsAggregate, Vector3 } from "@babylonjs/core";
 import TStateResource from "./TStateResource";
 import OwningState from "../../../computation/pub/OwningState";
 import IKeyableState from "./IKeyableState";
@@ -14,9 +14,12 @@ export default class JumpState extends OwningState<TStateResource> implements IK
     jumpable: Jumpable;
 
     constructor(
-        public movable: Movable
+        public movable: Movable,
+        public jumpAnimation: AnimationGroup
     ) {
         super();
+        jumpAnimation.enableBlending = true;
+        jumpAnimation.blendingSpeed = 0.2;
         this.jumpable = new Jumpable(movable);
         this.jumpable.emitter.on("jumpEnd", () => {
             if (this.isActive) {
@@ -43,6 +46,9 @@ export default class JumpState extends OwningState<TStateResource> implements IK
 
     jump(): JumpState {
         if (this.isActive) {
+            this.jumpAnimation.speedRatio = 0.6;
+            this.jumpAnimation.play();
+            this.jumpAnimation.goToFrame(50);
             this.jumpable.jump();
         }
         return this;
@@ -75,7 +81,7 @@ export default class JumpState extends OwningState<TStateResource> implements IK
         const takenResources = super.take(resources);
 
         if (takenResources.has("animation")) {
-            
+            this.jumpAnimation.stop();
         }
 
         return takenResources;

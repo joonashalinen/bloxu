@@ -84,18 +84,20 @@ export default async function(babylonjs: typeof BABYLON, scene: BABYLON.Scene) {
 
             // Label animations.
             const animationGroups = {
-                "idle": animationGroupsClone[1], 
-                "moveForward": animationGroupsClone[3], 
-                "moveForwardRight": animationGroupsClone[7], 
-                "moveRight": animationGroupsClone[9], 
-                "moveBackward": animationGroupsClone[2], 
-                "moveBackwardRight": animationGroupsClone[5],
-                "moveBackwardLeft": animationGroupsClone[4], 
-                "moveLeft": animationGroupsClone[8],
-                "moveForwardLeft": animationGroupsClone[6],
-                "turnRight": animationGroupsClone[14],
-                "turnLeft": animationGroupsClone[12],
-                "shoot": animationGroupsClone[10]
+                "idle": animationGroupsClone[2], 
+                "moveForward": animationGroupsClone[4], 
+                "moveForwardRight": animationGroupsClone[10], 
+                "moveRight": animationGroupsClone[12], 
+                "moveBackward": animationGroupsClone[3], 
+                "moveBackwardRight": animationGroupsClone[8],
+                "moveBackwardLeft": animationGroupsClone[7], 
+                "moveLeft": animationGroupsClone[11],
+                "moveForwardLeft": animationGroupsClone[9],
+                "turnRight": animationGroupsClone[17],
+                "turnLeft": animationGroupsClone[15],
+                "shoot": animationGroupsClone[13],
+                "jump": animationGroupsClone[6],
+                "fall": animationGroupsClone[0]
             } as ICharacterAnimations;
 
             // Normalize animation speeds.
