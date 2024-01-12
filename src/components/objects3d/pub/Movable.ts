@@ -13,12 +13,15 @@ export default class Movable implements IObject, IMovable, DMovable, IPhysical, 
     movementVelocity: Vector3;
     lastPosition: Vector3;
     gravityEnabled: boolean = true;
-    
+    onlyUseForce: boolean = false;
+    isInAir: boolean = false;
+
     constructor(
         public physicsAggregate: PhysicsAggregate
     ) {
         this.transformNode = physicsAggregate.transformNode;
         this.physicsAggregate = physicsAggregate;
+        this.lastPosition = physicsAggregate.body.transformNode.position.clone();
     }
 
     /**
@@ -40,10 +43,11 @@ export default class Movable implements IObject, IMovable, DMovable, IPhysical, 
                 this.direction = this.direction.add(direction).normalize();
             }
             if (this.gravityEnabled) {
-                if (!this.isFalling()) {
-                    this.updateVelocity();
-                } else {
+                this.updateIsInAir();
+                if (this.isInAir || this.onlyUseForce) {
                     this.applyForce();
+                } else {
+                    this.updateVelocity();
                 }
             } else {
                 this.updateVelocity();
@@ -53,16 +57,14 @@ export default class Movable implements IObject, IMovable, DMovable, IPhysical, 
     }
 
     /**
-     * Whether the Movable is currently moving downwards.
+     * Whether the Movable is currently in air, either falling or rising.
      */
-    isFalling() {
-        if (
-            this.lastPosition !== undefined && 
-            this.lastPosition.y - this.physicsAggregate.body.transformNode.position.y > 0.00001
-        ) {
-            return true;
+    updateIsInAir() {
+        if (this.lastPosition !== undefined) {
+            const yDifference = this.lastPosition.y - this.physicsAggregate.body.transformNode.position.y;
+            this.isInAir = (yDifference > 0.00001 || yDifference < -0.00001);
         } else {
-            return false;
+            this.isInAir = false;
         }
     }
 
@@ -79,11 +81,11 @@ export default class Movable implements IObject, IMovable, DMovable, IPhysical, 
     }
 
     /**
-     * Apply an impulse to the physics body, moving it.
+     * Apply a force to the physics body, moving it.
      */
     applyForce() {
         const mass = this.physicsAggregate.body.getMassProperties().mass;
-        const direction = this.direction.normalize().scale(mass! * this.speed * 5000);
+        const direction = this.direction.normalize().scale(mass! * this.speed * 1000);
         this.physicsAggregate.body.applyForce(
             direction, 
             this.physicsAggregate.body.transformNode.absolutePosition
@@ -102,12 +104,21 @@ export default class Movable implements IObject, IMovable, DMovable, IPhysical, 
     doOnTick(time: number): Movable {
         if (!this.direction.equals(new Vector3(0, 0, 0))) {
             if (this.gravityEnabled) {
-                this.lastPosition = this.physicsAggregate.body.transformNode.position.clone();
-                if (this.physicsAggregate.body.getLinearVelocity().length() < this.movementVelocity.length()) {
+                this.updateIsInAir();
+                if (this.isInAir) {
+                    this.lastPosition = this.physicsAggregate.body.transformNode.position.clone();
                     this.applyForce();
+                } else if (this.onlyUseForce) {
+                    this.applyForce();
+                } else {
+                    this.updateVelocity();
                 }
             } else {
-                this.updateVelocity();
+                if (this.onlyUseForce) {
+                    this.applyForce();
+                } else {
+                    this.updateVelocity();
+                }
             }
         }
         return this;

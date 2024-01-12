@@ -67,12 +67,7 @@ export default class AnimatedRotatable implements IObject, IRotatable {
                                                                     .observe(timeAdjustedAngleDifference).get();
 
         // 80 is a magic number found via trial and error for making the turn animation look correct.
-        // The animation speed also has to be at least 0.01, since a turning speed too near zero 
-        // will not even be visible. Also, this way we avoid giving the turning speed a zero value.
-        const newAnimationSpeed = Math.max(
-            this.originalAnimationSpeed * averagedAngleDifference * 80,
-            0.01
-        );
+        const newAnimationSpeed = this.originalAnimationSpeed * averagedAngleDifference * 80;
 
         const animation = this.animations[direction];
 

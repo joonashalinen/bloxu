@@ -169,7 +169,7 @@ export default class PlayerBody {
                 ),
                 rotate: new RotateState(new EventableRotatable(this.body.as("AnimatedRotatable") as AnimatedRotatable)),
                 shoot: new ShootState(this.id, character, this.body.as("MouseRotatable") as MouseRotatable, pistolMesh),
-                jump: new JumpState((this.body.as("Physical") as Physical).physicsAggregate)
+                jump: new JumpState((this.body.as("Movable") as Movable))
             },
             new Set<TStateResource>(tStateResources)
         );

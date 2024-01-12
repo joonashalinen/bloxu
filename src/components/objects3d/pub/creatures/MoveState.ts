@@ -1,14 +1,9 @@
 import { Vector3 } from "@babylonjs/core";
-import IOwningState from "../../../computation/pub/IOwningState";
-import EventEmitter from "../../../events/pub/EventEmitter";
-import TCompassPoint from "../../../geometry/pub/TCompassPoint";
 import AnimatedMovable from "../AnimatedMovable";
 import IMovable from "../IMovable";
 import IMovableState from "./IMovableState";
 import TStateResource from "./TStateResource";
 import OwningState from "../../../computation/pub/OwningState";
-import IEventable from "../../../events/pub/IEventable";
-import IAutoUpdatable from "../IAutoUpdatable";
 import IToggleable from "../../../misc/pub/IToggleable";
 import EventableMovable from "../EventableMovable";
 import ITickable from "../ITickable";
@@ -18,6 +13,7 @@ import ITickable from "../ITickable";
  */
 export default class MoveState extends OwningState<TStateResource> implements IMovableState, ITickable {
     wantedResources: Set<TStateResource> = new Set(["animation", "movement"]);
+    lastDirection: Vector3 = new Vector3(0, 0, 0);
 
     constructor(
         public movable: IMovable & IToggleable,
@@ -40,7 +36,8 @@ export default class MoveState extends OwningState<TStateResource> implements IM
     }
 
     move(direction: Vector3): IMovableState {
-        if (this.isActive) {
+        this.lastDirection = direction;
+        if (this.ownedResources.has("movement")) {
             this.movable.move(direction);
         }
         return this;
@@ -49,11 +46,17 @@ export default class MoveState extends OwningState<TStateResource> implements IM
     give(resources: Set<TStateResource>): Set<TStateResource> {
         const givenResources = super.give(resources);
         
-        if (resources.has("animation")) {
+        if (givenResources.has("animation")) {
             this.animatedMovable.enableAnimations();
         }
-        if (resources.has("movement")) {
+        if (givenResources.has("movement")) {
             this.movable.enable();
+        }
+
+        if (givenResources.has("animation") || givenResources.has("movement")) {
+            if (!(this.lastDirection.equals(new Vector3(0, 0, 0)))) {
+                this.movable.move(this.lastDirection);
+            }
         }
 
         return givenResources;

@@ -3,24 +3,42 @@ import TStateResource from "./TStateResource";
 import OwningState from "../../../computation/pub/OwningState";
 import IKeyableState from "./IKeyableState";
 import Jumpable from "./Jumpable";
+import Movable from "../Movable";
+import IActionableState from "./IActionableState";
 
 /**
  * State of a creature where the creature is jumping.
  */
-export default class JumpState extends OwningState<TStateResource> implements IKeyableState {
-    wantedResources: Set<TStateResource> = new Set(["animation"]);
+export default class JumpState extends OwningState<TStateResource> implements IKeyableState, IActionableState {
+    wantedResources: Set<TStateResource> = new Set(["animation", "mainAction"]);
     jumpable: Jumpable;
 
     constructor(
-        public physicsAggregate: PhysicsAggregate
+        public movable: Movable
     ) {
         super();
-        this.jumpable = new Jumpable(physicsAggregate);
+        this.jumpable = new Jumpable(movable);
         this.jumpable.emitter.on("jumpEnd", () => {
             if (this.isActive) {
-                this._endSelf("idle");
+                console.log("ended jumping");
+                this._endSelf("run");
             }
         });
+    }
+
+    /**
+     * We want to capture the main action 
+     * to prevent other states from using it.
+     */
+    doMainAction(): IActionableState {
+        // Do nothing.
+        return this;
+    }
+
+    doOnTick(time: number) {
+        if (this.isActive) {
+            this.jumpable.doOnTick(time);
+        }
     }
 
     jump(): JumpState {

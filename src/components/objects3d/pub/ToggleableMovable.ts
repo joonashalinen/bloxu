@@ -34,13 +34,17 @@ export default class ToggleableMovable implements IMovable, IToggleable, IEventa
     }
 
     enable(): IToggleable {
-        this.isEnabled = true;
+        if (!this.isEnabled) {
+            this.isEnabled = true;
+        }
         return this;
     }
 
     disable(): IToggleable {
-        this.isEnabled = false;
-        this.movable.move(new Vector3(0, 0, 0));
+        if (this.isEnabled) {
+            this.isEnabled = false;
+            this.movable.move(new Vector3(0, 0, 0));
+        }
         return this;
     }
 }

@@ -1,4 +1,8 @@
 
+body {
+    font-family: 'Lilita One';
+}
+
 #ui-main-menu-wrapper {
     background-image: url("assets/images/ui_main_menu_background.jpg");
     background-size: cover;

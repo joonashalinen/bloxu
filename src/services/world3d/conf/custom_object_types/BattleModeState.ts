@@ -33,6 +33,10 @@ export default class BattleModeState implements IActionModeState {
 
     doOnTick(time: number): ITickable {
         this.actionModeState.doOnTick(time);
+        const jumpState = this.actionModeState.stateMachine.states["jump"] as JumpState;
+        if (jumpState.isActive) {
+            jumpState.doOnTick(time);
+        }
         return this;
     }
 
@@ -78,7 +82,9 @@ export default class BattleModeState implements IActionModeState {
     
     doMainAction(): IActionableState {
         if (this.isActive) {
-            this.actionModeState.redirectAction<ShootState>("shoot", (state) => state.doMainAction());
+            if (this.actionModeState.stateMachine.resourceStateMachine.availableResources.has("mainAction")) {
+                this.actionModeState.redirectAction<ShootState>("shoot", (state) => state.doMainAction());
+            }
         }
         return this;
     }
