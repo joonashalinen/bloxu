@@ -9,6 +9,7 @@ import IRotatableState from "../../../../components/objects3d/pub/creatures/IRot
 import IState from "../../../../components/computation/pub/IState";
 import { IPointable } from "../../../../components/graphics2d/pub/IPointable";
 import ITickable from "../../../../components/objects3d/pub/ITickable";
+import JumpState from "../../../../components/objects3d/pub/creatures/JumpState";
 
 /**
  * State where the player's body is battle-ready.
@@ -87,6 +88,8 @@ export default class BattleModeState implements IActionModeState {
             if (key === "q") {
                 this.end();
                 this.actionModeState.emitter.trigger("end", ["build"]);
+            } else if (key === " ") {
+                this.actionModeState.redirectAction<JumpState>("jump", (state) => state.pressFeatureKey(key));
             }
         }
         return this;

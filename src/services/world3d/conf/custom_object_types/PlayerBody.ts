@@ -30,6 +30,7 @@ import BuildModeState from "./BuildModeState";
 import PlaceMeshInGridState from "./PlaceMeshInGridState";
 import MeshGrid from "../../../../components/objects3d/pub/MeshGrid";
 import FloatingCube from "./FloatingCube";
+import JumpState from "../../../../components/objects3d/pub/creatures/JumpState";
 
 /**
  * The body that the Player service owns and controls.
@@ -167,7 +168,8 @@ export default class PlayerBody {
                     this.body.as("EventableMovable") as EventableMovable
                 ),
                 rotate: new RotateState(new EventableRotatable(this.body.as("AnimatedRotatable") as AnimatedRotatable)),
-                shoot: new ShootState(this.id, character, this.body.as("MouseRotatable") as MouseRotatable, pistolMesh)
+                shoot: new ShootState(this.id, character, this.body.as("MouseRotatable") as MouseRotatable, pistolMesh),
+                jump: new JumpState((this.body.as("Physical") as Physical).physicsAggregate)
             },
             new Set<TStateResource>(tStateResources)
         );
@@ -188,6 +190,11 @@ export default class PlayerBody {
             },
             "rotate": {
                 "idle": new Set(["animation"])
+            },
+            "jump": {
+                "run": new Set(["animation"]),
+                "idle": new Set(["animation"]),
+                "rotation": new Set(["animation"]),
             }
         };
 
