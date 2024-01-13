@@ -15,6 +15,7 @@ export default class Movable implements IObject, IMovable, DMovable, IPhysical, 
     gravityEnabled: boolean = true;
     onlyUseForce: boolean = false;
     isInAir: boolean = false;
+    inAirMotionDirection: "up" | "down" | "none";
     maxVelocity: number | undefined;
 
     constructor(
@@ -62,8 +63,25 @@ export default class Movable implements IObject, IMovable, DMovable, IPhysical, 
     updateIsInAir() {
         if (this.lastPosition !== undefined) {
             const yDifference = this.lastPosition.y - this.physicsAggregate.body.transformNode.position.y;
-            this.isInAir = (yDifference > 0.00001 || yDifference < -0.00001);
-            if (this.isInAir) {
+
+            if (yDifference < -0.00001) {
+                // If we have hit the ground and are currently bouncing off it.
+                if (this.inAirMotionDirection === "down") {
+                    this.isInAir = false;
+                    this.inAirMotionDirection = "none";
+                } else {
+                    this.isInAir = true;
+                    this.inAirMotionDirection = "up";
+                }
+            } else if (yDifference > 0.00001) {
+                this.isInAir = true;
+                this.inAirMotionDirection = "down";
+            } else {
+                this.isInAir = false;
+                this.inAirMotionDirection = "none";
+            }
+
+            if (yDifference > 0.00001 || yDifference < -0.00001) {
                 this.lastPosition = this.physicsAggregate.body.transformNode.position.clone();
             }
         } else {
