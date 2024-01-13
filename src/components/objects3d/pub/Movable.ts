@@ -15,6 +15,7 @@ export default class Movable implements IObject, IMovable, DMovable, IPhysical, 
     gravityEnabled: boolean = true;
     onlyUseForce: boolean = false;
     isInAir: boolean = false;
+    maxVelocity: number | undefined;
 
     constructor(
         public physicsAggregate: PhysicsAggregate
@@ -43,7 +44,6 @@ export default class Movable implements IObject, IMovable, DMovable, IPhysical, 
                 this.direction = this.direction.add(direction).normalize();
             }
             if (this.gravityEnabled) {
-                this.updateIsInAir();
                 if (this.isInAir || this.onlyUseForce) {
                     this.applyForce();
                 } else {
@@ -63,6 +63,9 @@ export default class Movable implements IObject, IMovable, DMovable, IPhysical, 
         if (this.lastPosition !== undefined) {
             const yDifference = this.lastPosition.y - this.physicsAggregate.body.transformNode.position.y;
             this.isInAir = (yDifference > 0.00001 || yDifference < -0.00001);
+            if (this.isInAir) {
+                this.lastPosition = this.physicsAggregate.body.transformNode.position.clone();
+            }
         } else {
             this.isInAir = false;
         }
@@ -102,22 +105,28 @@ export default class Movable implements IObject, IMovable, DMovable, IPhysical, 
     }
 
     doOnTick(time: number): Movable {
+        if (this.gravityEnabled) {
+            this.updateIsInAir();
+        }
         if (!this.direction.equals(new Vector3(0, 0, 0))) {
-            if (this.gravityEnabled) {
-                this.updateIsInAir();
-                if (this.isInAir) {
-                    this.lastPosition = this.physicsAggregate.body.transformNode.position.clone();
-                    this.applyForce();
-                } else if (this.onlyUseForce) {
-                    this.applyForce();
+            if (
+                this.maxVelocity === undefined || 
+                this.physicsAggregate.body.getLinearVelocity().length() < this.maxVelocity
+            ) {
+                if (this.gravityEnabled) {
+                    if (this.isInAir) {
+                        this.applyForce();
+                    } else if (this.onlyUseForce) {
+                        this.applyForce();
+                    } else {
+                        this.updateVelocity();
+                    }
                 } else {
-                    this.updateVelocity();
-                }
-            } else {
-                if (this.onlyUseForce) {
-                    this.applyForce();
-                } else {
-                    this.updateVelocity();
+                    if (this.onlyUseForce) {
+                        this.applyForce();
+                    } else {
+                        this.updateVelocity();
+                    }
                 }
             }
         }

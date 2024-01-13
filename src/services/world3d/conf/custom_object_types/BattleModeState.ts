@@ -55,6 +55,14 @@ export default class BattleModeState implements IActionModeState {
     
     end(): unknown {
         if (this.isActive) {
+            const jumpState = this.actionModeState.stateMachine.states["jump"];
+            const shootState = this.actionModeState.stateMachine.states["shoot"];
+            if (jumpState.isActive) {
+                this.actionModeState.stateMachine.deactivateState("jump");
+            }
+            if (shootState.isActive) {
+                this.actionModeState.stateMachine.deactivateState("shoot");
+            }
             this.actionModeState.end();
             this.unequipGun();
         }
@@ -91,7 +99,7 @@ export default class BattleModeState implements IActionModeState {
 
     pressFeatureKey(key: string): BattleModeState {
         if (this.isActive) {
-            if (key === "q") {
+            if (key === "q" && !(this.actionModeState.stateMachine.states["jump"].isActive)) {
                 this.end();
                 this.actionModeState.emitter.trigger("end", ["build"]);
             } else if (key === " ") {

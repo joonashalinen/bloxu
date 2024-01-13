@@ -171,6 +171,7 @@ export default class PlayerBody {
                 shoot: new ShootState(this.id, character, this.body.as("MouseRotatable") as MouseRotatable, pistolMesh),
                 jump: new JumpState(
                     (this.body.as("Movable") as Movable),
+                    this.bodyBuilder.topMovable,
                     this.characterAnimations["jump"]
                 )
             },
@@ -195,7 +196,7 @@ export default class PlayerBody {
                 "idle": new Set(["animation"])
             },
             "jump": {
-                "run": new Set(["animation"]),
+                "run": new Set(["animation", "movement"]),
                 "idle": new Set(["animation"]),
                 "rotation": new Set(["animation"]),
             }

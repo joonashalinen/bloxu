@@ -82,10 +82,22 @@ export default class ActionModeState implements IActionModeState {
 
     move(direction: Vector3): IMovableState {
         if (this.isActive) {
-            return this.redirectAction<IMovableState>("run", (state) => state.move(direction));
-        } else {
-            return this;
+            // Try to redirect the action to the run state by default so it can attempt 
+            // to take control of movement if it has permission to.
+            this.redirectAction<IMovableState>("run", (state) => state.move(direction));
+            
+            const movementOwner = Object.values(this.stateMachine.activeStates)
+                .find((s) => s.ownedResources.has("movement"));
+            // If the run state does not have control of movement now, we should 
+            // redirect the action to the state, since this means that the run state was not 
+            // able to override it.
+            if (movementOwner !== undefined && movementOwner !== this.stateMachine.states["run"]) {
+                if ("move" in movementOwner) {
+                    (movementOwner as IMovableState).move(direction);
+                }
+            }
         }
+        return this;
     }
 
     setAngle(angle: number): IRotatableState {

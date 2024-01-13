@@ -5,16 +5,22 @@ import IKeyableState from "./IKeyableState";
 import Jumpable from "./Jumpable";
 import Movable from "../Movable";
 import IActionableState from "./IActionableState";
+import IMovable from "../IMovable";
+import IMovableState from "./IMovableState";
 
 /**
  * State of a creature where the creature is jumping.
  */
-export default class JumpState extends OwningState<TStateResource> implements IKeyableState, IActionableState {
-    wantedResources: Set<TStateResource> = new Set(["animation", "mainAction"]);
+export default class JumpState 
+    extends OwningState<TStateResource> 
+    implements IKeyableState, IActionableState, IMovableState 
+{
+    wantedResources: Set<TStateResource> = new Set(["animation", "mainAction", "movement"]);
     jumpable: Jumpable;
 
     constructor(
         public movable: Movable,
+        public topMovable: IMovable,
         public jumpAnimation: AnimationGroup
     ) {
         super();
@@ -24,9 +30,16 @@ export default class JumpState extends OwningState<TStateResource> implements IK
         this.jumpable.emitter.on("jumpEnd", () => {
             if (this.isActive) {
                 console.log("ended jumping");
-                this._endSelf("run");
+                this._endJumpState();
             }
         });
+    }
+
+    move(direction: Vector3): IMovableState {
+        if (this.isActive) {
+            this.topMovable.move(direction);
+        }
+        return this;
     }
 
     /**
@@ -40,16 +53,28 @@ export default class JumpState extends OwningState<TStateResource> implements IK
 
     doOnTick(time: number) {
         if (this.isActive) {
+            this.movable.doOnTick(time);
             this.jumpable.doOnTick(time);
         }
     }
 
     jump(): JumpState {
         if (this.isActive) {
-            this.jumpAnimation.speedRatio = 0.6;
-            this.jumpAnimation.play();
-            this.jumpAnimation.goToFrame(50);
-            this.jumpable.jump();
+            // If we are not already jumping.
+            if (!this.jumpable.jumping) {
+                // If the character is in air, we cannot jump 
+                // and we must return from the jumping state.
+                if (this.movable.isInAir) {
+                    this._endJumpState();
+                } else {
+                    // The character is not in air, meaning
+                    // we can jump.
+                    this.jumpAnimation.speedRatio = 0.6;
+                    this.jumpAnimation.play();
+                    this.jumpAnimation.goToFrame(50);
+                    this.jumpable.jump();
+                }
+            }
         }
         return this;
     }
@@ -69,11 +94,6 @@ export default class JumpState extends OwningState<TStateResource> implements IK
     
     give(resources: Set<TStateResource>): Set<TStateResource> {
         const givenResources = super.give(resources);
-        
-        if (resources.has("animation")) {
-            
-        }
-
         return givenResources;
     }
 
@@ -84,6 +104,20 @@ export default class JumpState extends OwningState<TStateResource> implements IK
             this.jumpAnimation.stop();
         }
 
+        if (takenResources.has("movement")) {
+            this.topMovable.move(new Vector3(0, 0, 0));
+        }
+
         return takenResources;
+    }
+
+    /**
+     * End the JumpState from within.
+     */
+    private _endJumpState() {
+        if (this.isActive) {
+            const nextState = !(this.movable.direction.equals(new Vector3(0, 0, 0))) ? "run" : "idle";
+            super._endSelf(nextState);
+        }
     }
 }

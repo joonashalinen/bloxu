@@ -7,6 +7,7 @@ import OwningState from "../../../computation/pub/OwningState";
 import IToggleable from "../../../misc/pub/IToggleable";
 import EventableMovable from "../EventableMovable";
 import ITickable from "../ITickable";
+import Movable from "../Movable";
 
 /**
  * State of a creature where the creature is currently moving in a direction.
@@ -25,6 +26,10 @@ export default class MoveState extends OwningState<TStateResource> implements IM
 
         eventableMovable.emitter.on("moveEnd", () => {
             this._endSelf("idle");
+        });
+
+        eventableMovable.emitter.on("move", () => {
+            this.lastDirection = (this.tickableMovable as Movable).direction;
         });
     }
 

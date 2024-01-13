@@ -291,6 +291,7 @@ export default class ResourceStateMachine<TResource> implements IStateMachine<IO
                 // or add them back to the list of available resources.
                 this.redirectFreedResources(freedResources);
             }
+            console.log(this.activeStates);
         });
     }
 }

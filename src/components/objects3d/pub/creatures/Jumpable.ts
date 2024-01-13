@@ -26,8 +26,15 @@ export default class Jumpable implements IObject, IEventable {
      */
     jump() {
         if (!this.jumping) {
-            this.movable.onlyUseForce = true;
             this.jumping = true;
+
+            this.movable.speed = this.movable.speed * 2;
+            this.movable.onlyUseForce = true;
+
+            const maxVelocity = (new Vector3(1, 0, 0).scale(
+                this.movable.physicsAggregate.body.getMassProperties().mass! * this.movable.speed
+            )).length();
+            this.movable.maxVelocity = maxVelocity;
 
             this.movable.physicsAggregate.body.applyImpulse(
                 new Vector3(
@@ -48,6 +55,8 @@ export default class Jumpable implements IObject, IEventable {
             this.movable.onlyUseForce = false;
             this.jumping = false;
             this.startedJumping = false;
+            this.movable.speed = this.movable.speed / 2;
+            this.movable.maxVelocity = undefined;
             this.emitter.trigger("jumpEnd");
         }
     }
