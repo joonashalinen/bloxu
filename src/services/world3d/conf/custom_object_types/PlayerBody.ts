@@ -48,6 +48,8 @@ export default class PlayerBody {
 
     emitter = new EventEmitter();
 
+    deathAltitude: number = -40;
+
     constructor(
         public id: string, 
         public startingPosition: Vector3, 
@@ -250,6 +252,11 @@ export default class PlayerBody {
     doOnTick(time: number) {
         const activeState = this.actionModeStateMachine.firstActiveState();
         activeState!.doOnTick(time);
+        const bodyAltitude = (this.body.as("Physical") as Physical)
+            .physicsAggregate.body.transformNode.absolutePosition.y;
+        if (bodyAltitude < this.deathAltitude) {
+            this.emitter.trigger("hitDeathAltitude");
+        }
     }
 
     /**

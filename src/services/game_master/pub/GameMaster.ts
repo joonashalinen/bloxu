@@ -210,6 +210,10 @@ export default class GameMaster {
      */
     onPlayerDeath(playerId: string) {
         if (this.gameRunning) {
+            // Pause the game engine.
+            this.proxyMessenger.postMessage(
+                this.messageFactory.createRequest("world3d", "pauseRenderLoop")
+            );
             // Notify the service's environment that the game has ended.
             this.proxyMessenger.postMessage(
                 this.messageFactory.createEvent("*", "GameMaster:<event>endGame")

@@ -34,7 +34,8 @@ export default class Player implements IPlayer {
             "IOService:<event>keyDown": this.onControllerKeyDown.bind(this),
             "IOService:<event>keyUp": this.onControllerKeyUp.bind(this),
             "World3D:Player:<event>rotate": this.onBodyRotate.bind(this),
-            "World3D:Player:<event>projectileHit": this.onBodyProjectileHit.bind(this)
+            "World3D:Player:<event>projectileHit": this.onBodyProjectileHit.bind(this),
+            "World3D:Player:<event>hitDeathAltitude": this.onBodyHitDeathAltitude.bind(this)
         };
         this.initialized = false;
         this.spawned = false;
@@ -249,6 +250,10 @@ export default class Player implements IPlayer {
                             playerBody.emitter.on("projectileHit", () => {
                                 sendMsg("World3D:Player:<event>projectileHit", playerBody.state());
                             });
+                            // Get notifications of when the player character reaches a death altitude (i.e. dies by falling).
+                            playerBody.emitter.on("hitDeathAltitude", () => {
+                                sendMsg("World3D:Player:<event>hitDeathAltitude", playerBody.state());
+                            });
                         }
                     }
                 }
@@ -299,6 +304,21 @@ export default class Player implements IPlayer {
      * disabled.
      */
     onBodyProjectileHit(state: DPlayerBody) {
+        this.die();
+    }
+
+    /**
+     * When the player's body has hit an altitude 
+     * at which the player should die.
+     */
+    onBodyHitDeathAltitude() {
+        this.die();
+    }
+
+    /**
+     * Causes the player to die if alive.
+     */
+    die() {
         if (this.isAlive) {
             this.isAlive = false;
             // Notify the service's environment that the player has died.

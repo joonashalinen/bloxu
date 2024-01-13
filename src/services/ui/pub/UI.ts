@@ -1,6 +1,7 @@
 import { DMessage } from "../../../components/messaging/pub/DMessage";
 import ProxyMessenger from "../../../components/messaging/pub/ProxyMessenger";
 import SyncMessenger from "../../../components/messaging/pub/SyncMessenger";
+import Notification from "../prv/Notification";
 import MainMenu from "../prv/MainMenu";
 
 /**
@@ -13,6 +14,7 @@ export default class UI {
     eventHandlers: {[event: string]: Function}
     mainMenu: MainMenu;
     codeWrapper: HTMLElement;
+    endGameScreenWrapper: HTMLElement;
 
     constructor(
         public document: Document,
@@ -21,10 +23,7 @@ export default class UI {
         this.syncMessenger = new SyncMessenger(this.proxyMessenger);
 
         if (wrapper === undefined) {
-            this.wrapper = document.createElement("div");
-            this.wrapper.classList.add("overlay");
-            this.wrapper.id = "ui-main-menu-wrapper";
-            document.body.appendChild(this.wrapper);
+            this.wrapper = this.createOverlayWrapper("ui-main-menu-wrapper");
         }
 
         this.mainMenu = new MainMenu(this.wrapper!, document);
@@ -71,21 +70,57 @@ export default class UI {
             "GameMaster:<event>loseGame": this.onGameLose.bind(this),
             "GameMaster:<event>winGame": this.onGameWin.bind(this)
         };
+
+        this.endGameScreenWrapper = this.createOverlayWrapper("ui-end-game-screen-wrapper");
+        this.endGameScreenWrapper.style.display = "none";
     }
 
     /**
      * When the player has lost the game.
      */
     onGameLose() {
-        window.alert("You lost")
-        location.reload();
+        this.showEndScreen("You lost");
     }
 
     /**
      * When the player has won the game.
      */
     onGameWin() {
-        window.alert("You won")
-        location.reload();
+        this.showEndScreen("You won!");
+    }
+
+    /**
+     * Show either a win or lose message.
+     */
+    showEndScreen(text: string) {
+        this.endGameScreenWrapper.style.display = "block";
+        const endScreen = new Notification(
+            this.endGameScreenWrapper, 
+            this.document,
+            {
+                notification: text,
+                button: "Go to Main Menu"
+            },
+            {
+                button: ["ui-main-menu-button"],
+                title: [],
+                box: ["ui-main-menu-screen", "ui-end-game-screen-box"]
+            }
+        );
+
+        endScreen.show();
+        endScreen.emitter.on("close", () => location.reload());
+    }
+
+    /**
+     * Create a new wrapper element that overlays 
+     * the whole body.
+     */
+    createOverlayWrapper(id: string) {
+        const wrapper = this.document.createElement("div");
+        wrapper.classList.add("overlay");
+        wrapper.id = id;
+        this.document.body.appendChild(wrapper);
+        return wrapper;
     }
 }
