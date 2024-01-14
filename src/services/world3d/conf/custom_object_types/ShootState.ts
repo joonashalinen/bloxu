@@ -89,7 +89,10 @@ export default class ShootState extends OwningState<TStateResource> implements I
     doMainAction() {
         if (this.ownedResources.has("animation")) {
             const direction = this.rotatable.leash.lastLeash3D;
-            this.shoot(direction);
+            const gunPosition = this.gun.transformNode.absolutePosition;
+            const directionFromGun = direction.subtract(gunPosition);
+            const transformedDirection = new Vector3(directionFromGun.x, 0, directionFromGun.z);
+            this.shoot(transformedDirection);
         }
         return this;
     }
@@ -115,10 +118,8 @@ export default class ShootState extends OwningState<TStateResource> implements I
     shoot(direction: Vector3) {
         if (this.isActive) {
             if (this.ownedResources.has("mainAction")) {
-                const gunPosition = this.gun.transformNode.absolutePosition;
-                const directionFromGun = direction.subtract(gunPosition);
-                const transformedDirection = new Vector3(directionFromGun.x, 0, directionFromGun.z);
-                this.gun.shoot(transformedDirection);
+                this.emitter.trigger("shoot", [direction]);
+                this.gun.shoot(direction);
             }
 
             if (this.ownedResources.has("animation")) {

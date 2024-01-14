@@ -5,6 +5,8 @@ import IPlayer from "../IPlayer";
 import Player, { DirectionEvent } from "../local/Player";
 import DVector2 from "../../../../components/graphics3d/pub/DVector2";
 import DPlayerBody from "../../../world3d/conf/custom_object_types/DPlayerBody";
+import ShootState from "../../../world3d/conf/custom_object_types/ShootState";
+import TStateResource from "../../../../components/objects3d/pub/creatures/TStateResource";
 
 /**
  * A Player that is controlled remotely by another online player.
@@ -71,14 +73,23 @@ export default class RemotePlayer implements IPlayer {
                     f: function(
                         this: World3D,
                         bodyId: string,
-                        direction: DVector2
+                        direction: DVector3
                     ) {
                         const body = this.getObject(bodyId) as PlayerBody;
-                        body.shoot(new this.babylonjs.Vector2(direction.x, direction.y));
+                        const shootState = (body.actionStateMachine.states["shoot"] as ShootState);
+
+                        if (!shootState.isActive) {
+                            body.actionStateMachine.resourceStateMachine
+                                .transferResourcesFromAll(
+                                    "shoot", new Set<TStateResource>(Array.from(shootState.wantedResources))
+                                );
+                            
+                            shootState.shoot(new this.babylonjs.Vector3(direction.x, direction.y, direction.z));
+                        }
                     }
                 }
             ])
-        )
+        );
     }
 
     /**

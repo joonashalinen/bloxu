@@ -11,8 +11,10 @@ import DVector2 from "../../../../components/graphics3d/pub/DVector2";
 import MouseRotatable from "../../../../components/objects3d/pub/MouseRotatable";
 import BuildModeState from "../../../world3d/conf/custom_object_types/BuildModeState";
 import { Vector3 } from "@babylonjs/core";
+import BattleModeState from "../../../world3d/conf/custom_object_types/BattleModeState";
+import ShootState from "../../../world3d/conf/custom_object_types/ShootState";
 
-export type DirectionEvent = {direction: DVector2, body: DPlayerBody};
+export type DirectionEvent = {direction: DVector2 | DVector3, body: DPlayerBody};
 
 /**
  * Class that contains the operations and state 
@@ -37,7 +39,8 @@ export default class Player implements IPlayer {
             "IOService:<event>keyUp": this.onControllerKeyUp.bind(this),
             "World3D:Player:<event>projectileHit": this.onBodyProjectileHit.bind(this),
             "World3D:Player:<event>hitDeathAltitude": this.onBodyHitDeathAltitude.bind(this),
-            "World3D:Player:<event>placeBlock": this.onBodyPlaceBlock.bind(this)
+            "World3D:Player:<event>placeBlock": this.onBodyPlaceBlock.bind(this),
+            "World3D:Player:<event>shoot": this.onBodyShoot.bind(this)
         };
         this.initialized = false;
         this.spawned = false;
@@ -122,16 +125,7 @@ export default class Player implements IPlayer {
                         bodyId: string
                     ) {
                         const body = this.getObject(bodyId) as PlayerBody;
-                        
-                        // Make the body do its main action.
-                        // Depending on the current state of the body 
-                        // this may be either shooting or placing a block.
-                        const direction = (body.body.as("MouseRotatable") as MouseRotatable).direction;
                         body.doMainAction();
-                        return {
-                            direction: {x: direction.x, y: direction.y},
-                            body: body.state()
-                        };
                     }
                 }
             ])
@@ -276,6 +270,17 @@ export default class Player implements IPlayer {
                                     }
                                 );
                             });
+                            // Listen to gun shot events.
+                            const shootState = (playerBody.actionStateMachine.states["shoot"] as ShootState);
+                            shootState.emitter.on("shoot", (direction: Vector3) => {
+                                sendMsg(
+                                    "World3D:Player:<event>shoot", 
+                                    {
+                                        direction: {x: direction.x, y: direction.y, z: direction.z},
+                                        body: playerBody.state()
+                                    } as DirectionEvent
+                                );
+                            });
                         }
                     }
                 }
@@ -331,6 +336,15 @@ export default class Player implements IPlayer {
     onBodyPlaceBlock(event: {cell: DVector3, absolutePosition: DVector3}) {
         this.proxyMessenger.postMessage(
             this.messageFactory.createEvent("*", "Player:<event>placeBlock", [event.absolutePosition])
+        );
+    }
+
+    /**
+     * When the player's body has placed a block.
+     */
+    onBodyShoot(event: DirectionEvent) {
+        this.proxyMessenger.postMessage(
+            this.messageFactory.createEvent("*", "Player:<event>shoot", [event])
         );
     }
 
