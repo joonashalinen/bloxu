@@ -62,6 +62,8 @@ export default class Player implements IPlayer {
      * When the controller's pointer has changed position.
      */
     async onControllerPoint(position: DVector2, controllerIndex: number) {
+        if (!this.spawned) {return}
+
         const angle = (await this.modifyWorld(
             [this.playerBodyId(), position], 
             function(this: World3D, bodyId: string, position: DVector2) {
@@ -80,6 +82,7 @@ export default class Player implements IPlayer {
      */
     async onControllerKeyDown(key: string, controllerIndex: number) {
         if (controllerIndex !== 0) {return}
+        if (!this.spawned) {return}
 
         const inBattleState = (await this.modifyWorld(
             [this.playerBodyId(), key], 
@@ -101,6 +104,7 @@ export default class Player implements IPlayer {
      */
     async onControllerKeyUp(key: string, controllerIndex: number) {
         if (controllerIndex !== 0) {return}
+        if (!this.spawned) {return}
 
         this.modifyWorld(
             [this.playerBodyId(), key], 
@@ -116,6 +120,8 @@ export default class Player implements IPlayer {
     async onControllerPointerTrigger(position: DVector2, buttonIndex: number, controllerIndex: number) {
         if (buttonIndex !== 0) {return}
         if (controllerIndex !== 0) {return}
+        if (!this.spawned) {return}
+
         const state = (await this.syncMessenger.postSyncMessage(
             this.messageFactory.createRequest("world3d", "modify", [
                 {
@@ -144,6 +150,7 @@ export default class Player implements IPlayer {
     async onControllerDirectionChange(direction: DVector2, controllerIndex: number) {
         if (this.disableControls) {return}
         if (controllerIndex !== 0) {return}
+        
         if (this.initialized && this.spawned) {
             // Move the player's body in the controller's direction.
             const directionEvent = (await this.syncMessenger.postSyncMessage({
@@ -296,6 +303,8 @@ export default class Player implements IPlayer {
      * Sets the state of the Player character's body.
      */
     setState(state: DPlayerBody) {
+        if (!this.spawned) {return}
+
         this.proxyMessenger.postMessage(
             this.messageFactory.createRequest("world3d", "modify", [
                 {
@@ -365,6 +374,8 @@ export default class Player implements IPlayer {
      * Sets the player's rotation angle.
      */
     setAngle(angle: number) {
+        if (!this.spawned) {return}
+
         this.modifyWorld(
             [angle, this.playerBodyId()], 
             function(this: World3D, angle: number, bodyId: string) {
@@ -378,6 +389,8 @@ export default class Player implements IPlayer {
      * Place a block at the given absolute position in the world.
      */
     placeBlockAbsolute(absolutePosition: DVector3) {
+        if (!this.spawned) {return}
+
         this.modifyWorld(
             [absolutePosition, this.playerBodyId()], 
             function(this: World3D, absolutePosition: DVector3, bodyId: string) {
