@@ -7,6 +7,7 @@ import DVector2 from "../../../../components/graphics3d/pub/DVector2";
 import DPlayerBody from "../../../world3d/conf/custom_object_types/DPlayerBody";
 import ShootState from "../../../world3d/conf/custom_object_types/ShootState";
 import TStateResource from "../../../../components/objects3d/pub/creatures/TStateResource";
+import JumpState from "../../../../components/objects3d/pub/creatures/JumpState";
 
 /**
  * A Player that is controlled remotely by another online player.
@@ -43,19 +44,36 @@ export default class RemotePlayer implements IPlayer {
      * When a controller direction event has been 
      * received, e.g. a joystick event.
      */
-    onRemoteMove(event: DirectionEvent) {
+    async onRemoteMove(event: DirectionEvent) {
         // Invert the direction vector, since the remote player's 
         // orientation for controls is the opposite 
         // of the local player's.
         event.direction = {x: (-1) * event.direction.x, y: (-1) * event.direction.y};
-        // Update the player's state in the world 
-        // to mirror the state the real player had at the time of the event.
-        this.player.setState(event.body);
-        // Enable controls temporarily so that we can simulate a controller direction event
-        // happening to the Player.
-        this.player.disableControls = false;
-        this.player.onControllerDirectionChange(event.direction, 0);
-        this.player.disableControls = true;
+        // Move the player's body in the controller's direction.
+        await this.player.modifyWorld(
+            [this.player.playerBodyId(), event],
+            function(this: World3D, bodyId: string, event: DirectionEvent) {
+                const body = this.getObject(bodyId) as PlayerBody;
+                const jumpState = body.actionStateMachine.states["jump"] as JumpState;
+                // We only want to force-update the state of the body 
+                // if we are not currently jumping. Force-updating state 
+                // during jumping often causes jumping to end prematurely.
+                if (!jumpState.isActive) {
+                    // Update the body's state in the world 
+                    // to mirror the state the real player had at the time of the event.
+                    body.setState(event.body);
+                }
+                const directionVector = new this.babylonjs.Vector2(event.direction.x, event.direction.y);
+                body.move(directionVector);
+                // Return something because SyncMessenger 
+                // requires that the receiving service returns a response.
+                // ClassMessenger on the other hand only returns a 
+                // response if the called function on the wrapped class returns something.
+                // The World3D service class is wrapped in a ClassMessenger.
+                // Thus, if we do not return anything here, we will not receive a response.
+                return true;
+            }
+        )
     }
 
     /**
