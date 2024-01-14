@@ -67,14 +67,18 @@ export default class AnimatedRotatable implements IObject, IRotatable {
                                                                     .observe(timeAdjustedAngleDifference).get();
 
         // 80 is a magic number found via trial and error for making the turn animation look correct.
-        const newAnimationSpeed = this.originalAnimationSpeed * averagedAngleDifference * 80;
+        // We also want to cap the animation speed.
+        const newAnimationSpeed = Math.min(
+            this.originalAnimationSpeed * averagedAngleDifference * 80,
+            2
+        );
 
         const animation = this.animations[direction];
 
         if (this.rotationEnabled) {
             // If there is not enough of a different in the turn speed, we 
             // do not update it.
-            if (Math.abs(newAnimationSpeed - this.currentAnimationSpeed) > 0.2) {
+            if (Math.abs(newAnimationSpeed - this.currentAnimationSpeed) > 0.1) {
                 this.currentAnimationSpeed = newAnimationSpeed;
                 animation.speedRatio = this.currentAnimationSpeed;
             }
