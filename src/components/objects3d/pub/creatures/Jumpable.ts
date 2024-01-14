@@ -30,6 +30,7 @@ export default class Jumpable implements IObject, IEventable {
 
             this.movable.speed = this.movable.speed * 20;
             this.movable.onlyUseForce = true;
+            this.movable.resetLastPosition();
 
             const maxVelocity = (new Vector3(1, 0, 0).scale(
                 this.movable.physicsAggregate.body.getMassProperties().mass! * this.movable.speed
@@ -48,9 +49,11 @@ export default class Jumpable implements IObject, IEventable {
     }
 
     doOnTick(time: number) {
+        // If jumping has started.
         if (this.movable.isInAir && !this.startedJumping) {
             this.startedJumping = true;
         }
+        // If jumping has ended.
         if (!this.movable.isInAir && this.startedJumping) {
             this.movable.onlyUseForce = false;
             this.jumping = false;

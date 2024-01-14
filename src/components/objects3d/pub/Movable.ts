@@ -82,7 +82,7 @@ export default class Movable implements IObject, IMovable, DMovable, IPhysical, 
             }
 
             if (yDifference > 0.00001 || yDifference < -0.00001) {
-                this.lastPosition = this.physicsAggregate.body.transformNode.position.clone();
+                this.resetLastPosition();
             }
         } else {
             this.isInAir = false;
@@ -149,5 +149,12 @@ export default class Movable implements IObject, IMovable, DMovable, IPhysical, 
             }
         }
         return this;
+    }
+
+    /**
+     * Set the last position to be the current position.
+     */
+    resetLastPosition() {
+        this.lastPosition = this.physicsAggregate.body.transformNode.position.clone();
     }
 }

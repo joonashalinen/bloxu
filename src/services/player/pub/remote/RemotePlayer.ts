@@ -51,7 +51,7 @@ export default class RemotePlayer implements IPlayer {
         // Update the player's state in the world 
         // to mirror the state the real player had at the time of the event.
         this.player.setState(event.body);
-        // Enable controls temporarily so that we can simulate a controller direction event.
+        // Enable controls temporarily so that we can simulate a controller direction event
         // happening to the Player.
         this.player.disableControls = false;
         this.player.onControllerDirectionChange(event.direction, 0);
