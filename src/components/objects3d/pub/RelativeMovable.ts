@@ -9,6 +9,7 @@ import IObject from "./IObject";
  */
 export default class RelativeMovable implements IMovable, IObject {
     transformNode: TransformNode;
+    direction: Vector3;
 
     constructor(public movable: IMovable & IObject, public rotatable: IRotatable) {
         this.transformNode = movable.transformNode;
@@ -18,6 +19,7 @@ export default class RelativeMovable implements IMovable, IObject {
      * Move in given direction relative to the current orientation.
      */
     move(direction: Vector3) {
+        this.direction = direction;
         // Adjust the direction vector based on the current rotation angle.
         // We want movements to be relative to the orientation of the player character.
         const relativeDirection = direction.rotateByQuaternionToRef(

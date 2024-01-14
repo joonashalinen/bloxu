@@ -207,11 +207,16 @@ export default class ControllableBuilder {
         animationGroups: AnimationGroup[],
         defaultAnimation: AnimationGroup
     ) {
-        if (!(this.topMovable instanceof EventableMovable)) {
-            throw new Error("The object must be made last an EventableMovable before it can be made an animated movable.");
+        if (this.result.as("EventableMovable") === undefined) {
+            throw new Error("The object must be made an EventableMovable before it can be made an animated movable.");
         }
 
-        const animatedMovable = new AnimatedMovable(this.topMovable as EventableMovable, directions, animationGroups);
+        const animatedMovable = new AnimatedMovable(
+            this.topMovable, 
+            this.result.as("EventableMovable") as EventableMovable, 
+            directions, 
+            animationGroups
+        );
         animatedMovable.currentAnimation = defaultAnimation;
         this.result.is(animatedMovable);
         this.topMovable = animatedMovable;

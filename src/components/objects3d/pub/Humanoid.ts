@@ -8,12 +8,12 @@ import IObject from "./IObject";
  * For example, all humans (in general) can move, and the movements
  * have animations.
  */
-export default class Humanoid implements IObject, IMovable {
+export default class Humanoid implements IObject {
     constructor(public transformNode: TransformNode) {
         
     }
     
-    move(direction: Vector3, onlyInDirection?: boolean | undefined): IMovable {
+    move(direction: Vector3, onlyInDirection?: boolean | undefined): IObject {
         throw new Error("Method not implemented.");
     }
 }

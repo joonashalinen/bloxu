@@ -8,6 +8,7 @@ import IObject from "./IObject";
  */
 export default class CameraRelativeMovable implements IMovable, IObject {
     transformNode: TransformNode;
+    direction: Vector3;
 
     constructor(public movable: IMovable & IObject, public camera: Camera) {
         this.transformNode = movable.transformNode;
@@ -17,6 +18,8 @@ export default class CameraRelativeMovable implements IMovable, IObject {
      * Move in given direction relative to the current orientation.
      */
     move(direction: Vector3) {
+        this.direction = direction;
+
         // Vector between camera and target.
         const betweenCameraAndTarget = this.movable.transformNode.position
             .subtract(this.camera.position);

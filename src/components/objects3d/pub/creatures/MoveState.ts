@@ -29,7 +29,7 @@ export default class MoveState extends OwningState<TStateResource> implements IM
         });
 
         eventableMovable.emitter.on("move", () => {
-            this.lastDirection = (this.tickableMovable as Movable).direction;
+            this.lastDirection = this.movable.direction;
         });
     }
 

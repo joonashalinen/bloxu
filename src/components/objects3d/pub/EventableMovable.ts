@@ -11,6 +11,13 @@ import IObject from "./IObject";
 export default class EventableMovable implements IMovable, IEventable, IObject {
     emitter: EventEmitter = new EventEmitter();
     
+    public get direction(): Vector3 {
+        return this.movable.direction;
+    }
+    public set direction(value: Vector3) {
+        this.movable.direction = value;
+    }
+
     get transformNode() {
         return this.movable.transformNode;
     }

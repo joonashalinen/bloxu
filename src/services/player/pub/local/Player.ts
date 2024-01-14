@@ -84,6 +84,12 @@ export default class Player implements IPlayer {
                 const body = this.getObject(bodyId) as PlayerBody;
                 body.pressFeatureKey(key);
         });
+
+        if (key === " ") {
+            this.proxyMessenger.postMessage(
+                this.messageFactory.createEvent("*", "Player:<event>jump")
+            );
+        }
     }
 
     /**

@@ -6,6 +6,8 @@ import { Vector3 } from "@babylonjs/core";
  */
 export default interface IMovable {
     
+    direction: Vector3;
+
     /**
      * Sets the object to move in the given direction. The magnitude 
      * of the vector indicates the speed. The onlyInDirection property 

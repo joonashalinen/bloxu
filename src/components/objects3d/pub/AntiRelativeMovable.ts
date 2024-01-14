@@ -13,6 +13,7 @@ import IObject from "./IObject";
  */
 export default class AntiRelativeMovable implements IMovable, IObject {
     transformNode: TransformNode;
+    direction: Vector3;
 
     constructor(public movable: IMovable & IObject, public rotatable: IRotatable) {
         this.transformNode = movable.transformNode;
@@ -23,6 +24,8 @@ export default class AntiRelativeMovable implements IMovable, IObject {
      * RelativeMovable would rotate it.
      */
     move(direction: Vector3) {
+        this.direction = direction;
+        
         const relativeDirection = direction.rotateByQuaternionToRef(
             Quaternion.RotationAxis(Axis.Y, (-1) * this.rotatable.angle + Math.PI/2),
             new Vector3()

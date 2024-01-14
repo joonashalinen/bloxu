@@ -97,6 +97,7 @@ export default class PlayerBody {
                 depth: characterWidth
             }
         );
+        controllableBuilder.makeEventableMovable();
         controllableBuilder.makeMouseRotatable();
         controllableBuilder.makeAnimatedRotatable(
             {
@@ -108,7 +109,6 @@ export default class PlayerBody {
         // Undoes the AntiRelativeMovable (applied below), resulting in 
         // moving in the original movement direction.
         controllableBuilder.makeRelativeMovable();
-        controllableBuilder.makeEventableMovable();
         controllableBuilder.makeAnimatedMovable(
             [
                 new Vector2(0, 0),
@@ -134,7 +134,8 @@ export default class PlayerBody {
             ],
             character.animations["idle"]
         );
-        // Make AntiRelativeMovable to make character animations relative to the orientation.
+        // Make AntiRelativeMovable after AnimatedMovable 
+        // to make character animations relative to the orientation.
         controllableBuilder.makeAntiRelativeMovable();
         controllableBuilder.makeCameraRelativeMovable();
         this.bodyBuilder = controllableBuilder;

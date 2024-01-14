@@ -22,6 +22,7 @@ export default class RemotePlayer implements IPlayer {
             "OnlineSynchronizer:Player:<event>rotate": this.onRemoteRotate.bind(this),
             "OnlineSynchronizer:Player:<event>die": this.onRemoteDie.bind(this),
             "OnlineSynchronizer:Player:<event>placeBlock": this.onRemotePlaceBlock.bind(this),
+            "OnlineSynchronizer:Player:<event>jump": this.onRemoteJump.bind(this),
         };
     }
     
@@ -109,7 +110,13 @@ export default class RemotePlayer implements IPlayer {
      * When the remote player has placed a block.
      */
     onRemotePlaceBlock(absolutePosition: DVector3) {
-        console.log(absolutePosition);
         this.player.placeBlockAbsolute(absolutePosition);
+    }
+
+    /**
+     * When the remote player has jumped.
+     */
+    onRemoteJump() {
+        this.player.onControllerKeyDown(" ", 0);
     }
 }

@@ -11,6 +11,13 @@ export default class ToggleableMovable implements IMovable, IToggleable, IEventa
     isEnabled = true;
     emitter = new EventEmitter();
 
+    public get direction(): Vector3 {
+        return this.movable.direction;
+    }
+    public set direction(value: Vector3) {
+        this.movable.direction = value;
+    }
+
     constructor(public movable: IMovable | (IMovable & IEventable)) {
         if ("emitter" in movable) {
             movable.emitter.on("moveEnd", () => {

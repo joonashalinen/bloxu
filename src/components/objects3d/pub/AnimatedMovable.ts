@@ -15,8 +15,16 @@ export default class AnimatedMovable implements IMovable, IObject, IEventable {
     movementEnabled: boolean = true;
     emitter: EventEmitter = new EventEmitter();
 
+    public get direction(): Vector3 {
+        return this.movable.direction;
+    }
+    public set direction(value: Vector3) {
+        this.movable.direction = value;
+    }
+
     constructor(
-        public movable: IMovable & IObject & IEventable, 
+        public movable: IMovable & IObject, 
+        public eventableMovable: IMovable & IEventable,
         public directions: Array<Vector2>, 
         public animations: Array<AnimationGroup>
     ) {
@@ -26,7 +34,7 @@ export default class AnimatedMovable implements IMovable, IObject, IEventable {
             animation.blendingSpeed = 0.2;
         });
 
-        movable.emitter.on("moveEnd", (...args: unknown[]) => {
+        eventableMovable.emitter.on("moveEnd", (...args: unknown[]) => {
             this.emitter.trigger("moveEnd", args);
         });
     }
