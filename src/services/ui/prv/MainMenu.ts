@@ -68,4 +68,18 @@ export default class MainMenu implements IEventable {
     onJoinGame(callback: (code: string) => void) {
         this.emitter.on("joinGame", callback);
     }
+
+    /**
+     * Show the main menu.
+     */
+    show() {
+        this.wrapper.style.display = "block";
+    }
+
+    /**
+     * Hide the main menu.
+     */
+    hide() {
+        this.wrapper.style.display = "none";
+    }
 }

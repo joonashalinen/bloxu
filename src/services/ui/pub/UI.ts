@@ -73,6 +73,8 @@ export default class UI {
 
         this.endGameScreenWrapper = this.createOverlayWrapper("ui-end-game-screen-wrapper");
         this.endGameScreenWrapper.style.display = "none";
+
+        this.mainMenu.hide();
     }
 
     /**
@@ -122,5 +124,19 @@ export default class UI {
         wrapper.id = id;
         this.document.body.appendChild(wrapper);
         return wrapper;
+    }
+
+    /**
+     * Show the UI
+     */
+    show() {
+        this.mainMenu.show();
+    }
+
+    /**
+     * Hide the UI:
+     */
+    hide() {
+        this.mainMenu.hide();
     }
 }

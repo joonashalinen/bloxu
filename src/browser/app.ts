@@ -95,6 +95,8 @@ class App {
         await this.initializeService(gameMasterWorker, "gameMaster");
         await this.initializeService(onlineSynchronizerWorker, "onlineSynchronizer");
         console.log("all services initialized");
+        // We can now make the UI visible.
+        ui.show();
 
         // Setup communications between services.
         var messengers = {
