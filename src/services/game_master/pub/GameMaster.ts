@@ -49,7 +49,7 @@ export default class GameMaster {
 
         // Create the cube islands the players will spawn on.
         this.createCubeIsland("GameMaster:FloatingCube?1", {x: 0, y: 0, z: 0});
-        this.createCubeIsland("GameMaster:FloatingCube?2", {x: 0, y: 0, z: 20});
+        this.createCubeIsland("GameMaster:FloatingCube?2", {x: 0, y: 0, z: 20.156});
 
         // vvv Setup players. vvv        
 
