@@ -1,0 +1,109 @@
+
+body {
+    font-family: 'Lilita One';
+}
+
+#ui-main-menu-wrapper {
+    background-image: url("assets/images/ui_main_menu_background.jpg");
+    background-size: cover;
+    font-family: 'Lilita One';
+}
+
+.ui-main-menu-screen {
+    position: relative;
+    top: 50%;
+    width: 400px;
+    margin: 0 auto;
+}
+
+#ui-main-menu-home-screen {
+    height: 150px;
+    margin-top: -75px;
+}
+
+#ui-main-menu-join-game-screen {
+    height: 150px;
+    margin-top: -75px;
+}
+
+.ui-end-game-screen-box {
+    height: 120px;
+    margin-top: -75px;
+    background-color: rgba(0, 0, 0, 0.3);
+    border-radius: 20px;
+    padding-top: 5px;
+}
+
+.ui-end-game-screen-box > .ui-main-menu-button {
+    width: 180px;
+}
+
+.ui-code-wrapper {
+    color: white;
+    position: absolute;
+    top: 20px;
+    left: 10px;
+    color: rgb(34, 57, 64);
+    font-family: 'Lilita One';
+    width: 200px
+}
+
+.ui-code-wrapper > span {
+    margin-left: 10px;
+}
+
+.ui-main-menu-screen > * {
+    display: block;
+    margin: 0 auto;
+    color: white;
+    margin-top: 20px;
+    text-align: center;
+}
+
+.ui-main-menu-home-screen-title {
+    text-align: center;
+}
+
+.ui-main-menu-button {
+    width: 140px;
+    height: 30px;
+    font-weight: bold;
+    text-align: center;
+    border-radius: 8px;
+    border: solid;
+    border-width: 3px;
+    font-size: 18px;
+    border-color: white;
+    color: white;
+}
+
+.ui-main-menu-button:hover {
+    background-color: white;
+    color: rgb(34, 57, 64);
+}
+
+.ui-main-menu-input {
+    font-weight: bold;
+    text-align: center;
+    border-width: 2px;
+    font-size: 18px;
+    border-color: white;
+    color: white;
+    border: solid;
+    border-radius: 8px;
+    padding-top: 5px;
+    padding-bottom: 5px;
+}
+
+.ui-main-menu-input:focus {
+    border-width: 3px;
+    outline: none;
+}
+
+::placeholder {
+    font-style: italic;
+    font-size: 14px;
+    border-color: white;
+    color: white;
+    opacity: 1; /* Firefox */
+  }
