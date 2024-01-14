@@ -21,7 +21,7 @@ export default class MainMenuHomeScreen implements IState, IEventable {
     ) {
         // Create title element.
         this.title = document.createElement("h1");
-        this.title.innerText = "Sky Standoff";
+        this.title.innerText = "Sky Duel";
         this.title.classList.add("ui-main-menu-home-screen-title");
         this.wrapper.appendChild(this.title);
         // Create menu buttons.
