@@ -9,6 +9,8 @@ import SyncMessenger from "../../../../components/messaging/pub/SyncMessenger";
 import DPlayerBody from "../../../world3d/conf/custom_object_types/DPlayerBody";
 import DVector2 from "../../../../components/graphics3d/pub/DVector2";
 import MouseRotatable from "../../../../components/objects3d/pub/MouseRotatable";
+import BuildModeState from "../../../world3d/conf/custom_object_types/BuildModeState";
+import { Vector3 } from "@babylonjs/core";
 
 export type DirectionEvent = {direction: DVector2, body: DPlayerBody};
 
@@ -33,9 +35,9 @@ export default class Player implements IPlayer {
             "IOService:<event>point": this.onControllerPoint.bind(this),
             "IOService:<event>keyDown": this.onControllerKeyDown.bind(this),
             "IOService:<event>keyUp": this.onControllerKeyUp.bind(this),
-            "World3D:Player:<event>rotate": this.onBodyRotate.bind(this),
             "World3D:Player:<event>projectileHit": this.onBodyProjectileHit.bind(this),
-            "World3D:Player:<event>hitDeathAltitude": this.onBodyHitDeathAltitude.bind(this)
+            "World3D:Player:<event>hitDeathAltitude": this.onBodyHitDeathAltitude.bind(this),
+            "World3D:Player:<event>placeBlock": this.onBodyPlaceBlock.bind(this)
         };
         this.initialized = false;
         this.spawned = false;
@@ -57,12 +59,17 @@ export default class Player implements IPlayer {
      * When the controller's pointer has changed position.
      */
     async onControllerPoint(position: DVector2, controllerIndex: number) {
-        this._modifyWorld(
+        const angle = (await this.modifyWorld(
             [this.playerBodyId(), position], 
             function(this: World3D, bodyId: string, position: DVector2) {
                 const body = this.getObject(bodyId) as PlayerBody;
                 body.point(new this.babylonjs.Vector2(position.x, position.y));
-        });
+                return body.bodyBuilder.topRotatable.angle;
+        }))[0] as number;
+        
+        this.proxyMessenger.postMessage(
+            this.messageFactory.createEvent("*", "Player:<event>rotate", [angle])
+        );
     }
 
     /**
@@ -71,7 +78,7 @@ export default class Player implements IPlayer {
     async onControllerKeyDown(key: string, controllerIndex: number) {
         if (controllerIndex !== 0) {return}
 
-        this._modifyWorld(
+        this.modifyWorld(
             [this.playerBodyId(), key], 
             function(this: World3D, bodyId: string, key: string) {
                 const body = this.getObject(bodyId) as PlayerBody;
@@ -85,7 +92,7 @@ export default class Player implements IPlayer {
     async onControllerKeyUp(key: string, controllerIndex: number) {
         if (controllerIndex !== 0) {return}
 
-        this._modifyWorld(
+        this.modifyWorld(
             [this.playerBodyId(), key], 
             function(this: World3D, bodyId: string, key: string) {
                 const body = this.getObject(bodyId) as PlayerBody;
@@ -99,7 +106,6 @@ export default class Player implements IPlayer {
     async onControllerPointerTrigger(position: DVector2, buttonIndex: number, controllerIndex: number) {
         if (buttonIndex !== 0) {return}
         if (controllerIndex !== 0) {return}
-        // Shoot gun.
         const state = (await this.syncMessenger.postSyncMessage(
             this.messageFactory.createRequest("world3d", "modify", [
                 {
@@ -109,6 +115,7 @@ export default class Player implements IPlayer {
                         bodyId: string
                     ) {
                         const body = this.getObject(bodyId) as PlayerBody;
+                        
                         // Make the body do its main action.
                         // Depending on the current state of the body 
                         // this may be either shooting or placing a block.
@@ -229,7 +236,7 @@ export default class Player implements IPlayer {
                     boundArgs: [this.playerBodyId(), this.disableControls],
                     f: function(
                         this: World3D, 
-                        sendMsg: (eventName: string, event: DPlayerBody) => void,
+                        sendMsg: (eventName: string, event: unknown) => void,
                         playerBodyId: string,
                         disableControls: boolean
                     ) {
@@ -242,10 +249,6 @@ export default class Player implements IPlayer {
                             // Let the player's body handle updating its own 
                             // objects.
                             playerBody.enableAutoUpdate();
-                            // Get notifications of the player character's rotation events from World3D.
-                            (playerBody.body.as("MouseRotatable") as MouseRotatable).emitter.on("rotate", () => {
-                                sendMsg("World3D:Player:<event>rotate", playerBody.state())
-                            });
                             // Get notifications of when the player character gets hit with a projectile.
                             playerBody.emitter.on("projectileHit", () => {
                                 sendMsg("World3D:Player:<event>projectileHit", playerBody.state());
@@ -253,6 +256,18 @@ export default class Player implements IPlayer {
                             // Get notifications of when the player character reaches a death altitude (i.e. dies by falling).
                             playerBody.emitter.on("hitDeathAltitude", () => {
                                 sendMsg("World3D:Player:<event>hitDeathAltitude", playerBody.state());
+                            });
+                            // Listen to block placement events.
+                            const buildState = (playerBody.actionModeStateMachine.states["build"] as BuildModeState);
+                            const placementGrid = buildState.placeMeshState.eventablePlacementGrid;
+                            placementGrid.emitter.on("place", (cell: Vector3, absolutePosition: Vector3) => {
+                                sendMsg(
+                                    "World3D:Player:<event>placeBlock", 
+                                    {
+                                        cell: {x: cell.x, y: cell.y, z: cell.z},
+                                        absolutePosition: {x: absolutePosition.x, y: absolutePosition.y, z: absolutePosition.z}
+                                    }
+                                );
                             });
                         }
                     }
@@ -291,18 +306,6 @@ export default class Player implements IPlayer {
      * This is an event that occurs only if the Player's controls are not 
      * disabled.
      */
-    onBodyRotate(state: DPlayerBody) {
-        // Send a rotate event to the service's environment.
-        this.proxyMessenger.postMessage(
-            this.messageFactory.createEvent("*", "Player:<event>rotate", [state])
-        )
-    }
-
-    /**
-     * When the Player's player body has rotated in the world.
-     * This is an event that occurs only if the Player's controls are not 
-     * disabled.
-     */
     onBodyProjectileHit(state: DPlayerBody) {
         this.die();
     }
@@ -313,6 +316,15 @@ export default class Player implements IPlayer {
      */
     onBodyHitDeathAltitude() {
         this.die();
+    }
+
+    /**
+     * When the player's body has placed a block.
+     */
+    onBodyPlaceBlock(event: {cell: DVector3, absolutePosition: DVector3}) {
+        this.proxyMessenger.postMessage(
+            this.messageFactory.createEvent("*", "Player:<event>placeBlock", [event.absolutePosition])
+        );
     }
 
     /**
@@ -329,9 +341,37 @@ export default class Player implements IPlayer {
     }
 
     /**
+     * Sets the player's rotation angle.
+     */
+    setAngle(angle: number) {
+        this.modifyWorld(
+            [angle, this.playerBodyId()], 
+            function(this: World3D, angle: number, bodyId: string) {
+                const body = this.getObject(bodyId) as PlayerBody;
+                body.setAngle(angle);
+            }
+        )
+    }
+
+    /**
+     * Place a block at the given absolute position in the world.
+     */
+    placeBlockAbsolute(absolutePosition: DVector3) {
+        this.modifyWorld(
+            [absolutePosition, this.playerBodyId()], 
+            function(this: World3D, absolutePosition: DVector3, bodyId: string) {
+                const body = this.getObject(bodyId) as PlayerBody;
+                body.placeBlockAbsolute(
+                    new this.babylonjs.Vector3(absolutePosition.x, absolutePosition.y, absolutePosition.z)
+                );
+            }
+        )
+    }
+
+    /**
      * Call 'modify' on world3d.
      */
-    private async _modifyWorld(boundArgs: unknown[], f: Function) {
+    async modifyWorld(boundArgs: unknown[], f: Function) {
         return this.syncMessenger.postSyncMessage(
             this.messageFactory.createRequest("world3d", "modify", [
                 {

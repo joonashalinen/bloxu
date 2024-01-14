@@ -15,6 +15,8 @@ import Shiftable from "../../../../components/objects3d/pub/Shiftable";
 import GridFollower from "../../../../components/objects3d/pub/GridFollower";
 import ShiftableFollower from "../../../../components/objects3d/pub/ShiftableFollower";
 import IObject from "../../../../components/objects3d/pub/IObject";
+import EventablePlaceable from "../../../../components/objects3d/pub/menus/EventablePlaceable";
+import EventablePlacementGrid from "../../../../components/objects3d/pub/menus/EventablePlacementGrid";
 
 /**
  * A state of a movable creature where they can place 
@@ -24,12 +26,14 @@ import IObject from "../../../../components/objects3d/pub/IObject";
 export default class PlaceMeshInGridState implements IState, IEventable, IPointable, IActionableState, IKeyableState, ITickable {
     isActive: boolean = false;
     emitter = new EventEmitter();
-    placementGrid: PointablePlacementGrid;
+    pointablePlacementGrid: PointablePlacementGrid<EventablePlacementGrid>;
     blockSize: number;
     shiftableGrid: Shiftable;
     gridFollower: GridFollower;
     shiftableFollower: ShiftableFollower;
     characterHeight: number = 1.8;
+    eventablePlacementGrid: EventablePlacementGrid;
+    placementGrid: PlacementGrid;
 
     constructor(
         public baseId: string,
@@ -62,7 +66,7 @@ export default class PlaceMeshInGridState implements IState, IEventable, IPointa
         // Make a ShiftableFollower to coordinate between the Follower and the Shiftable.
         this.shiftableFollower = new ShiftableFollower(this.shiftableGrid, this.gridFollower);
 
-        const placementGrid = new PlacementGrid(
+        this.placementGrid = new PlacementGrid(
             grid,
             () => {
                 const obj = this.makeObject(`PlaceMeshInGridState:object?${this.baseId}`);
@@ -74,13 +78,15 @@ export default class PlaceMeshInGridState implements IState, IEventable, IPointa
                 return obj;
             }
         );
-        placementGrid.setPosition = (obj, position) => {
+        this.placementGrid.setPosition = (obj, position) => {
             (obj as Physical).physicsAggregate.body.transformNode.setAbsolutePosition(position);
         };
 
-        this.placementGrid = new PointablePlacementGrid(
+        this.eventablePlacementGrid = new EventablePlacementGrid(this.placementGrid);
+
+        this.pointablePlacementGrid = new PointablePlacementGrid(
             grid,
-            placementGrid
+            this.eventablePlacementGrid
         );
     }
 
@@ -113,14 +119,14 @@ export default class PlaceMeshInGridState implements IState, IEventable, IPointa
 
     doMainAction(): IActionableState {
         if (this.isActive) {
-            this.placementGrid.place();
+            this.pointablePlacementGrid.place();
         }
         return this;
     }
 
     point(pointerPosition: { x: number; y: number; }): IPointable {
         if (this.isActive) {
-            this.placementGrid.point(pointerPosition);
+            this.pointablePlacementGrid.point(pointerPosition);
         }
         return this;
     }

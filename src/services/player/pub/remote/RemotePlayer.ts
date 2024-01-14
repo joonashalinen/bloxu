@@ -19,8 +19,9 @@ export default class RemotePlayer implements IPlayer {
         this.eventHandlers = {
             "OnlineSynchronizer:Player:<event>move": this.onRemoteMove.bind(this),
             "OnlineSynchronizer:Player:<event>shoot": this.onRemoteShoot.bind(this),
-            "OnlineSynchronizer:Player:<event>rotate": this.onSimpleStateChange.bind(this),
-            "OnlineSynchronizer:Player:<event>die": this.onRemoteDie.bind(this)
+            "OnlineSynchronizer:Player:<event>rotate": this.onRemoteRotate.bind(this),
+            "OnlineSynchronizer:Player:<event>die": this.onRemoteDie.bind(this),
+            "OnlineSynchronizer:Player:<event>placeBlock": this.onRemotePlaceBlock.bind(this),
         };
     }
     
@@ -40,6 +41,10 @@ export default class RemotePlayer implements IPlayer {
      * received, e.g. a joystick event.
      */
     onRemoteMove(event: DirectionEvent) {
+        // Invert the direction vector, since the remote player's 
+        // orientation for controls is the opposite 
+        // of the local player's.
+        event.direction = {x: (-1) * event.direction.x, y: (-1) * event.direction.y};
         // Update the player's state in the world 
         // to mirror the state the real player had at the time of the event.
         this.player.setState(event.body);
@@ -91,5 +96,20 @@ export default class RemotePlayer implements IPlayer {
         this.player.proxyMessenger.postMessage(
             this.player.messageFactory.createEvent("*", "Player:<event>die", [this.player.playerId])
         );
+    }
+
+    /**
+     * When the remote player has rotated.
+     */
+    onRemoteRotate(angle: number) {
+        this.player.setAngle(angle);
+    }
+
+    /**
+     * When the remote player has placed a block.
+     */
+    onRemotePlaceBlock(absolutePosition: DVector3) {
+        console.log(absolutePosition);
+        this.player.placeBlockAbsolute(absolutePosition);
     }
 }

@@ -3,19 +3,20 @@ import MeshGrid from "../MeshGrid";
 import { IPointable } from "../../../graphics2d/pub/IPointable";
 import PlacementGrid from "./PlacementGrid";
 import Object from "../Object";
+import IPlaceable from "./IPlaceable";
 
 /**
  * Adds the functionality of allowing placement via a pointer controller 
  * (such as a mouse pointer for example) place objects in a PlacementGrid;
  */
-export default class PointablePlacementGrid implements IPointable {
+export default class PointablePlacementGrid<T extends IPlaceable> implements IPointable {
     highlightMesh: (mesh: AbstractMesh) => AbstractMesh = (mesh) => {mesh.visibility = 1; return mesh;};
     unhighlightMesh: (mesh: AbstractMesh) => AbstractMesh = (mesh) => {mesh.visibility = 0.5; return mesh;};
     pointedMesh: AbstractMesh | undefined;
 
     constructor(
         public grid: MeshGrid,
-        public placementGrid: PlacementGrid
+        public placementGrid: T
     ) {
         grid.map((mesh) => this.unhighlightMesh(mesh));
     }

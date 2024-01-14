@@ -367,4 +367,14 @@ export default class PlayerBody {
         const activeState = Object.values(this.actionModeStateMachine.activeStates)[0];
         activeState.setAngle(angle);
     }
+
+    /**
+     * Place a block at the given absolute position coordinates.
+     */
+    placeBlockAbsolute(absolutePosition: Vector3) {
+        const buildState = (this.actionModeStateMachine.states["build"] as BuildModeState);
+        const placementGrid = buildState.placeMeshState.placementGrid;
+        const obj = placementGrid.createObject();
+        placementGrid.setPosition(obj, absolutePosition);
+    }
 }
