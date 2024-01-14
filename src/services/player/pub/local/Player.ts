@@ -78,14 +78,15 @@ export default class Player implements IPlayer {
     async onControllerKeyDown(key: string, controllerIndex: number) {
         if (controllerIndex !== 0) {return}
 
-        this.modifyWorld(
+        const inBattleState = (await this.modifyWorld(
             [this.playerBodyId(), key], 
             function(this: World3D, bodyId: string, key: string) {
                 const body = this.getObject(bodyId) as PlayerBody;
                 body.pressFeatureKey(key);
-        });
+                return "battle" in body.actionModeStateMachine.activeStates;
+        }))[0];
 
-        if (key === " ") {
+        if (key === " " && inBattleState) {
             this.proxyMessenger.postMessage(
                 this.messageFactory.createEvent("*", "Player:<event>jump")
             );
