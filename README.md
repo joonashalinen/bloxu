@@ -4,7 +4,25 @@ This is the repository for the browser-based online game "Sky Duel". The in-deve
 ## How to play the game
 You can play the game at: http://138.197.9.66:3001/. The game is a two-player shooting game where the goal is to defeat your opponent. You can defeat your opponent by either making them fall from the map or by shooting them.
 
+<img styles="margin:auto" src="docs/promo_images/shooting.png" width="250">
+
+*Image 1, player shooting*
+
 Additionally, you can also build by placing blocks in the world. These blocks can serve as platforms for you to walk on. Alternatively, you can use these blocks to shield yourself from your opponent's bullets.
+
+<img styles="margin:auto" src="docs/promo_images/building.png" width="250">
+
+*Image 2, placing a block on the lower-left corner (cursor not visible)*
+
+<br />
+<img styles="margin:auto" src="docs/promo_images/building_down.png" width="250">
+
+*Image 3, placing a block lower (holding shift)*
+
+<br />
+<img styles="margin:auto" src="docs/promo_images/building_up.png" width="250">
+
+*Image 4, placing a block higher (holding space)*
 
 ### Hosting a new game
 To start playing, you must either host a new game or join an existing one. If you wish to host a new game, you can press the "Host Game" button on the title menu. After you have hosted a new game, you will receive a game code, which you can tell your friend so they can join the same game with you. After your friend has joined, the game will begin.
