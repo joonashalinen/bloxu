@@ -11,7 +11,7 @@ import { DirectionEvent } from "../../../player/pub/local/Player";
  */
 export default class OnlineSynchronizerClient {
 
-    websocketServerAddress = "ws://localhost:3000";
+    websocketServerAddress = "ws://138.197.9.66:3000";
     proxyMessenger = new ProxyMessenger<DMessage, DMessage>();
     serviceId = "onlineSynchronizerClient";
     // We do not know our player id within the game yet until we join one.
