@@ -2,6 +2,7 @@ import {IMediator} from "./IMediator";
 import IMessenger from "./IMessenger";
 import EventEmitter from "../../events/pub/EventEmitter";
 import {DMessage} from "./DMessage";
+import IEventable from "../../events/pub/IEventable";
 
 type Actor = IMessenger<DMessage, DMessage>;
 type Actors = {[name: string]: Actor};
@@ -10,7 +11,7 @@ type Actors = {[name: string]: Actor};
  * Default implementation for IMediator. Facilitates sending messages 
  * between different actors which all implement the IMessenger interface.
  */
-export default class Mediator implements IMediator {
+export default class Mediator implements IMediator, IEventable {
     emitter: EventEmitter;
     actors: Actors;
     actorListeners: {[actor: string]: (msg: DMessage) => void}
@@ -32,7 +33,14 @@ export default class Mediator implements IMediator {
      */
     _listenToActor(name: string, actor: Actor): void {
         const listener = (msg: DMessage) => {
-            this.postMessage(msg, name)
+            // We catch and trigger errors here so that the user of the 
+            // Mediator can know when an error has occurred during 
+            // inter-messenger communication.
+            try {
+                this.postMessage(msg, name);
+            } catch (e) {
+                this.emitter.trigger("error", [e, name, msg]);
+            }
         };
         this.actorListeners[name] = listener;
         actor.onMessage(listener);

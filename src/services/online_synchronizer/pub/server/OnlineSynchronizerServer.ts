@@ -39,8 +39,12 @@ export default class OnlineSynchronizerServer {
         if (this.hotel.isInRoom(player)) {
             throw new Error("Player '" + player + "' is already in a game.");
         }
-        this.hotel.joinRoom(code, player, messenger);
-        return this.playerIdInGame(player);
+        const joined = this.hotel.joinRoom(code, player, messenger);
+        if (!joined) {
+            throw new Error("Could not join room.");
+        } else {
+            return this.playerIdInGame(player);
+        }
     }
 
     /**

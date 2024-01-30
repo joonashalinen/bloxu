@@ -8,6 +8,7 @@ import Mediator from "../../components/messaging/pub/Mediator";
 import { IMediator } from "../../components/messaging/pub/IMediator";
 import WebSocketMessenger from "../../components/network/pub/server/WebSocketMessenger";
 import { DMessage } from "../../components/messaging/pub/DMessage";
+import IEventable from "../../components/events/pub/IEventable";
 
 /**
  * Provides the entry point and state of 
@@ -19,7 +20,7 @@ export default class Server {
     webSockets: {[id: string]: WebSocket};
     expressApp: express.Application;
     websocketServer: WebSocketServer;
-    mediator: IMediator;
+    mediator: IMediator & IEventable;
 
     constructor() {
         this.onlineSynchronizer = new OnlineSynchronizerServer();
@@ -29,7 +30,14 @@ export default class Server {
             "onlineSynchronizerServer"
         );
         this.webSockets = {};
+        
         this.mediator = new Mediator({"onlineSynchronizerServer": this.synchronizerMessenger});
+        this.mediator.emitter.on("error", (error: Error, actorName: string, msg: DMessage) => {
+            console.log("Error occurred in Mediator for actor '" + actorName + "'.");
+            console.log("The message was: " + msg);
+            console.log("Error was: " + error.toString());
+        });
+
         this.startExpressServer();
         this.startWebSocketServer();
     }

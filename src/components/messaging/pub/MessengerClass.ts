@@ -28,7 +28,12 @@ export default class MessengerClass<C> implements IMessenger<DMessage, DMessage>
      * The given msg is assumed to be of type "request".
      */
     async _callMethod(msg: DMessage) {
-        const result = await this.wrappee[msg.message.type](...msg.message.args, msg);
+        var result: unknown;
+        try {
+            result = await this.wrappee[msg.message.type](...msg.message.args, msg);
+        } catch (e) {
+            result = {error: e.toString()};
+        }
         // If the result is not the wrapped class itself or undefined then we assume 
         // that the result value matters and we send it as a response message.
         if (
