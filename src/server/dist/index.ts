@@ -127,8 +127,12 @@ export default class Server {
                         // the nodejs event loop so that the message 
                         // gets sent first to its destination.
                         setTimeout(() => {
-                            // Now, remove the connection's access to OnlineSynchronizerServer.
-                            this.mediator.removeActor(playerId);
+                            // Now, try to remove the connection's access to OnlineSynchronizerServer.
+                            try {
+                                this.mediator.removeActor(playerId);
+                            } catch (e) {
+                                console.log(e);
+                            }
                         }, 0);
                     });
                     

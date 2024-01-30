@@ -132,8 +132,13 @@ var Server = /** @class */ (function () {
                             // the nodejs event loop so that the message 
                             // gets sent first to its destination.
                             setTimeout(function () {
-                                // Now, remove the connection's access to OnlineSynchronizerServer.
-                                _this.mediator.removeActor(playerId);
+                                // Now, try to remove the connection's access to OnlineSynchronizerServer.
+                                try {
+                                    _this.mediator.removeActor(playerId);
+                                }
+                                catch (e) {
+                                    console.log(e);
+                                }
                             }, 0);
                         });
                     }
