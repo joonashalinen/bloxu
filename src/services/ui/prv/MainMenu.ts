@@ -2,6 +2,7 @@ import IState from "../../../components/computation/pub/IState";
 import StateMachine from "../../../components/computation/pub/StateMachine";
 import EventEmitter from "../../../components/events/pub/EventEmitter";
 import IEventable from "../../../components/events/pub/IEventable";
+import IScreen from "../../../components/gui/pub/IScreen";
 import JoinGameScreen from "./JoinGameScreen";
 import MainMenuHomeScreen from "./MainMenuHomeScreen";
 
@@ -9,7 +10,7 @@ import MainMenuHomeScreen from "./MainMenuHomeScreen";
  * The main menu of the Bloxu game's ui.
  */
 export default class MainMenu implements IEventable {
-    subMenuStateMachine: StateMachine<IState>;
+    subMenuStateMachine: StateMachine<IState & IScreen>;
     emitter = new EventEmitter();
 
     constructor(
@@ -80,5 +81,15 @@ export default class MainMenu implements IEventable {
      */
     hide() {
         this.wrapper.style.display = "none";
+    }
+
+    /**
+     * Shows an error in the main menu's currently active screen.
+     */
+    showError(msg: string) {
+        const currentState = this.subMenuStateMachine.firstActiveState();
+        if (currentState !== undefined) {
+            currentState.showError(msg);
+        }
     }
 }

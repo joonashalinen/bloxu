@@ -1,15 +1,18 @@
 import IState from "../../../components/computation/pub/IState";
 import EventEmitter from "../../../components/events/pub/EventEmitter";
+import IScreen from "../../../components/gui/pub/IScreen";
 
 /**
  * A submenu where the user can 
  * join an existing game.
  */
-export default class JoinGameScreen implements IState {
+export default class JoinGameScreen implements IState, IScreen {
     isActive: boolean = false;
     emitter = new EventEmitter();
     codeInput: HTMLInputElement;
     codeInputTitle: HTMLElement;
+    errorElement: HTMLElement;
+    errorElementTimeout: NodeJS.Timeout;
 
     constructor(
         public wrapper: HTMLElement,
@@ -50,6 +53,23 @@ export default class JoinGameScreen implements IState {
                 this.emitter.trigger("joinGame", [this.codeInput.value]);
             }
         });
+
+        // Create element for showing error messages.
+        this.errorElement = document.createElement("p");
+        this.wrapper.appendChild(this.errorElement);
+    }
+
+    showError(error: string): void {
+        this.errorElement.innerText = error;
+
+        if (this.errorElementTimeout !== undefined) {
+            clearTimeout(this.errorElementTimeout);
+            this.errorElementTimeout = undefined;
+        }
+
+        this.errorElementTimeout = setTimeout(() => {
+            this.errorElement.innerText = "";
+        }, 10000);
     }
 
     start(...args: unknown[]): unknown {

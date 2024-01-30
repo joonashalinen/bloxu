@@ -1,11 +1,12 @@
 import IState from "../../../components/computation/pub/IState";
 import EventEmitter from "../../../components/events/pub/EventEmitter";
 import IEventable from "../../../components/events/pub/IEventable";
+import IScreen from "../../../components/gui/pub/IScreen";
 
 /**
  * The top-level menu screen in the main menu.
  */
-export default class MainMenuHomeScreen implements IState, IEventable {
+export default class MainMenuHomeScreen implements IState, IEventable, IScreen {
     isActive: boolean = false;
     emitter = new EventEmitter();
     buttons: {[name: string]: HTMLElement} = {};
@@ -38,6 +39,10 @@ export default class MainMenuHomeScreen implements IState, IEventable {
             this.end();
             this.emitter.trigger("end", ["joinGame"]);
         });
+    }
+
+    showError(error: string): void {
+        
     }
 
     start(...args: unknown[]): unknown {

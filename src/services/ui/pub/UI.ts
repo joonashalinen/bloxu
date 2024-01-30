@@ -56,7 +56,7 @@ export default class UI {
             if (typeof response === "string") {
                 this.mainMenu.hide();
             } else {
-                console.log(response);
+                this.mainMenu.showError(response.error);
             }
         });
 
