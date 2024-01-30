@@ -190,7 +190,7 @@ export default class GameMaster {
      * the host of the game.
      */
     async joinGame(code: string) {
-        this.localPlayerId = (await this.syncMessenger.postSyncMessage({
+        const response = (await this.syncMessenger.postSyncMessage({
             recipient: "onlineSynchronizer",
             sender: "gameMaster",
             type: "request",
@@ -198,11 +198,14 @@ export default class GameMaster {
                 type: "joinGame",
                 args: [code]
             }
-        }))[0] as string;
+        }))[0] as string | {error: string};
 
-        await this._startGame();
+        if (typeof response === "string") {
+            this.localPlayerId = response;
+            await this._startGame();
+        }
 
-        return this.localPlayerId;
+        return response;
     }
 
     /**

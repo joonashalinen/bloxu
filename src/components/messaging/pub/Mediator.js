@@ -47,7 +47,7 @@ var Mediator = /** @class */ (function () {
     };
     Mediator.prototype.addActor = function (id, actor) {
         if (id in this.actors) {
-            throw new Error("Actor with given id '" + "' already exists.");
+            throw new Error("Actor with given id '" + id + "' already exists.");
         }
         this.actors[id] = actor;
         this._listenToActor(id, actor);
@@ -55,7 +55,7 @@ var Mediator = /** @class */ (function () {
     };
     Mediator.prototype.removeActor = function (id) {
         if (!(id in this.actors)) {
-            throw new Error("Actor with given id '" + "' does not exist.");
+            throw new Error("Actor with given id '" + id + "' does not exist.");
         }
         var actor = this.actors[id];
         delete this.actors[id];

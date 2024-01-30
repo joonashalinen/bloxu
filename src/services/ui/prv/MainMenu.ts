@@ -35,7 +35,6 @@ export default class MainMenu implements IEventable {
         });
 
         (this.subMenuStateMachine.states["joinGame"] as JoinGameScreen).onJoinGame((code: string) => {
-            this.wrapper.style.display = "none";
             this.emitter.trigger("joinGame", [code]);
         });
 

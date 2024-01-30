@@ -43,7 +43,7 @@ export default class UI {
         });
 
         this.mainMenu.onJoinGame(async (code: string) => {
-            (await this.syncMessenger.postSyncMessage({
+            const response = (await this.syncMessenger.postSyncMessage({
                 recipient: "gameMaster",
                 sender: "ui",
                 type: "request",
@@ -51,7 +51,13 @@ export default class UI {
                     type: "joinGame",
                     args: [code]
                 }
-            }))[0] as boolean;
+            }))[0] as string | {error: string};
+
+            if (typeof response === "string") {
+                this.mainMenu.hide();
+            } else {
+                console.log(response);
+            }
         });
 
         this.codeWrapper = document.createElement("div");

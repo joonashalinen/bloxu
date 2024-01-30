@@ -58,7 +58,7 @@ export default class Mediator implements IMediator, IEventable {
 
     addActor(id: string, actor: Actor) {
         if (id in this.actors) {
-            throw new Error("Actor with given id '" + "' already exists.");
+            throw new Error("Actor with given id '" + id + "' already exists.");
         }
         this.actors[id] = actor;
         this._listenToActor(id, actor);
@@ -67,7 +67,7 @@ export default class Mediator implements IMediator, IEventable {
 
     removeActor(id: string) {
         if (!(id in this.actors)) {
-            throw new Error("Actor with given id '" + "' does not exist.");
+            throw new Error("Actor with given id '" + id +  "' does not exist.");
         }
         const actor = this.actors[id];
         delete this.actors[id];

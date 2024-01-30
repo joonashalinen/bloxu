@@ -155,12 +155,16 @@ export default class OnlineSynchronizerClient {
      * Join an existing game by using a code.
      */
     async joinGame(code: string) {
-        this.playerIdInGame = (await this.makeGameConnectionSyncRequest(
+        const response = (await this.makeGameConnectionSyncRequest(
             "joinGame", 
             [code, this.gameConnectionId]
-        ))[0] as string;
-        this.joinedGame = true;
-        return this.playerIdInGame;
+        ))[0] as string | {error: string};
+        
+        if (typeof response === "string") {
+            this.playerIdInGame = response;
+            this.joinedGame = true;
+        }
+        return response;
     }
 
     /**
