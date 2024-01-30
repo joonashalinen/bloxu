@@ -95,7 +95,7 @@ var Server = /** @class */ (function () {
             ws.on('error', console.error);
             // Manually capture all incoming messages from the websocket.
             ws.on("message", function (data) { return __awaiter(_this, void 0, void 0, function () {
-                var msg, messenger_1;
+                var msg, messenger_1, onResponse_1;
                 var _this = this;
                 return __generator(this, function (_a) {
                     msg = JSON.parse(data.toString());
@@ -123,11 +123,8 @@ var Server = /** @class */ (function () {
                         msg.message.args.push(messenger_1);
                         // Now we let OnlineSynchronizerServer handle the 'joinGame' message.
                         this.synchronizerMessenger.postMessage(msg);
-                        // Wait for the response to 'joinGame' before removing the connection 
-                        // from the Mediator. If we do not wait for the response, 
-                        // then a reply cannot be sent back from OnlineSynchronizerServer, 
-                        // since the websocket connection is no longer present in the Mediator.
-                        this.mediator.onMessageFor(playerId, function (msg) {
+                        onResponse_1 = function (msg) {
+                            console.log(msg);
                             var errorOccurred = (msg.message.args.length > 0 &&
                                 typeof msg.message.args[0] === "object" &&
                                 "error" in msg.message.args[0]);
@@ -145,7 +142,13 @@ var Server = /** @class */ (function () {
                                     }
                                 }, 0);
                             }
-                        });
+                            _this.mediator.offMessageFor(playerId, onResponse_1);
+                        };
+                        // Wait for the response to 'joinGame' before removing the connection 
+                        // from the Mediator. If we do not wait for the response, 
+                        // then a reply cannot be sent back from OnlineSynchronizerServer, 
+                        // since the websocket connection is no longer present in the Mediator.
+                        this.mediator.onMessageFor(playerId, onResponse_1);
                     }
                     else {
                         // Redirect message to OnlineSynchronizerServer.

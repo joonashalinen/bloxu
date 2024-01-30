@@ -118,11 +118,8 @@ export default class Server {
                     msg.message.args.push(messenger);
                     // Now we let OnlineSynchronizerServer handle the 'joinGame' message.
                     this.synchronizerMessenger.postMessage(msg);
-                    // Wait for the response to 'joinGame' before removing the connection 
-                    // from the Mediator. If we do not wait for the response, 
-                    // then a reply cannot be sent back from OnlineSynchronizerServer, 
-                    // since the websocket connection is no longer present in the Mediator.
-                    this.mediator.onMessageFor(playerId, (msg) => {
+
+                    const onResponse = (msg) => {
                         const errorOccurred = (
                             msg.message.args.length > 0 && 
                             typeof msg.message.args[0] === "object" && 
@@ -141,7 +138,13 @@ export default class Server {
                                 }
                             }, 0);
                         }
-                    });
+                        this.mediator.offMessageFor(playerId, onResponse);
+                    };
+                    // Wait for the response to 'joinGame' before removing the connection 
+                    // from the Mediator. If we do not wait for the response, 
+                    // then a reply cannot be sent back from OnlineSynchronizerServer, 
+                    // since the websocket connection is no longer present in the Mediator.
+                    this.mediator.onMessageFor(playerId, onResponse);
                     
                 } else {
                     // Redirect message to OnlineSynchronizerServer.
