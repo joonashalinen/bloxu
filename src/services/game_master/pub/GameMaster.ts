@@ -29,7 +29,8 @@ export default class GameMaster {
     constructor() {
         this.syncMessenger = new SyncMessenger(this.proxyMessenger);
         this.eventHandlers = {
-            "Player:<event>die": this.onPlayerDeath.bind(this)
+            "Player:<event>die": this.onPlayerDeath.bind(this),
+            "OnlineSynchronizer:<event>remotePlayerJoined": this.onPlayerJoined.bind(this)
         };
         this.initialized = false;
     }
@@ -235,5 +236,16 @@ export default class GameMaster {
             }
             this.gameRunning = false;
         }
+    }
+
+    /**
+     * When a player other than the main local player has joined the game.
+     */
+    onPlayerJoined(playerId: string) {
+        // We assume there are only two players, which means 
+        // the game has started, since all players are present.
+        this.proxyMessenger.postMessage(
+            this.messageFactory.createEvent("*", "GameMaster:<event>startGame")
+        );
     }
 }

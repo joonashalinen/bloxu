@@ -34,7 +34,11 @@ export default class MainMenuHomeScreen implements IState, IEventable, IScreen {
             this.buttons[name] = button;
         });
         // Add event listeners to menu buttons.
-        this.buttons["hostGame"].addEventListener("click", () => this.emitter.trigger("hostGame"));
+        this.buttons["hostGame"].addEventListener("click", () => {
+            this.end();
+            this.emitter.trigger("end", ["hostGame"]);
+            this.emitter.trigger("hostGame");
+        });
         this.buttons["joinGame"].addEventListener("click", () => {
             this.end();
             this.emitter.trigger("end", ["joinGame"]);

@@ -26,6 +26,10 @@ body {
     margin-top: -75px;
 }
 
+#ui-main-menu-host-game-screen {
+    margin-top: -28px;
+}
+
 .ui-end-game-screen-box {
     height: 120px;
     margin-top: -75px;

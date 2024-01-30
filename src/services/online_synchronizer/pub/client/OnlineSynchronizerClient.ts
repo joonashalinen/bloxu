@@ -41,7 +41,7 @@ export default class OnlineSynchronizerClient {
 
     constructor() {
         this.eventHandlers = {
-            "*": this.onAnyEvent.bind(this),
+            "*": this.onAnyEvent.bind(this)
         };
     }
 
@@ -82,7 +82,9 @@ export default class OnlineSynchronizerClient {
         const msg = this.gameMessageFactory.createEvent("*", type, args);
         
         // Set subrecipients.
-        msg.subRecipients = [to];
+        if (to !== "") {
+            msg.subRecipients = [to];
+        }
 
         this.gameMessenger.postMessage(msg);
     }
@@ -135,7 +137,9 @@ export default class OnlineSynchronizerClient {
                 this.proxyMessenger.postMessage(redirectedMsg);
             
             } else {
-                throw new Error("Handling messages sent directly to OnlineSynchronizerClient not implemented.");
+                // Currently there is no metadata messaging, which is why we do nothing.
+                console.log("New metadata message for OnlineSynchronizerClient:");
+                console.log(msg);
             }
         })
 
@@ -160,10 +164,14 @@ export default class OnlineSynchronizerClient {
             [code, this.gameConnectionId]
         ))[0] as string | {error: string};
         
+        // If no error occurred.
         if (typeof response === "string") {
             this.playerIdInGame = response;
             this.joinedGame = true;
+            // Let the other players in the room know that this player has joined.
+            this.sendEventInGame("*", "OnlineSynchronizer:<event>remotePlayerJoined", [this.playerIdInGame]);
         }
+        
         return response;
     }
 

@@ -3,6 +3,7 @@ import ProxyMessenger from "../../../components/messaging/pub/ProxyMessenger";
 import SyncMessenger from "../../../components/messaging/pub/SyncMessenger";
 import Notification from "../prv/Notification";
 import MainMenu from "../prv/MainMenu";
+import HostGameScreen from "../prv/HostGameScreen";
 
 /**
  * Contains the state and operations of the UI service.
@@ -20,6 +21,12 @@ export default class UI {
         public document: Document,
         public wrapper?: HTMLElement
     ) {
+        this.eventHandlers = {
+            "GameMaster:<event>loseGame": this.onGameLose.bind(this),
+            "GameMaster:<event>winGame": this.onGameWin.bind(this),
+            "GameMaster:<event>startGame": this.onGameStart.bind(this)
+        };
+
         this.syncMessenger = new SyncMessenger(this.proxyMessenger);
 
         if (wrapper === undefined) {
@@ -29,7 +36,7 @@ export default class UI {
         this.mainMenu = new MainMenu(this.wrapper!, document);
 
         this.mainMenu.onHostGame(async () => {
-            const code = (await this.syncMessenger.postSyncMessage({
+            const response = (await this.syncMessenger.postSyncMessage({
                 recipient: "gameMaster",
                 sender: "ui",
                 type: "request",
@@ -37,9 +44,15 @@ export default class UI {
                     type: "hostGame",
                     args: []
                 }
-            }))[0] as string;
-            this.codeText.innerText = this.codeText.innerText + code;
-            this.codeWrapper.style.display = "block";
+            }))[0] as string | {error: string};
+            // If no error occurred.
+            if (typeof response === "string") {
+                const currentState = this.mainMenu.subMenuStateMachine.firstActiveState();
+                // If we are still in the host game screen.
+                if (currentState === this.mainMenu.subMenuStateMachine.states["hostGame"]) {
+                    (currentState as HostGameScreen).setCode(response);
+                }
+            }
         });
 
         this.mainMenu.onJoinGame(async (code: string) => {
@@ -72,11 +85,6 @@ export default class UI {
         this.codeText = document.createElement("span");
         this.codeWrapper.appendChild(this.codeText);
 
-        this.eventHandlers = {
-            "GameMaster:<event>loseGame": this.onGameLose.bind(this),
-            "GameMaster:<event>winGame": this.onGameWin.bind(this)
-        };
-
         this.endGameScreenWrapper = this.createOverlayWrapper("ui-end-game-screen-wrapper");
         this.endGameScreenWrapper.style.display = "none";
 
@@ -95,6 +103,15 @@ export default class UI {
      */
     onGameWin() {
         this.showEndScreen("You won!");
+    }
+
+    /**
+     * When the game has started. Relevant only when hosting a game (and thus waiting 
+     * for the other player to join before hiding the main menu)
+     * since when joining a game the game starts immediately.
+     */
+    onGameStart() {
+        this.mainMenu.hide();
     }
 
     /**

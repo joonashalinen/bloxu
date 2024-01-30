@@ -3,6 +3,7 @@ import StateMachine from "../../../components/computation/pub/StateMachine";
 import EventEmitter from "../../../components/events/pub/EventEmitter";
 import IEventable from "../../../components/events/pub/IEventable";
 import IScreen from "../../../components/gui/pub/IScreen";
+import HostGameScreen from "./HostGameScreen";
 import JoinGameScreen from "./JoinGameScreen";
 import MainMenuHomeScreen from "./MainMenuHomeScreen";
 
@@ -26,12 +27,15 @@ export default class MainMenu implements IEventable {
                 "joinGame": new JoinGameScreen(
                     this._makeWrapper("ui-main-menu-join-game-screen", ["ui-main-menu-screen"]),
                     document
+                ),
+                "hostGame": new HostGameScreen(
+                    this._makeWrapper("ui-main-menu-host-game-screen", ["ui-main-menu-screen"]),
+                    document
                 )
             }
         );
 
         (this.subMenuStateMachine.states["home"] as MainMenuHomeScreen).onHostGame(() => {
-            this.wrapper.style.display = "none";
             this.emitter.trigger("hostGame");
         });
 
