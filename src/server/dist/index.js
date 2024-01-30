@@ -52,6 +52,11 @@ var Server = /** @class */ (function () {
         this.synchronizerMessenger = new MessengerClass_1.default(this.onlineSynchronizer, this.onlineSynchronizer.proxyMessenger, "onlineSynchronizerServer");
         this.webSockets = {};
         this.mediator = new Mediator_1.default({ "onlineSynchronizerServer": this.synchronizerMessenger });
+        this.mediator.emitter.on("error", function (error, actorName, msg) {
+            console.log("Error occurred in Mediator for actor '" + actorName + "'.");
+            console.log("The message was: " + msg);
+            console.log("Error was: " + error.toString());
+        });
         this.startExpressServer();
         this.startWebSocketServer();
     }

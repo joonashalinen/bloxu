@@ -69,13 +69,21 @@ var MessengerClass = /** @class */ (function () {
      */
     MessengerClass.prototype._callMethod = function (msg) {
         return __awaiter(this, void 0, void 0, function () {
-            var result, responseMsg;
+            var result, e_1, responseMsg;
             var _a;
             return __generator(this, function (_b) {
                 switch (_b.label) {
-                    case 0: return [4 /*yield*/, (_a = this.wrappee)[msg.message.type].apply(_a, __spreadArray(__spreadArray([], msg.message.args, false), [msg], false))];
+                    case 0:
+                        _b.trys.push([0, 2, , 3]);
+                        return [4 /*yield*/, (_a = this.wrappee)[msg.message.type].apply(_a, __spreadArray(__spreadArray([], msg.message.args, false), [msg], false))];
                     case 1:
                         result = _b.sent();
+                        return [3 /*break*/, 3];
+                    case 2:
+                        e_1 = _b.sent();
+                        result = { error: e_1.toString() };
+                        return [3 /*break*/, 3];
+                    case 3:
                         // If the result is not the wrapped class itself or undefined then we assume 
                         // that the result value matters and we send it as a response message.
                         if (result !== undefined &&

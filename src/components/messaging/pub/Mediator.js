@@ -23,7 +23,15 @@ var Mediator = /** @class */ (function () {
     Mediator.prototype._listenToActor = function (name, actor) {
         var _this = this;
         var listener = function (msg) {
-            _this.postMessage(msg, name);
+            // We catch and trigger errors here so that the user of the 
+            // Mediator can know when an error has occurred during 
+            // inter-messenger communication.
+            try {
+                _this.postMessage(msg, name);
+            }
+            catch (e) {
+                _this.emitter.trigger("error", [e, name, msg]);
+            }
         };
         this.actorListeners[name] = listener;
         actor.onMessage(listener);

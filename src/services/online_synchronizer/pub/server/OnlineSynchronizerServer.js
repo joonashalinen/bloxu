@@ -35,8 +35,13 @@ var OnlineSynchronizerServer = /** @class */ (function () {
         if (this.hotel.isInRoom(player)) {
             throw new Error("Player '" + player + "' is already in a game.");
         }
-        this.hotel.joinRoom(code, player, messenger);
-        return this.playerIdInGame(player);
+        var joined = this.hotel.joinRoom(code, player, messenger);
+        if (!joined) {
+            throw new Error("Could not join room.");
+        }
+        else {
+            return this.playerIdInGame(player);
+        }
     };
     /**
      * Host a new game. Returns the code that
