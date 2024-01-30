@@ -120,6 +120,7 @@ export default class Server {
                     this.synchronizerMessenger.postMessage(msg);
 
                     const onResponse = (msg) => {
+                        console.log(msg);
                         const errorOccurred = (
                             msg.message.args.length > 0 && 
                             typeof msg.message.args[0] === "object" && 

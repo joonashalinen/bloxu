@@ -14,6 +14,7 @@ export default class OnlineSynchronizerServer {
     playerIdGenerator = new StringSequence(new ArithmeticSequence());
     hotel = new Hotel();
     proxyMessenger = new ProxyMessenger<DMessage, DMessage>();
+    gameParticipantHistory: {[code: string]: string[]} = {};
 
     constructor() {
         this.hotel.createRoom = (code: string) => {
@@ -39,10 +40,19 @@ export default class OnlineSynchronizerServer {
         if (this.hotel.isInRoom(player)) {
             throw new Error("Player '" + player + "' is already in a game.");
         }
+        if (!(this.hotel.roomWithCodeExists(code))) {
+            throw new Error("Trying to join a non-existent game: " + code);
+        }
+        // FIX THIS: Here we assume that a game has started if it has 
+        // two players that have joined it. This assumption may change in the future.
+        if (this.gameParticipantHistory[code].length > 1) {
+            throw new Error("Trying to join a game that has already started.");
+        }
         const joined = this.hotel.joinRoom(code, player, messenger);
         if (!joined) {
             throw new Error("Could not join room.");
         } else {
+            this.gameParticipantHistory[code].push(player);
             return this.playerIdInGame(player);
         }
     }
@@ -52,7 +62,9 @@ export default class OnlineSynchronizerServer {
      * can be used to invite other players into the game.
      */
     hostGame() {
-        return this.hotel.hostRoom();
+        const code = this.hotel.hostRoom();
+        this.gameParticipantHistory[code] = [];
+        return code;
     }
 
     /**

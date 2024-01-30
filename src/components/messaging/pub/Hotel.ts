@@ -80,7 +80,10 @@ export default class Hotel {
      * Generate a random room code.
      */
     private generateRoomCode(): string {
-        const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+        // Note: the upper case character 'O' and the number '0' are omitted 
+        // from the code's possible characters to prevent users from confusing 
+        // them with each other.
+        const characters = "ABCDEFGHIJKLMNPQRSTUVWXYZ123456789";
         const codeLength = 6;
         let code = "";
 

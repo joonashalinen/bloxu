@@ -69,7 +69,10 @@ var Hotel = /** @class */ (function () {
      * Generate a random room code.
      */
     Hotel.prototype.generateRoomCode = function () {
-        var characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+        // Note: the upper case character 'O' and the number '0' are omitted 
+        // from the code's possible characters to prevent users from confusing 
+        // them with each other.
+        var characters = "ABCDEFGHIJKLMNPQRSTUVWXYZ123456789";
         var codeLength = 6;
         var code = "";
         for (var i = 0; i < codeLength; i++) {

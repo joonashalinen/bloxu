@@ -14,6 +14,7 @@ var OnlineSynchronizerServer = /** @class */ (function () {
         this.playerIdGenerator = new StringSequence_1.default(new ArithmeticSequence_1.default());
         this.hotel = new Hotel_1.default();
         this.proxyMessenger = new ProxyMessenger_1.default();
+        this.gameParticipantHistory = {};
         this.hotel.createRoom = function (code) {
             var room = new DiscreetRoom_1.default(code);
             var aliasGenerator = new StringSequence_1.default(new ArithmeticSequence_1.default());
@@ -35,11 +36,20 @@ var OnlineSynchronizerServer = /** @class */ (function () {
         if (this.hotel.isInRoom(player)) {
             throw new Error("Player '" + player + "' is already in a game.");
         }
+        if (!(this.hotel.roomWithCodeExists(code))) {
+            throw new Error("Trying to join a non-existent game: " + code);
+        }
+        // FIX THIS: Here we assume that a game has started if it has 
+        // two players that have joined it. This assumption may change in the future.
+        if (this.gameParticipantHistory[code].length > 1) {
+            throw new Error("Trying to join a game that has already started.");
+        }
         var joined = this.hotel.joinRoom(code, player, messenger);
         if (!joined) {
             throw new Error("Could not join room.");
         }
         else {
+            this.gameParticipantHistory[code].push(player);
             return this.playerIdInGame(player);
         }
     };
@@ -48,7 +58,9 @@ var OnlineSynchronizerServer = /** @class */ (function () {
      * can be used to invite other players into the game.
      */
     OnlineSynchronizerServer.prototype.hostGame = function () {
-        return this.hotel.hostRoom();
+        var code = this.hotel.hostRoom();
+        this.gameParticipantHistory[code] = [];
+        return code;
     };
     /**
      * Causes player to leave the game they are in if they are in one.
