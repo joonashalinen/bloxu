@@ -123,17 +123,24 @@ export default class Server {
                     // then a reply cannot be sent back from OnlineSynchronizerServer, 
                     // since the websocket connection is no longer present in the Mediator.
                     this.mediator.onMessageFor(playerId, (msg) => {
-                        // Remove ourselves from the current iteration of 
-                        // the nodejs event loop so that the message 
-                        // gets sent first to its destination.
-                        setTimeout(() => {
-                            // Now, try to remove the connection's access to OnlineSynchronizerServer.
-                            try {
-                                this.mediator.removeActor(playerId);
-                            } catch (e) {
-                                console.log(e);
-                            }
-                        }, 0);
+                        const errorOccurred = (
+                            msg.message.args.length > 0 && 
+                            typeof msg.message.args[0] === "object" && 
+                            "error" in msg.message.args[0]
+                        );
+                        if (!errorOccurred) {
+                            // Remove ourselves from the current iteration of 
+                            // the nodejs event loop so that the message 
+                            // gets sent first to its destination.
+                            setTimeout(() => {
+                                // Now, try to remove the connection's access to OnlineSynchronizerServer.
+                                try {
+                                    this.mediator.removeActor(playerId);
+                                } catch (e) {
+                                    console.log(e);
+                                }
+                            }, 0);
+                        }
                     });
                     
                 } else {

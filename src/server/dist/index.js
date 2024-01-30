@@ -128,18 +128,23 @@ var Server = /** @class */ (function () {
                         // then a reply cannot be sent back from OnlineSynchronizerServer, 
                         // since the websocket connection is no longer present in the Mediator.
                         this.mediator.onMessageFor(playerId, function (msg) {
-                            // Remove ourselves from the current iteration of 
-                            // the nodejs event loop so that the message 
-                            // gets sent first to its destination.
-                            setTimeout(function () {
-                                // Now, try to remove the connection's access to OnlineSynchronizerServer.
-                                try {
-                                    _this.mediator.removeActor(playerId);
-                                }
-                                catch (e) {
-                                    console.log(e);
-                                }
-                            }, 0);
+                            var errorOccurred = (msg.message.args.length > 0 &&
+                                typeof msg.message.args[0] === "object" &&
+                                "error" in msg.message.args[0]);
+                            if (!errorOccurred) {
+                                // Remove ourselves from the current iteration of 
+                                // the nodejs event loop so that the message 
+                                // gets sent first to its destination.
+                                setTimeout(function () {
+                                    // Now, try to remove the connection's access to OnlineSynchronizerServer.
+                                    try {
+                                        _this.mediator.removeActor(playerId);
+                                    }
+                                    catch (e) {
+                                        console.log(e);
+                                    }
+                                }, 0);
+                            }
                         });
                     }
                     else {
