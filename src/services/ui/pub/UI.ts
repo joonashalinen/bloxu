@@ -154,6 +154,9 @@ export default class UI {
      */
     show() {
         this.mainMenu.show();
+        // Hide the initial loading screen.
+        const loadingScreen = document.getElementById("first-loading-screen");
+        loadingScreen.style.display = "none";
     }
 
     /**
