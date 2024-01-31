@@ -63,7 +63,7 @@ var Server = /** @class */ (function () {
     Server.prototype.startExpressServer = function () {
         var app = express();
         this.expressApp = app;
-        var port = 3001;
+        var port = 80;
         app.use(express.static("public"));
         app.get('/', function (req, res) {
             res.sendFile('public/index.html');
