@@ -38,6 +38,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 Object.defineProperty(exports, "__esModule", { value: true });
 var express = require("express");
 var https = require("https");
+var http = require("http");
 var fs = require("fs");
 var ws_1 = require("ws");
 var OnlineSynchronizerServer_1 = require("../../services/online_synchronizer/pub/server/OnlineSynchronizerServer");
@@ -69,11 +70,13 @@ var Server = /** @class */ (function () {
         app.get('/', function (req, res) {
             res.sendFile('public/index.html');
         });
-        var server = https.createServer({
+        var httpsServer = https.createServer({
             key: fs.readFileSync('key.pem'),
             cert: fs.readFileSync('cert.pem'),
         }, app);
-        server.listen(443);
+        var httpServer = http.createServer(app);
+        httpsServer.listen(443);
+        httpServer.listen(80);
         return app;
     };
     Server.prototype.startWebSocketServer = function () {

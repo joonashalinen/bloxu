@@ -1,6 +1,7 @@
 import * as express from "express";
 import * as path from "path";
 import * as https from "https";
+import * as http from "http";
 import * as fs from "fs";
 import { WebSocketServer } from 'ws';
 import OnlineSynchronizerServer from "../../services/online_synchronizer/pub/server/OnlineSynchronizerServer";
@@ -54,12 +55,14 @@ export default class Server {
             res.sendFile('public/index.html')
         });
         
-        const server = https.createServer({
+        const httpsServer = https.createServer({
                 key: fs.readFileSync('key.pem'),
                 cert: fs.readFileSync('cert.pem'),
         }, app);
-        
-        server.listen(443);
+        const httpServer = http.createServer(app);
+
+        httpsServer.listen(443);
+        httpServer.listen(80);
 
         return app;
     }
