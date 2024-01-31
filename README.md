@@ -1,7 +1,7 @@
 # Introduction
 This is the repository for the browser-based online game "Sky Duel". The in-development name of the project is 'Bloxu' which is why the repository is named correspondingly. This readme file serves as the main documentation of the game, its project structure and its architecture.
 
-## How to play the game
+## How to Play the Game
 You can play the game at: https://joonashalinen.net. The game is a two-player shooting game where the goal is to defeat your opponent. You can defeat your opponent by either making them fall from the map or by shooting them.
 
 <img styles="margin:auto" src="docs/promo_images/shooting.png" width="250">
@@ -24,10 +24,10 @@ Additionally, you can also build by placing blocks in the world. These blocks ca
 
 *Image 4, placing a block higher (holding space)*
 
-### Hosting a new game
+### Hosting a New Game
 To start playing, you must either host a new game or join an existing one. If you wish to host a new game, you can press the "Host Game" button on the title menu. After you have hosted a new game, you will receive a game code, which you can tell your friend so they can join the same game with you. After your friend has joined, the game will begin.
 
-### Joining a game
+### Joining a Game
 To join a game, you need the host of the game to tell you their game code. Once you know the game code, you can join a game by pressing the "Join Game" button on the title menu. Doing so will prompt you to enter your game code. Once you have entered a valid game code, the game will begin.
 
 ### Controls
@@ -39,10 +39,10 @@ To join a game, you need the host of the game to tell you their game code. Once 
 | Space  | Jump (if in battle mode) / Move block placement menu higher (if in build mode) |
 | Shift  | Move block placement menu lower (if in build mode) |
 
-# Central third-party libraries
+# Central Third Party Libraries
 The project uses some third-party libraries. The most central of them is BabylonJS, which is the game engine the project uses. In addition, ExpressJS as well as WebSockets via the 'ws' library are used in the online server. Finally, webpack is used to bundle the final source code that is run on the browser.
 
-# Project folder structure
+# Project Folder Structure
 The following is a list of the most important files and folders as well as their descriptions:
 
 * src/: Contains all the source code of the project.
