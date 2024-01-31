@@ -37,6 +37,8 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 var express = require("express");
+var https = require("https");
+var fs = require("fs");
 var ws_1 = require("ws");
 var OnlineSynchronizerServer_1 = require("../../services/online_synchronizer/pub/server/OnlineSynchronizerServer");
 var MessengerClass_1 = require("../../components/messaging/pub/MessengerClass");
@@ -63,14 +65,15 @@ var Server = /** @class */ (function () {
     Server.prototype.startExpressServer = function () {
         var app = express();
         this.expressApp = app;
-        var port = 80;
         app.use(express.static("public"));
         app.get('/', function (req, res) {
             res.sendFile('public/index.html');
         });
-        app.listen(port, function () {
-            console.log("Example app listening on port ".concat(port));
-        });
+        var server = https.createServer({
+            key: fs.readFileSync('key.pem'),
+            cert: fs.readFileSync('cert.pem'),
+        }, app);
+        server.listen(443);
         return app;
     };
     Server.prototype.startWebSocketServer = function () {

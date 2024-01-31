@@ -1,5 +1,7 @@
 import * as express from "express";
-import * as path from"path";
+import * as path from "path";
+import * as https from "https";
+import * as fs from "fs";
 import { WebSocketServer } from 'ws';
 import OnlineSynchronizerServer from "../../services/online_synchronizer/pub/server/OnlineSynchronizerServer";
 import { WebSocket} from 'ws';
@@ -45,17 +47,19 @@ export default class Server {
     startExpressServer() {
         const app = (express as unknown as Function)();
         this.expressApp = app;
-        const port = 80;
 
         app.use(express.static("public"))
 
         app.get('/', (req, res) => {
             res.sendFile('public/index.html')
-        })
-    
-        app.listen(port, () => {
-            console.log(`Example app listening on port ${port}`)
-        })
+        });
+        
+        const server = https.createServer({
+                key: fs.readFileSync('key.pem'),
+                cert: fs.readFileSync('cert.pem'),
+        }, app);
+        
+        server.listen(443);
 
         return app;
     }
