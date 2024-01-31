@@ -40,7 +40,7 @@ To join a game, you need the host of the game to tell you their game code. Once 
 | Shift  | Move block placement menu lower (if in build mode) |
 
 # Central third-party libraries
-The project uses some third-party libraries. The most central of them is BabylonJS, which is the game engine the project uses. In addition, ExpressJS is used in the online server. Finally, webpack is used to bundle the final source code that is run on the browser.
+The project uses some third-party libraries. The most central of them is BabylonJS, which is the game engine the project uses. In addition, ExpressJS and websockets via the 'ws' library are used in the online server. Finally, webpack is used to bundle the final source code that is run on the browser.
 
 # Project folder structure
 The following is a list of the most important files and folders as well as their descriptions:
@@ -73,6 +73,8 @@ A dashed arrow indicates an implementation inheritance relationship. The target 
 
 As discussed above, each microservice is able to send messages to other services. In addition, they can send public messages that are not sent to any specific service. Instead, all services receive these types of messages and can choose for themselves if they wish to care about the received message or not.
 
+## Individual Service Responsibilities
+
 The following is a description of the individual responsibilities of each microservice:
 * 3D World: This service is responsible for running the game engine. It provides access points for the other services so that they can interact with the objects in the world.
 
@@ -89,6 +91,8 @@ The following is a description of the individual responsibilities of each micros
 * GameMaster: The GameMaster service controls all universal game logic. 'Game logic' means any behaviour that is exclusively part of the idea of a 1v1 shooting game such as Sky Duel. For example, collision physics is not game logic because it is behaviour that applies to many kinds of 3D simulations instead of just the Sky Duel game. Conversely, building the initial game world and spawning 2 players on opposing platforms is part of game logic.
 
 * UI: The UI service is responsible for managing all GUI behaviour.
+
+## Service Folder Locations
 
 The locations of each microservice in the project folder structure are as follows:
 | Service  | Folder Path |
