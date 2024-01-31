@@ -40,7 +40,7 @@ To join a game, you need the host of the game to tell you their game code. Once 
 | Shift  | Move block placement menu lower (if in build mode) |
 
 # Central third-party libraries
-The project uses some third-party libraries. The most central of them is BabylonJS, which is the game engine the project uses. In addition, ExpressJS and websockets via the 'ws' library are used in the online server. Finally, webpack is used to bundle the final source code that is run on the browser.
+The project uses some third-party libraries. The most central of them is BabylonJS, which is the game engine the project uses. In addition, ExpressJS as well as WebSockets via the 'ws' library are used in the online server. Finally, webpack is used to bundle the final source code that is run on the browser.
 
 # Project folder structure
 The following is a list of the most important files and folders as well as their descriptions:
