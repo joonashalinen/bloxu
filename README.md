@@ -67,7 +67,7 @@ The project has a microservice architecture. The following diagram shows each mi
 
 *Image 5, microservice architecture*
 
-A solid arrow from a service to another in the diagram denotes a "knows of" relationship. If a service knows of another service, then it most likely has a dependency relationship to it. Knowing about another service means that the service is expected to a) exist and be running and b) send and receive the expected messages. To promote modularity, circular dependencies between services are not allowed.
+A solid arrow from a service to another in the diagram denotes a "knows of" relationship. If a service knows of another service, then it most likely has a dependency relationship to it. Knowing about another service means that the service is expected to a) exist and b) send or receive the expected messages. To promote modularity, circular dependencies between services are not allowed.
 
 A dashed arrow indicates an implementation inheritance relationship. The target of the arrow is then not a concrete service but an interface. The source of the arrow then implements that interface.
 
