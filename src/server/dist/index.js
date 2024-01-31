@@ -78,7 +78,11 @@ var Server = /** @class */ (function () {
     };
     Server.prototype.startWebSocketServer = function () {
         var _this = this;
-        var wss = new ws_1.WebSocketServer({ port: 3000 });
+        var server = https.createServer({
+            key: fs.readFileSync('key.pem'),
+            cert: fs.readFileSync('cert.pem'),
+        });
+        var wss = new ws_1.WebSocketServer({ server: server });
         this.websocketServer = wss;
         // When a new websocket connects.
         wss.on('connection', function (ws) {
@@ -168,6 +172,7 @@ var Server = /** @class */ (function () {
                 console.log("player " + playerId + " disconnected");
             });
         });
+        server.listen(3000);
         return wss;
     };
     return Server;

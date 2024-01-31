@@ -65,9 +65,14 @@ export default class Server {
     }
     
     startWebSocketServer() {
-        const wss = new WebSocketServer({ port: 3000 });
-        this.websocketServer = wss;
+        const server = https.createServer({
+                key: fs.readFileSync('key.pem'),
+                cert: fs.readFileSync('cert.pem'),
+        });
 
+        const wss = new WebSocketServer({ server: server });
+        this.websocketServer = wss;
+        
         // When a new websocket connects.
         wss.on('connection', (ws) => {
             console.log("websocket connected");
@@ -165,6 +170,9 @@ export default class Server {
                 console.log("player " + playerId + " disconnected");
             })
         });
+
+        server.listen(3000);
+
         return wss;
     }
 
