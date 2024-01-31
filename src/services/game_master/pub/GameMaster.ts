@@ -39,7 +39,7 @@ export default class GameMaster {
      * Spawn everything needed for the game 
      * and make the 3D world run.
      */
-    private async _startGame() {
+    private async _startGame(otherPlayerIsAI: boolean = false) {
 
         // vvv Setup environment. vvv
 
@@ -54,12 +54,12 @@ export default class GameMaster {
 
         // vvv Setup players. vvv        
 
-        // Tell the player services who is the main player and who is the remote player.
+        // Tell the player services who is the main player and who is the remote / AI player.
         this.proxyMessenger.postMessage(
             this.messageFactory.createRequest(this.localPlayerId, "beMainPlayer")
         );
         this.proxyMessenger.postMessage(
-            this.messageFactory.createRequest(this.remotePlayerId(), "beRemotePlayer")
+            this.messageFactory.createRequest(this.remotePlayerId(), !otherPlayerIsAI ? "beRemotePlayer" : "beAIPlayer")
         );
 
         // Initialize players.
@@ -184,6 +184,27 @@ export default class GameMaster {
         await this._startGame();
 
         return code;
+    }
+
+    /**
+     * Starts a local game against an AI opponent.
+     */
+    async startLocalGame() {
+        const [code, localPlayerId] = (await this.syncMessenger.postSyncMessage({
+            recipient: "onlineSynchronizer",
+            sender: "gameMaster",
+            type: "request",
+            message: {
+                type: "hostGame",
+                args: []
+            }
+        }))[0] as [string, string];
+
+        this.localPlayerId = localPlayerId;
+
+        await this._startGame(true);
+
+        return true;
     }
 
     /**

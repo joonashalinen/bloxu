@@ -13,6 +13,7 @@ import BuildModeState from "../../../world3d/conf/custom_object_types/BuildModeS
 import { Vector3 } from "@babylonjs/core";
 import BattleModeState from "../../../world3d/conf/custom_object_types/BattleModeState";
 import ShootState from "../../../world3d/conf/custom_object_types/ShootState";
+import IService from "../../../../components/services/pub/IService";
 
 export type DirectionEvent = {direction: DVector2 | DVector3, body: DPlayerBody};
 
@@ -20,7 +21,7 @@ export type DirectionEvent = {direction: DVector2 | DVector3, body: DPlayerBody}
  * Class that contains the operations and state 
  * of the LocalPlayer service.
  */
-export default class Player implements IPlayer {
+export default class Player implements IPlayer, IService {
     eventHandlers: {[name: string]: Function}
     initialized: boolean;
     proxyMessenger: ProxyMessenger<DMessage, DMessage>;
@@ -28,6 +29,7 @@ export default class Player implements IPlayer {
     messageFactory: MessageFactory;
     spawned: boolean;
     disableControls: boolean;
+    disableEvents: boolean;
     isAlive: boolean;
 
     constructor(public playerId: string) {
@@ -49,6 +51,7 @@ export default class Player implements IPlayer {
         this.syncMessenger = new SyncMessenger(this.proxyMessenger);
         this.messageFactory = new MessageFactory(playerId);
         this.disableControls = false;
+        this.disableEvents = false;
     }
 
     /**
@@ -63,6 +66,7 @@ export default class Player implements IPlayer {
      */
     async onControllerPoint(position: DVector2, controllerIndex: number) {
         if (!this.spawned) {return}
+        if (this.disableControls) {return}
 
         const angle = (await this.modifyWorld(
             [this.playerBodyId(), position], 
@@ -83,6 +87,7 @@ export default class Player implements IPlayer {
     async onControllerKeyDown(key: string, controllerIndex: number) {
         if (controllerIndex !== 0) {return}
         if (!this.spawned) {return}
+        if (this.disableControls) {return}
 
         const inBattleState = (await this.modifyWorld(
             [this.playerBodyId(), key], 
@@ -105,6 +110,7 @@ export default class Player implements IPlayer {
     async onControllerKeyUp(key: string, controllerIndex: number) {
         if (controllerIndex !== 0) {return}
         if (!this.spawned) {return}
+        if (this.disableControls) {return}
 
         this.modifyWorld(
             [this.playerBodyId(), key], 
@@ -121,6 +127,7 @@ export default class Player implements IPlayer {
         if (buttonIndex !== 0) {return}
         if (controllerIndex !== 0) {return}
         if (!this.spawned) {return}
+        if (this.disableControls) {return}
 
         const state = (await this.syncMessenger.postSyncMessage(
             this.messageFactory.createRequest("world3d", "modify", [
@@ -184,7 +191,7 @@ export default class Player implements IPlayer {
     /**
      * Initialization procedure for the LocalPlayer service.
      */
-    initialize() {
+    async initialize() {
         this.initialized = true;
         return true;
     }
@@ -241,19 +248,19 @@ export default class Player implements IPlayer {
             this.messageFactory.createRequest("world3d", "listen", [
                 this.playerId,
                 {
-                    boundArgs: [this.playerBodyId(), this.disableControls],
+                    boundArgs: [this.playerBodyId(), this.disableEvents],
                     f: function(
                         this: World3D, 
                         sendMsg: (eventName: string, event: unknown) => void,
                         playerBodyId: string,
-                        disableControls: boolean
+                        disableEvents: boolean
                     ) {
                         const playerBody = this.getObject(playerBodyId) as PlayerBody;
 
                         // If the player service should be disconnected 
                         // from any controls (such as the keyboard or mouse) 
                         // then we do not want to set the related event listeners.
-                        if (!disableControls) {
+                        if (!disableEvents) {
                             // Let the player's body handle updating its own 
                             // objects.
                             playerBody.enableAutoUpdate();

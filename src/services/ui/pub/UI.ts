@@ -55,6 +55,20 @@ export default class UI {
             }
         });
 
+        this.mainMenu.emitter.on("playDemo", async () => {
+            (await this.syncMessenger.postSyncMessage({
+                recipient: "gameMaster",
+                sender: "ui",
+                type: "request",
+                message: {
+                    type: "startLocalGame",
+                    args: []
+                }
+            }))[0] as string | {error: string};
+
+            this.mainMenu.hide();
+        });
+
         this.mainMenu.onJoinGame(async (code: string) => {
             const response = (await this.syncMessenger.postSyncMessage({
                 recipient: "gameMaster",

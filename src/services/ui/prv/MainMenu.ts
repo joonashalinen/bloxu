@@ -39,6 +39,10 @@ export default class MainMenu implements IEventable {
             this.emitter.trigger("hostGame");
         });
 
+        (this.subMenuStateMachine.states["home"] as MainMenuHomeScreen).emitter.on("playDemo", () => {
+            this.emitter.trigger("playDemo");
+        });
+
         (this.subMenuStateMachine.states["joinGame"] as JoinGameScreen).onJoinGame((code: string) => {
             this.emitter.trigger("joinGame", [code]);
         });

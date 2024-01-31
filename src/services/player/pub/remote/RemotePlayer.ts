@@ -8,17 +8,30 @@ import DPlayerBody from "../../../world3d/conf/custom_object_types/DPlayerBody";
 import ShootState from "../../../world3d/conf/custom_object_types/ShootState";
 import TStateResource from "../../../../components/objects3d/pub/creatures/TStateResource";
 import JumpState from "../../../../components/objects3d/pub/creatures/JumpState";
+import IService from "../../../../components/services/pub/IService";
+import { DMessage } from "../../../../components/messaging/pub/DMessage";
+import MessageFactory from "../../../../components/messaging/pub/MessageFactory";
+import ProxyMessenger from "../../../../components/messaging/pub/ProxyMessenger";
+import SyncMessenger from "../../../../components/messaging/pub/SyncMessenger";
 
 /**
  * A Player that is controlled remotely by another online player.
  */
-export default class RemotePlayer implements IPlayer {
+export default class RemotePlayer implements IPlayer, IService {
     player: Player;
     eventHandlers: {[name: string]: Function};
+    proxyMessenger: ProxyMessenger<DMessage, DMessage>;
+    syncMessenger: SyncMessenger;
+    messageFactory: MessageFactory;
 
     constructor(playerId: string) {
         this.player = new Player(playerId);
         this.player.disableControls = true;
+        this.player.disableEvents = true;
+        this.proxyMessenger = this.player.proxyMessenger;
+        this.syncMessenger = this.player.syncMessenger;
+        this.messageFactory = this.player.messageFactory;
+
         this.eventHandlers = {
             "OnlineSynchronizer:Player:<event>move": this.onRemoteMove.bind(this),
             "OnlineSynchronizer:Player:<event>shoot": this.onRemoteShoot.bind(this),
@@ -32,7 +45,7 @@ export default class RemotePlayer implements IPlayer {
     /**
      * Initialize RemotePlayer service.
      */
-    initialize() {
+    async initialize() {
         return this.player.initialize();
     }
 
