@@ -79,21 +79,21 @@ As discussed above, each microservice is able to send messages to other services
 ## Individual Service Responsibilities
 
 The following is a description of the individual responsibilities of each microservice:
-* 3D World: This service is responsible for running the game engine. It provides access points for the other services so that they can interact with the objects in the world.
+* **3D World:** This service is responsible for running the game engine. It provides access points for the other services so that they can interact with the objects in the world.
 
-* IO: The IO Service is responsible for capturing user controls, such as keyboard and mouse events for example. The IO Service sends public messages when the user controls change. The IO Service adds a layer of abstraction that can make it possible to decouple the game from the user controls. This can be useful in the future if support for different types of controllers is added, such as for joystick controllers for example.
+* **IO:** The IO Service is responsible for capturing user controls, such as keyboard and mouse events for example. The IO Service sends public messages when the user controls change. The IO Service adds a layer of abstraction that can make it possible to decouple the game from the user controls. This can be useful in the future if support for different types of controllers is added, such as for joystick controllers for example.
 
-* LocalPlayer: The LocalPlayer service is the glue between the local player character's objects in the 3D world and the real user controlling the player. Most importantly, it is responsible for connecting user controls to the player character in the 3D world.
+* **LocalPlayer:** The LocalPlayer service is the glue between the local player character's objects in the 3D world and the real user controlling the player. Most importantly, it is responsible for connecting user controls to the player character in the 3D world.
 
-* RemotePlayer: A RemotePlayer service is instantiated for the opponent. RemotePlayer connects the real human playing as the opponent to the corresponding player character in the 3D world.
+* **RemotePlayer:** A RemotePlayer service is instantiated for the opponent. RemotePlayer connects the real human playing as the opponent to the corresponding player character in the 3D world.
 
-* Player: The Player interface describes the common interface between LocalPlayer and RemotePlayer. Conceptually, a 'Player' is the intelligence behind a player character in the game. The intelligence may be an actual human controlling the player via a controller or it may be an AI. Currently AI players have not been implemented but this is a plausible future development path.
+* **Player:** The Player interface describes the common interface between LocalPlayer and RemotePlayer. Conceptually, a 'Player' is the intelligence behind a player character in the game. The intelligence may be an actual human controlling the player via a controller or it may be an AI. Currently AI players have not been implemented but this is a plausible future development path.
 
-* Online Synchronizer: This service is responsible for ensuring that the two remote separate game instances stay synchronized (i.e. that they 'agree' about the state of the world).
+* **Online Synchronizer:** This service is responsible for ensuring that the two remote separate game instances stay synchronized (i.e. that they 'agree' about the state of the world).
 
-* GameMaster: The GameMaster service controls all universal game logic. 'Game logic' means any behaviour that is exclusively part of the idea of a 1v1 shooting game such as Sky Duel. For example, collision physics is not game logic because it is behaviour that applies to many kinds of 3D simulations instead of just the Sky Duel game. Conversely, building the initial game world and spawning 2 players on opposing platforms is part of game logic.
+* **GameMaster:** The GameMaster service controls all universal game logic. 'Game logic' means any behaviour that is exclusively part of the idea of a 1v1 shooting game such as Sky Duel. For example, collision physics is not game logic because it is behaviour that applies to many kinds of 3D simulations instead of just the Sky Duel game. Conversely, building the initial game world and spawning 2 players on opposing platforms is part of game logic.
 
-* UI: The UI service is responsible for managing all GUI behaviour.
+* **UI:** The UI service is responsible for managing all GUI behaviour.
 
 ## Service Folder Locations
 
