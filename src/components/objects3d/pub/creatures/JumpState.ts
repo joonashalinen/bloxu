@@ -29,7 +29,6 @@ export default class JumpState
         this.jumpable = new Jumpable(movable);
         this.jumpable.emitter.on("jumpEnd", () => {
             if (this.isActive) {
-                console.log("ended jumping");
                 this._endJumpState();
             }
         });
@@ -65,7 +64,10 @@ export default class JumpState
                 // If the character is in air, we cannot jump 
                 // and we must return from the jumping state.
                 if (this.movable.isInAir) {
-                    this._endJumpState();
+                    // If the movable is still in air even after updating.
+                    if (this.movable.isInAir) {
+                        this._endJumpState();
+                    }
                 } else {
                     // The character is not in air, meaning
                     // we can jump.

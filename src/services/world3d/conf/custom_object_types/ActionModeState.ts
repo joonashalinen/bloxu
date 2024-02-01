@@ -15,6 +15,7 @@ import IObject from "../../../../components/objects3d/pub/IObject";
 import MouseRotatable from "../../../../components/objects3d/pub/MouseRotatable";
 import ITickable from "../../../../components/objects3d/pub/ITickable";
 import MoveState from "../../../../components/objects3d/pub/creatures/MoveState";
+import Movable from "../../../../components/objects3d/pub/Movable";
 
 /**
  * Contains the common functionalities between different action 
@@ -89,7 +90,6 @@ export default class ActionModeState implements IActionModeState {
             const movementOwner = Object.values(this.stateMachine.activeStates)
                 .find((s) => s.ownedResources.has("movement"));
             
-            console.log(movementOwner);
             // If the run state does not have control of movement now, we should 
             // redirect the action to the state that does, since this means that the run state was not 
             // able to override it.

@@ -11,11 +11,13 @@ export default class KeyboardController implements IDirectionController, IKeyCon
     emitter: EventEmitter;
     document: Document;
     pressedKeys: Set<string>;
+    directionKeys: Set<string>;
 
-    constructor(document: Document) {
+    constructor(document: Document, directionKeys: string[] = ["w", "a", "s", "d"]) {
         this.emitter = new EventEmitter();
         this.document = document;
         this.pressedKeys = new Set<string>();
+        this.directionKeys = new Set<string>(directionKeys);
 
         this.document.addEventListener("keydown", this.handleKeyDown.bind(this));
         this.document.addEventListener("keyup", this.handleKeyUp.bind(this));
@@ -42,32 +44,38 @@ export default class KeyboardController implements IDirectionController, IKeyCon
      * Handle the keydown event.
      */
     handleKeyDown(event: KeyboardEvent): void {
+        const key = event.key.toLowerCase();
+
         // Add the pressed key to the set
-        this.pressedKeys.add(event.key.toLowerCase());
+        this.pressedKeys.add(key);
 
         // Calculate the direction based on the pressed keys
         const direction = this.calculateDirection();
-        const compassPoint = this.determineCompassPoint();
 
         // Trigger an event with the direction information
-        this.emitter.trigger("directionChange", [direction]);
-        this.emitter.trigger("keyDown", [event.key.toLowerCase()]);
+        if (this.directionKeys.has(key)) {
+            this.emitter.trigger("directionChange", [direction]);
+        }
+        this.emitter.trigger("keyDown", [key]);
     }
 
     /**
      * Handle the keyup event.
      */
     handleKeyUp(event: KeyboardEvent): void {
+        const key = event.key.toLowerCase();
+
         // Remove the released key from the set
-        this.pressedKeys.delete(event.key.toLowerCase());
+        this.pressedKeys.delete(key);
 
         // Calculate the direction based on the remaining pressed keys
         const direction = this.calculateDirection();
-        const compassPoint = this.determineCompassPoint();
 
         // Trigger an event with the direction information
-        this.emitter.trigger("directionChange", [direction]);
-        this.emitter.trigger("keyUp", [event.key.toLowerCase()]);
+        if (this.directionKeys.has(key)) {
+            this.emitter.trigger("directionChange", [direction]);
+        }
+        this.emitter.trigger("keyUp", [key]);
     }
 
     /**

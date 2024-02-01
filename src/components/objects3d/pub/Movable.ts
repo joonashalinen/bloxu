@@ -17,7 +17,7 @@ export default class Movable implements IObject, IMovable, DMovable, IPhysical, 
     isInAir: boolean = false;
     inAirMotionDirection: "up" | "down" | "none";
     maxVelocity: number | undefined;
-
+ 
     constructor(
         public physicsAggregate: PhysicsAggregate
     ) {
@@ -38,6 +38,8 @@ export default class Movable implements IObject, IMovable, DMovable, IPhysical, 
     }
 
     move(direction: Vector3, onlyInDirection: boolean = true): IMovable {
+        console.log(direction);
+        direction = direction.clone();
         if (this.direction.normalize().subtract(direction.normalize()).length() > 0.01) {
             if (onlyInDirection) {
                 this.direction = direction;
@@ -45,7 +47,16 @@ export default class Movable implements IObject, IMovable, DMovable, IPhysical, 
                 this.direction = this.direction.add(direction).normalize();
             }
             if (this.gravityEnabled) {
-                if (this.isInAir || this.onlyUseForce) {
+                if (this.isInAir) {
+                    // If we have stopped moving while in air.
+                    if (direction.equals(new Vector3(0, 0, 0))) {
+                        // Remove all horizontal movement velocity.
+                        const currentVelocity =  this.physicsAggregate.body.getLinearVelocity();
+                        this.physicsAggregate.body.setLinearVelocity(new Vector3(0, currentVelocity.y, 0));
+                    } else {
+                        this.applyForce();
+                    }
+                } else if (this.onlyUseForce) {
                     this.applyForce();
                 } else {
                     this.updateVelocity();
@@ -54,6 +65,7 @@ export default class Movable implements IObject, IMovable, DMovable, IPhysical, 
                 this.updateVelocity();
             }
         }
+
         return this;
     }
 
@@ -64,21 +76,23 @@ export default class Movable implements IObject, IMovable, DMovable, IPhysical, 
         if (this.lastPosition !== undefined) {
             const yDifference = this.lastPosition.y - this.physicsAggregate.body.transformNode.position.y;
 
+            // If we moved up.
             if (yDifference < -0.00001) {
                 // If we have hit the ground and are currently bouncing off it.
                 if (this.inAirMotionDirection === "down") {
-                    this.isInAir = false;
-                    this.inAirMotionDirection = "none";
+                    this.endAirMotion();
                 } else {
                     this.isInAir = true;
                     this.inAirMotionDirection = "up";
                 }
-            } else if (yDifference > 0.00001) {
+            } else if (yDifference > 0.00001) { 
+                // If we are here, then we moved down.
                 this.isInAir = true;
                 this.inAirMotionDirection = "down";
-            } else {
-                this.isInAir = false;
-                this.inAirMotionDirection = "none";
+            } else if (this.isInAir) {
+                // The motion is too small to be noticable and 
+                // thus we assume we have ended airborne motion.
+                this.endAirMotion();
             }
 
             if (yDifference > 0.00001 || yDifference < -0.00001) {
@@ -87,6 +101,15 @@ export default class Movable implements IObject, IMovable, DMovable, IPhysical, 
         } else {
             this.isInAir = false;
         }
+    }
+
+    /**
+     * Makes the Movable stop its airborne motion.
+     */
+    endAirMotion() {
+        this.isInAir = false;
+        this.inAirMotionDirection = "none";
+        this.updateVelocity();
     }
 
     /**

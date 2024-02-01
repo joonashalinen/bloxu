@@ -158,7 +158,9 @@ export default class RemotePlayer implements IPlayer, IService {
     /**
      * When the remote player has jumped.
      */
-    onRemoteJump() {
-        this.player.onControllerKeyDown(" ", 0);
+    async onRemoteJump() {
+        this.player.disableControls = false;
+        await this.player.onControllerKeyDown(" ", 0);
+        this.player.disableControls = true;
     }
 }

@@ -8,6 +8,7 @@ import TStateResource from "../../../../components/objects3d/pub/creatures/TStat
 import OwningState from "../../../../components/computation/pub/OwningState";
 import IRotatable from "../../../../components/objects3d/pub/IRotatable";
 import MouseRotatable from "../../../../components/objects3d/pub/MouseRotatable";
+import IMovable from "../../../../components/objects3d/pub/IMovable";
 
 /**
  * State where the player's body is battle-ready.
@@ -22,7 +23,8 @@ export default class ShootState extends OwningState<TStateResource> implements I
         public id: string,
         public character: AnimatedMesh,
         public rotatable: MouseRotatable,
-        public pistolMesh: Mesh
+        public pistolMesh: Mesh,
+        public movable: IMovable
     ) {
         super();
 
@@ -66,6 +68,10 @@ export default class ShootState extends OwningState<TStateResource> implements I
 
         if (resources.has("animation")) {
             
+        }
+
+        if (resources.has("movement")) {
+            this.movable.move(new Vector3(0, 0, 0));
         }
 
         return givenResources;

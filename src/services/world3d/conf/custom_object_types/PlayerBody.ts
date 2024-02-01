@@ -171,7 +171,13 @@ export default class PlayerBody {
                     this.body.as("EventableMovable") as EventableMovable
                 ),
                 rotate: new RotateState(new EventableRotatable(this.body.as("AnimatedRotatable") as AnimatedRotatable)),
-                shoot: new ShootState(this.id, character, this.body.as("MouseRotatable") as MouseRotatable, pistolMesh),
+                shoot: new ShootState(
+                    this.id, 
+                    character, 
+                    this.body.as("MouseRotatable") as MouseRotatable, 
+                    pistolMesh,
+                    (this.body.as("Movable") as Movable)
+                    ),
                 jump: new JumpState(
                     (this.body.as("Movable") as Movable),
                     this.bodyBuilder.topMovable,
