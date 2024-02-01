@@ -17,6 +17,7 @@ export default class ShootState extends OwningState<TStateResource> implements I
     gun: ProjectileWeapon;
     glowLayer: GlowLayer;
     wantedResources: Set<TStateResource> = new Set(["animation", "rotation", "movement", "mainAction", "secondaryAction"]);
+    previousMovementDirection: Vector3;
     private _ignoreNextAnimationEnd = false;
 
     constructor(
@@ -56,7 +57,8 @@ export default class ShootState extends OwningState<TStateResource> implements I
 
         this.character.animations["shoot"].onAnimationGroupEndObservable.add(() => {
             if (!this._ignoreNextAnimationEnd) {
-                this._endSelf("idle");
+                const nextState = this.previousMovementDirection.equals(new Vector3(0, 0, 0)) ? "idle" : "run";
+                this._endSelf(nextState);
             } else {
                 this._ignoreNextAnimationEnd = false;
             }
@@ -71,6 +73,7 @@ export default class ShootState extends OwningState<TStateResource> implements I
         }
 
         if (resources.has("movement")) {
+            this.previousMovementDirection = this.movable.direction;
             this.movable.move(new Vector3(0, 0, 0));
         }
 

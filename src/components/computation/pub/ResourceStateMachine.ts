@@ -283,7 +283,6 @@ export default class ResourceStateMachine<TResource> implements IStateMachine<IO
                 const wantedResourcesFreed = Array.from(freedResources).filter((r) => nextState.wantedResources.has(r));
                 wantedResourcesFreed.forEach((r) => this.availableResources.add(r));
                 this.doBeforeChangeState(nextStateId, args);
-
                 // Activate the next state.
                 this.activateState(nextStateId);
             } else {

@@ -89,7 +89,7 @@ export default class ActionModeState implements IActionModeState {
             
             const movementOwner = Object.values(this.stateMachine.activeStates)
                 .find((s) => s.ownedResources.has("movement"));
-            
+
             // If the run state does not have control of movement now, we should 
             // redirect the action to the state that does, since this means that the run state was not 
             // able to override it.
