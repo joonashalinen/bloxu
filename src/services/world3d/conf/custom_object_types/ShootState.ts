@@ -112,7 +112,7 @@ export default class ShootState extends OwningState<TStateResource> implements I
      * state from moving.
      */
     move(direction: Vector3) {
-        // Do nothing.
+        this.previousMovementDirection = direction;
         return this;
     }
 
