@@ -26,7 +26,6 @@ export default class Jumpable implements IObject, IEventable {
      */
     jump() {
         if (!this.jumping) {
-            console.log("jumping");
             this.jumping = true;
 
             this.movable.speed = this.movable.speed * 20;

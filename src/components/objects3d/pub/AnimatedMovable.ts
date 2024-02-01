@@ -78,6 +78,7 @@ export default class AnimatedMovable implements IMovable, IObject, IEventable {
         }
         this.currentAnimation = undefined;
         this.animationsEnabled = false;
+        return this;
     }
 
     /**

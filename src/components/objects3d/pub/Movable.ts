@@ -38,7 +38,6 @@ export default class Movable implements IObject, IMovable, DMovable, IPhysical, 
     }
 
     move(direction: Vector3, onlyInDirection: boolean = true): IMovable {
-        console.log(direction);
         direction = direction.clone();
         if (this.direction.normalize().subtract(direction.normalize()).length() > 0.01) {
             if (onlyInDirection) {

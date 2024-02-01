@@ -167,7 +167,7 @@ export default class PlayerBody {
                 run: new MoveState(
                     new ToggleableMovable(this.bodyBuilder.topMovable),
                     (this.body.as("Movable") as Movable),
-                    this.body.as("AnimatedMovable") as AnimatedMovable,
+                    (this.body.as("AnimatedMovable") as AnimatedMovable).disableAnimations(),
                     this.body.as("EventableMovable") as EventableMovable
                 ),
                 rotate: new RotateState(new EventableRotatable(this.body.as("AnimatedRotatable") as AnimatedRotatable)),
