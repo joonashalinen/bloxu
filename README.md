@@ -91,7 +91,7 @@ The following is a description of the individual responsibilities of each servic
 
 * **Online Synchronizer:** This service is responsible for ensuring that the two remote separate game instances stay synchronized (i.e. that they 'agree' about the state of the world).
 
-* **GameMaster:** The GameMaster service controls all universal game logic. 'Game logic' means any behaviour that is exclusively part of the idea of a 1v1 shooting game such as Sky Duel. For example, collision physics is not game logic because it is behaviour that applies to many kinds of 3D simulations instead of just the Sky Duel game. Conversely, building the initial game world and spawning 2 players on opposing platforms is part of game logic.
+* **GameMaster:** The GameMaster service controls all universal game logic. 'Game logic' means any behaviour that is exclusively part of the idea of a 1v1 shooting game such as Sky Duel. For example, collision physics is not game logic because it is behaviour that applies to many kinds of 3D simulations instead of just the Sky Duel game. Conversely, deciding that the game has ended because one of the players has died is part of game logic.
 
 * **UI:** The UI service is responsible for managing all GUI behaviour.
 
