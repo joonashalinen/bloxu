@@ -52,7 +52,7 @@ The following is a list of the most important files and folders as well as their
 
 * src/components/: Contains all reusable classes of the project. The classes are categorized into subfolders based on the subject area of the classes. Each subfolder is thought of as a reusable class library fit for some specific problem domain. To facilitate modularity, circular dependencies between libraries is not allowed. Each library subfolder contains two subfolders: 'prv' and 'pub'. The former contains all classes that are deemed private for that library and the latter those that are public (i.e. for use outside the library).
 
-* src/services/: Contains the project-specific (i.e. non-reusable) code for each microservice of the project (see 'MicroService Architecture' below).
+* src/services/: Contains the project-specific (i.e. non-reusable) code for each service of the project (see 'Service Architecture' below).
 
 * src/browser/: Contains files and folders only relevant for the browser-side instance of the game (as opposed to the online server that facilitates online play).
 
@@ -62,23 +62,23 @@ The following is a list of the most important files and folders as well as their
 
 * src/server/dist/index.ts: The main program that runs the online server.
 
-# Microservice Architecture
+# Service Architecture
 
-The project has a microservice architecture. The following diagram shows each microservice as well as their relationships to another.
+The project has a conceptual service architecture. The following diagram shows each service as well as their relationships to another.
 
 <img styles="margin:auto" src="docs/service_architecture.png" width="600">
 
-*Image 5, microservice architecture*
+*Image 5, service architecture*
 
 A solid arrow from a service to another in the diagram denotes a "knows of" relationship. If a service knows of another service, then it most likely has a dependency relationship to it. Knowing about another service means that the service is expected to a) exist and b) send or receive the expected messages. To promote modularity, circular dependencies between services are not allowed.
 
 A dashed arrow indicates an implementation inheritance relationship. The target of the arrow is then not a concrete service but an interface. The source of the arrow then implements that interface.
 
-As discussed above, each microservice is able to send messages to other services. In addition, they can send public messages that are not sent to any specific service. Instead, all services receive these types of messages and can choose for themselves if they wish to care about the received message or not.
+As discussed above, each service is able to send messages to other services. In addition, they can send public messages that are not sent to any specific service. Instead, all services receive these types of messages and can choose for themselves if they wish to care about the received message or not.
 
 ## Individual Service Responsibilities
 
-The following is a description of the individual responsibilities of each microservice:
+The following is a description of the individual responsibilities of each service:
 * **3D World:** This service is responsible for running the game engine. It provides access points for the other services so that they can interact with the objects in the world.
 
 * **IO:** The IO Service is responsible for capturing user controls, such as keyboard and mouse events for example. The IO Service sends public messages when the user controls change. The IO Service adds a layer of abstraction that can make it possible to decouple the game from the user controls. This can be useful in the future if support for different types of controllers is added, such as for joystick controllers for example.
@@ -97,7 +97,7 @@ The following is a description of the individual responsibilities of each micros
 
 ## Service Folder Locations
 
-The locations of each microservice in the project folder structure are as follows:
+The locations of each service in the project folder structure are as follows:
 | Service  | Folder Path |
 | ------------- | ------------- |
 | 3D World  | src/services/world3d |
@@ -110,10 +110,10 @@ The locations of each microservice in the project folder structure are as follow
 
 # Concrete Process Architecture
 
-The previous description of the project's microservice architecture was a description of the conceptual service architecture. Conversely, this section describes what the real-world processes are and which services they run. In the context of the browser client, a process is a web worker. In the context of the online server, a process is an operating system process. The following image depicts the individual processes and their relationships to one another.
+The previous description of the project's service architecture was a description of the conceptual service architecture. Conversely, this section describes what the real-world processes are and which services they run. In the context of the browser client, a process is a web worker. In the context of the online server, a process is an operating system process. The following image depicts the individual processes and their relationships to one another.
 
 <img styles="margin:auto" src="docs/process_architecture.png" width="600">
 
 *Image 6, process architecture*
 
-As in the diagram of the microservice architecture, a solid arrow indicates a "knows of" relationship. Similarly, a dashed arrow indicates an implementation inheritance relationship. The difference between this diagram and the conceptual service architecture diagram is that some services are joined into the same process. Additionally, the "Online Synchronizer" service is split into two separate processes: one running on the browser and one running on the online server.
+As in the diagram of the service architecture, a solid arrow indicates a "knows of" relationship. Similarly, a dashed arrow indicates an implementation inheritance relationship. The difference between this diagram and the conceptual service architecture diagram is that some services are joined into the same process. Additionally, the "Online Synchronizer" service is split into two separate processes: one running on the browser and one running on the online server.
