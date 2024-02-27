@@ -4,9 +4,6 @@ This is the repository for the browser-based online game "Sky Duel". The in-deve
 ## How to Play the Game
 You can play the game at: https://joonashalinen.net. The game is a two-player shooting game where the goal is to defeat your opponent. You can defeat your opponent by either making them fall from the map or by shooting them.
 
-> [!WARNING]  
-> If you are intending on testing the game by playing against yourself then please remember to ensure both games are visible. You can do this by creating two browser windows instead of tabs. Due to browser optimizations, running the game on a hidden tab will freeze it. This will then cause synchronization issues.
-
 <img styles="margin:auto" src="docs/promo_images/shooting.png" width="250">
 
 *Image 1, player shooting*
