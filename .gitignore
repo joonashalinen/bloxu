@@ -1,3 +1,4 @@
 **/node_modules
 docs/*.bkp
 docs/*.dtmp
+*.js.map
