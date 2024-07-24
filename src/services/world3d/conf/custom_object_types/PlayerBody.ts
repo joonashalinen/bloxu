@@ -71,7 +71,7 @@ export default class PlayerBody {
 
         // Set character mesh color.
         const characterMaterial = new StandardMaterial("PlayerBody:mesh:material?" + this.id, scene);
-        
+
         if (this.id.includes("player-1")) {
             const color = new Color3(0.8, 0.54, 0.54);
             characterMaterial.diffuseColor = color;
@@ -90,7 +90,7 @@ export default class PlayerBody {
         // Configure character controls.
         const controllableBuilder = new ControllableBuilder(character.mesh);
         controllableBuilder.makeMovable(
-            0.0021, 
+            0.003, 
             {
                 width: characterWidth, 
                 height: characterHeight, 

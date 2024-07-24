@@ -1,4 +1,5 @@
 import * as BABYLON from "@babylonjs/core";
+import { PhysicsAggregate, PhysicsShapeType } from "@babylonjs/core";
 import "@babylonjs/loaders"
 
 export interface ICharacterAnimations {
@@ -38,12 +39,12 @@ export default async function(babylonjs: typeof BABYLON, scene: BABYLON.Scene) {
     ));
     playerMeshImport.rootNodes[0].setEnabled(false);
 
-    const skyboxMesh: BABYLON.AbstractMesh = (await babylonjs.SceneLoader.ImportMeshAsync(
+    /* const skyboxMesh: BABYLON.AbstractMesh = (await babylonjs.SceneLoader.ImportMeshAsync(
         null,
         "assets/models/",
         "skybox.glb",
         scene
-    )).meshes[0];
+    )).meshes[0]; */
 
     const gunMeshImport = (await babylonjs.SceneLoader.LoadAssetContainerAsync(
         "assets/models/",
@@ -136,10 +137,10 @@ export default async function(babylonjs: typeof BABYLON, scene: BABYLON.Scene) {
             // skyboxMesh.material!.disableLighting = true;
             // skyboxMesh.scaling = new BABYLON.Vector3(1, 1, -1);
             // skyboxMesh.rotate(BABYLON.Vector3.Right(), -0.5);
-            skyboxMesh.rotate(BABYLON.Vector3.Up(), 1.7);
-            skyboxMesh.translate(BABYLON.Vector3.Up(), -200);
+            /* skyboxMesh.rotate(BABYLON.Vector3.Up(), 1.7);
+            skyboxMesh.translate(BABYLON.Vector3.Up(), -200); */
             // skyboxMesh.infiniteDistance = true;
-            return skyboxMesh;
+            /* return skyboxMesh; */
         },
         "Cube": (id: string, size: number) => {
             // Create cube mesh.

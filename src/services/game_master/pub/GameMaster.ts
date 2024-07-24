@@ -48,10 +48,6 @@ export default class GameMaster {
             this.messageFactory.createRequest("world3d", "run")
         );
 
-        // Create the cube islands the players will spawn on.
-        this.createCubeIsland("GameMaster:FloatingCube?1", {x: 0, y: 0, z: 0});
-        this.createCubeIsland("GameMaster:FloatingCube?2", {x: 0, y: 0, z: 20.156});
-
         // vvv Setup players. vvv        
 
         // Tell the player services who is the main player and who is the remote / AI player.
@@ -72,23 +68,22 @@ export default class GameMaster {
 
         // Spawn players.
         this.proxyMessenger.postMessage(
-            this.messageFactory.createRequest("player-1", "spawn", [{x: 0, y: 0, z: 0}])
+            this.messageFactory.createRequest("player-1", "spawn", [{x: 4, y: 4, z: -5}])
         );
         this.proxyMessenger.postMessage(
-            this.messageFactory.createRequest("player-2", "spawn", [{x: 0, y: 0, z: 20}])
+            this.messageFactory.createRequest("player-2", "spawn", [{x: 0, y: 4, z: -5}])
         );
 
-        // Create skybox.
-        this.proxyMessenger.postMessage(
-            this.messageFactory.createRequest("world3d", "modify", [
-                {
-                    boundArgs: [],
-                    f: function(this: World3D) {
-                        const skybox = this.meshConstructors["SkyBox"]();
-                    }
-                }
-            ])
-        );
+        // Create map.
+        const success = (await this.syncMessenger.postSyncMessage({
+            recipient: "world3d",
+            sender: "gameMaster",
+            type: "request",
+            message: {
+                type: "selectMap",
+                args: ["level1"]
+            }
+        }))[0] as boolean;
 
         // Center camera on the local player.
         setTimeout(() => {
@@ -99,6 +94,7 @@ export default class GameMaster {
                             f: function(this: World3D, playerId: string) {
                                 const playerBody = this.getObject(`Player:PlayerBody?${playerId}`) as PlayerBody;
                                 this.camera.lockedTarget = playerBody.mainMesh;
+                                this.camera.radius = 16;
                                 // If we are player 2, then we wish to rotate the camera 180 degrees.
                                 if (playerId === "player-2") {
                                     this.camera.alpha = this.camera.alpha + Math.PI

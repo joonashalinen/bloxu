@@ -5,8 +5,7 @@ import "@babylonjs/inspector";
 import "@babylonjs/loaders";
 import { HavokPlugin } from "@babylonjs/core/Physics";
 import HavokPhysics from "@babylonjs/havok";
-import { Engine, Scene, ArcRotateCamera, Vector3, HemisphericLight, Mesh, MeshBuilder } from "@babylonjs/core";
-import IObject from "../../../components/objects3d/pub/IObject";
+import { Engine, Scene, ArcRotateCamera, Vector3, HemisphericLight, Mesh, MeshBuilder, Color4 } from "@babylonjs/core";
 import ProxyMessenger from "../../../components/messaging/pub/ProxyMessenger";
 import { DMessage } from "../../../components/messaging/pub/DMessage";
 import IService from "../../../components/services/pub/IService";
@@ -19,6 +18,7 @@ import Pointer from "../../../components/objects3d/pub/Pointer";
 import meshConstructors from "../conf/meshConstructors";
 import Glow from "../../../components/graphics3d/pub/effects/Glow";
 import ITickable from "../../../components/objects3d/pub/ITickable";
+import maps from "../conf/maps/maps";
 
 type Types = {[type: string]: Function};
 type Instances = {[name: string]: Object};
@@ -161,6 +161,20 @@ export default class World3D implements IService {
     }
 
     /**
+     * Selects and renders the world map with the given id.
+     * Returns whether this is successful or not.
+     */
+    async selectMap(id: string) {
+        if (maps[id]) {
+            const mapGenerator: (scene: Scene) => Promise<Mesh> = maps[id];
+            await mapGenerator(this.scene);
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    /**
      * Initialization procedure for the World3D service.
      */
     async initialize(): Promise<boolean> {
@@ -173,7 +187,9 @@ export default class World3D implements IService {
 
         // Setup lighting.
         var light: HemisphericLight = new HemisphericLight("light", new Vector3(-1, 1, 1), this.scene);
+        light.intensity = light.intensity * 1.3;
         this.scene.ambientColor = new babylonjs.Color3(0.15, 0.3, 0.6);
+        this.scene.clearColor = new Color4(0.1, 0.15, 0.2, 1);
 
         // hide/show the Inspector
         window.addEventListener("keydown", (ev) => {
