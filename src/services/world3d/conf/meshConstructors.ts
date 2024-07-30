@@ -1,6 +1,6 @@
 import * as BABYLON from "@babylonjs/core";
-import { PhysicsAggregate, PhysicsShapeType } from "@babylonjs/core";
 import "@babylonjs/loaders"
+import AssetLoader from "../prv/AssetLoader";
 
 export interface ICharacterAnimations {
     "idle": BABYLON.AnimationGroup, 
@@ -24,34 +24,37 @@ export interface AnimatedMesh {
 }
 
 export default async function(babylonjs: typeof BABYLON, scene: BABYLON.Scene) {
-    const directionArrowMesh: BABYLON.AbstractMesh = (await babylonjs.SceneLoader.ImportMeshAsync(
-        null,
-        "assets/models/",
-        "direction_arrow.glb",
-        scene
-    )).meshes[0];
-    directionArrowMesh.setEnabled(false);
+    const assetLoader = new AssetLoader("assets/", scene);
     
-    const playerMeshImport = (await babylonjs.SceneLoader.LoadAssetContainerAsync(
-        "assets/models/",
-        "player.glb",
-        scene
-    ));
-    playerMeshImport.rootNodes[0].setEnabled(false);
+    assetLoader.modelPaths = {
+        "Blocks::dirt": "blocks/dirt.glb",
+        "Blocks::grassyDirt": "blocks/grassy_dirt.glb",
+        "Blocks::stone": "blocks/stone.glb"
+    };
 
-    /* const skyboxMesh: BABYLON.AbstractMesh = (await babylonjs.SceneLoader.ImportMeshAsync(
-        null,
-        "assets/models/",
-        "skybox.glb",
-        scene
-    )).meshes[0]; */
+    const directionArrowMesh = (await assetLoader.loadModelFromFile("direction_arrow.glb")).meshes[0];
+    const playerMeshImport = (await assetLoader.loadModelFromFile("player.glb"));
+    const skyboxImport = (await assetLoader.loadModelFromFile("skybox.glb"));
+    const gunMeshImport = (await assetLoader.loadModelFromFile("plasma_pistol.glb"));
+    assetLoader.loadModel("Blocks::dirt");
+    assetLoader.loadModel("Blocks::grassyDirt");
+    assetLoader.loadModel("Blocks::stone");
 
-    const gunMeshImport = (await babylonjs.SceneLoader.LoadAssetContainerAsync(
-        "assets/models/",
-        "plasma_pistol.glb",
-        scene
-    ));
-    gunMeshImport.meshes[0].setEnabled(false);
+    function plainConstructor(type: string, id?: string) {
+        const modelImport = assetLoader.getModel(type);
+        const entries = modelImport.instantiateModelsToScene();
+        const root = entries.rootNodes[0] as BABYLON.TransformNode;
+        const mesh = root.getChildMeshes()[0];
+        root.scaling = new BABYLON.Vector3(1, 1, 1);
+        root.rotation = new BABYLON.Vector3(0, 0, 0);
+        mesh.scaling = new BABYLON.Vector3(1, 1, 1);
+        mesh.rotation = new BABYLON.Vector3(0, 0, 0);
+        root.setEnabled(true);
+        if (typeof id === "string") {
+            mesh.id = id;
+        }
+        return mesh;
+    }
 
     return {
         "DirectionArrow": (id: string) => {
@@ -133,14 +136,13 @@ export default async function(babylonjs: typeof BABYLON, scene: BABYLON.Scene) {
             return mesh;
         },
         "SkyBox": () => {
-            // skyboxMesh.material!.backFaceCulling = false;
-            // skyboxMesh.material!.disableLighting = true;
-            // skyboxMesh.scaling = new BABYLON.Vector3(1, 1, -1);
-            // skyboxMesh.rotate(BABYLON.Vector3.Right(), -0.5);
-            /* skyboxMesh.rotate(BABYLON.Vector3.Up(), 1.7);
-            skyboxMesh.translate(BABYLON.Vector3.Up(), -200); */
-            // skyboxMesh.infiniteDistance = true;
-            /* return skyboxMesh; */
+            const entries = skyboxImport.instantiateModelsToScene();
+            const rootMesh = entries.rootNodes[0] as BABYLON.TransformNode;
+            rootMesh.setEnabled(true);
+            rootMesh.position = new BABYLON.Vector3(0, 0, 0);
+            //rootMesh.rotate(BABYLON.Vector3.Up(), 1.7);
+            rootMesh.translate(BABYLON.Vector3.Up(), -200);
+            return rootMesh;
         },
         "Cube": (id: string, size: number) => {
             // Create cube mesh.
@@ -154,6 +156,76 @@ export default async function(babylonjs: typeof BABYLON, scene: BABYLON.Scene) {
             // material.emissiveColor = new Color3(0.04, 0.09, 0.16);
             cube.material = material;
             return cube;
+        },
+        "Blocks::dirt": () => plainConstructor("Blocks::dirt"),
+        "Blocks::grassyDirt": () => plainConstructor("Blocks::grassyDirt"),
+        "Blocks::stone": () => plainConstructor("Blocks::stone"),
+        "Interactables::portal": () => {
+            function createMaterial(name: string) {
+                const material = new BABYLON.StandardMaterial(name, scene);
+                const color = new BABYLON.Color3(1, 0.74, 1);
+                material.diffuseColor = color;
+                return material;
+            }
+
+            function createTorusWithAnimationStartFrame(startFrame: number) {
+                const torus = BABYLON.MeshBuilder.CreateTorus(
+                    "Interactables::portalRing" + startFrame, 
+                    {thickness: 0.25, diameter: 1.5,  tessellation: 64}, scene);
+                torus.rotate(BABYLON.Vector3.Left(), (1 / 2) * Math.PI);
+                torus.material = createMaterial("Interactables::portalRingMaterial");
+
+                function animate(name: string, property: string, 
+                    from: number | BABYLON.Vector3, 
+                    to: number | BABYLON.Vector3,
+                    startFrame = 0,
+                    endFrame = 10) {
+                    const frameRate = 10;
+                    const expand = new BABYLON.Animation(name, property, 
+                        frameRate,
+                        from instanceof BABYLON.Vector3 ? 
+                            BABYLON.Animation.ANIMATIONTYPE_VECTOR3 : 
+                            BABYLON.Animation.ANIMATIONTYPE_FLOAT, 
+                        BABYLON.Animation.ANIMATIONLOOPMODE_CYCLE);
+        
+                    expand.setKeys([
+                        {frame: startFrame, value: from},
+                        {frame: endFrame, value: to}
+                    ]);
+    
+                    torus.animations.push(expand);
+                }
+
+                animate("Interactables::portalExpand" + startFrame, "scaling", 
+                    new BABYLON.Vector3(0.001, 0.001, 0.001), 
+                    new BABYLON.Vector3(1, 1, 1), startFrame);
+
+                animate("Interactables::portalVisibility" + startFrame, "visibility", 1, 0.001, startFrame);
+
+                return torus;
+            }
+
+            const parent = new BABYLON.TransformNode("Interactables::portal", scene);
+
+            const toruses = [0, 0, 0].map(createTorusWithAnimationStartFrame);
+            const startFrames = [0, 4, 8];
+            toruses.forEach((torus: BABYLON.Mesh, i: number) => {
+                torus.parent = parent;
+                const animatable = scene.beginAnimation(torus, 0, 10, true, 0.5);
+                animatable.goToFrame(startFrames[i]);
+            });
+
+            const frame = BABYLON.MeshBuilder.CreateTorus(
+            "Interactables::portalFrame", 
+            {thickness: 0.1, diameter: 2, tessellation: 64}, scene);
+            frame.rotate(BABYLON.Vector3.Left(), (1 / 2) * Math.PI);
+            frame.material = createMaterial("Interactables::portalBodyMaterial");
+            (frame.material as BABYLON.StandardMaterial).emissiveColor = 
+                new BABYLON.Color3(0.15, 0.05, 15);
+            frame.visibility = 0.3;
+            frame.parent = parent;
+
+            return parent;
         }
     };
 }

@@ -77,13 +77,13 @@ export default class PlayerBody {
             characterMaterial.diffuseColor = color;
             characterMaterial.ambientColor = color;
             characterMaterial.specularColor = color;
-            characterMaterial.emissiveColor = new Color3(0.32, 0.11, 0.11);
+            /* characterMaterial.emissiveColor = new Color3(0.32, 0.11, 0.11); */
         } else {
             const color = new Color3(0.49, 0.59, 0.75);
             characterMaterial.diffuseColor = color;
             characterMaterial.ambientColor = color;
             characterMaterial.specularColor = color;
-            characterMaterial.emissiveColor = new Color3(0.04, 0.09, 0.16);
+            /* characterMaterial.emissiveColor = new Color3(0.04, 0.09, 0.16); */
         }
         character.mesh.getChildMeshes().forEach((m) => m.material = characterMaterial);
 
@@ -153,6 +153,10 @@ export default class PlayerBody {
         physicsAggregate.body.setMassProperties({
             inertia: new Vector3(0, 0, 0)
         });
+
+        // Fix vertical positioning of the player character mesh. Currently 
+        // it for some reason is above the hitbox. TODO: Find out why this happens.
+        character.mesh.position.y -= characterHeight / 2;
         
         // vvv Create state machine for the character's action states. vvv
 

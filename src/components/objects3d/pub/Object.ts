@@ -1,12 +1,170 @@
-import { TransformNode } from "@babylonjs/core";
+import { PhysicsAggregate, TransformNode, Vector3 } from "@babylonjs/core";
 import IObject from "./IObject";
+import IMovable from "./IMovable";
+import Movable from "./Movable";
 
 /**
- * Default implementation of an IObject.
- * Does nothing except wraps the given TransformNode.
+ * A generic object in the 3D world. Supports all the common operations 
+ * we may wish to do an arbitrary object.
  */
 export default class Object implements IObject {
-    constructor(public transformNode: TransformNode) {
+    direction = new Vector3(0, 0, 0);
+    speed: number = 10;
+    movementVelocity: Vector3;
+    lastPosition: Vector3;
+    gravityEnabled: boolean = true;
+    onlyUseForce: boolean = false;
+    isInAir: boolean = false;
+    inAirMotionDirection: "up" | "down" | "none";
+    maxVelocity: number | undefined;
+    transformNode: TransformNode;
+
+    constructor(public physicsAggregate: PhysicsAggregate) {
+        this.transformNode = this.physicsAggregate.transformNode;
+        this.lastPosition = this.physicsAggregate.body.transformNode.position.clone();
+    }
+
+    move(direction: Vector3, onlyInDirection: boolean = true) {
+        direction = direction.clone();
+        if (this.direction.normalize().subtract(direction.normalize()).length() > 0.01) {
+            if (onlyInDirection) {
+                this.direction = direction;
+            } else {
+                this.direction = this.direction.add(direction).normalize();
+            }
+            if (this.gravityEnabled) {
+                if (this.isInAir) {
+                    // If we have stopped moving while in air.
+                    if (direction.equals(new Vector3(0, 0, 0))) {
+                        // Remove all horizontal movement velocity.
+                        const currentVelocity =  this.physicsAggregate.body.getLinearVelocity();
+                        this.physicsAggregate.body.setLinearVelocity(new Vector3(0, currentVelocity.y, 0));
+                    } else {
+                        this.applyForce();
+                    }
+                } else if (this.onlyUseForce) {
+                    this.applyForce();
+                } else {
+                    this.updateVelocity();
+                }
+            } else {
+                this.updateVelocity();
+            }
+        }
+    }
+
+    setMotionDirectionInLocalSpace(velocity: Vector3) {
         
+    }
+
+    /**
+     * Whether the Movable is currently in air, either falling or rising.
+     */
+    updateIsInAir() {
+        if (this.lastPosition !== undefined) {
+            const yDifference = this.lastPosition.y - this.physicsAggregate.body.transformNode.position.y;
+
+            // If we moved up.
+            if (yDifference < -0.00001) {
+                // If we have hit the ground and are currently bouncing off it.
+                if (this.inAirMotionDirection === "down") {
+                    this.endAirMotion();
+                } else {
+                    this.isInAir = true;
+                    this.inAirMotionDirection = "up";
+                }
+            } else if (yDifference > 0.00001) { 
+                // If we are here, then we moved down.
+                this.isInAir = true;
+                this.inAirMotionDirection = "down";
+            } else if (this.isInAir) {
+                // The motion is too small to be noticable and 
+                // thus we assume we have ended airborne motion.
+                this.endAirMotion();
+            }
+
+            if (yDifference > 0.00001 || yDifference < -0.00001) {
+                this.resetLastPosition();
+            }
+        } else {
+            this.isInAir = false;
+        }
+    }
+
+    /**
+     * Makes the Movable stop its airborne motion.
+     */
+    endAirMotion() {
+        this.isInAir = false;
+        this.inAirMotionDirection = "none";
+        this.updateVelocity();
+    }
+
+    /**
+     * Apply an impulse to the physics body, moving it.
+     */
+    applyImpulse() {
+        const mass = this.physicsAggregate.body.getMassProperties().mass;
+        const direction = this.direction.normalize().scale(mass! * this.speed * 1000);
+        this.physicsAggregate.body.applyImpulse(
+            direction, 
+            this.physicsAggregate.body.transformNode.absolutePosition
+        );
+    }
+
+    /**
+     * Apply a force to the physics body, moving it.
+     */
+    applyForce() {
+        const mass = this.physicsAggregate.body.getMassProperties().mass;
+        const direction = this.direction.normalize().scale(mass! * this.speed * 1000);
+        this.physicsAggregate.body.applyForce(
+            direction, 
+            this.physicsAggregate.body.transformNode.absolutePosition
+        );
+    }
+
+    /**
+     * Update the velocity of the physics body.
+     */
+    updateVelocity() {
+        const mass = this.physicsAggregate.body.getMassProperties().mass;
+        this.movementVelocity = this.direction.normalize().scale(mass! * this.speed);
+        this.physicsAggregate.body.setLinearVelocity(this.movementVelocity);
+    }
+
+    doOnTick(time: number) {
+        if (this.gravityEnabled) {
+            this.updateIsInAir();
+        }
+        if (!this.direction.equals(new Vector3(0, 0, 0))) {
+            if (
+                this.maxVelocity === undefined || 
+                this.physicsAggregate.body.getLinearVelocity().length() < this.maxVelocity
+            ) {
+                if (this.gravityEnabled) {
+                    if (this.isInAir) {
+                        this.applyForce();
+                    } else if (this.onlyUseForce) {
+                        this.applyForce();
+                    } else {
+                        this.updateVelocity();
+                    }
+                } else {
+                    if (this.onlyUseForce) {
+                        this.applyForce();
+                    } else {
+                        this.updateVelocity();
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Set the last position to be the current position.
+     */
+    resetLastPosition() {
+        this.lastPosition = this.physicsAggregate.body.transformNode.position.clone();
     }
 }

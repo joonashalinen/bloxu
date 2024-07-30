@@ -22,6 +22,7 @@ import maps from "../conf/maps/maps";
 
 type Types = {[type: string]: Function};
 type Instances = {[name: string]: Object};
+type MeshConstructors = {[name: string]: Function};
 
 /**
  * Class containing the state and operations of the world3d service.
@@ -31,6 +32,7 @@ export default class World3D implements IService {
     objectTypes: Types;
     effects: Instances;
     effectTypes: Types;
+    skybox: Mesh;
     meshConstructors: {[name: string]: Function};
     proxyMessenger: ProxyMessenger<DMessage, DMessage>;
     syncMessenger: SyncMessenger;
@@ -41,6 +43,7 @@ export default class World3D implements IService {
     canvas: HTMLCanvasElement;
     camera: babylonjs.ArcRotateCamera;
     gravity: Vector3;
+    glowLayer: babylonjs.GlowLayer;
 
     constructor(document: Document) {
         this.objects = {};
@@ -77,6 +80,7 @@ export default class World3D implements IService {
 
         this.engine = new Engine(this.canvas, true);
         this.scene = new Scene(this.engine);
+        /* this.glowLayer = new babylonjs.GlowLayer("mainGlowLayer", this.scene); */
     }
 
     /**
@@ -166,8 +170,9 @@ export default class World3D implements IService {
      */
     async selectMap(id: string) {
         if (maps[id]) {
-            const mapGenerator: (scene: Scene) => Promise<Mesh> = maps[id];
-            await mapGenerator(this.scene);
+            const mapGenerator: (scene: Scene, meshConstructors: MeshConstructors) 
+                => Promise<Mesh> = maps[id];
+            await mapGenerator(this.scene, this.meshConstructors);
             return true;
         } else {
             return false;
@@ -186,10 +191,11 @@ export default class World3D implements IService {
         this.camera.fov = 1.2;
 
         // Setup lighting.
-        var light: HemisphericLight = new HemisphericLight("light", new Vector3(-1, 1, 1), this.scene);
+        var light: HemisphericLight = new HemisphericLight("light", new Vector3(-30, 30, -30), this.scene);
         light.intensity = light.intensity * 1.3;
+        light.specular.scaleInPlace(0);
         this.scene.ambientColor = new babylonjs.Color3(0.15, 0.3, 0.6);
-        this.scene.clearColor = new Color4(0.1, 0.15, 0.2, 1);
+        this.scene.clearColor = new Color4(0.75, 0.97, 1, 1);
 
         // hide/show the Inspector
         window.addEventListener("keydown", (ev) => {
@@ -213,6 +219,10 @@ export default class World3D implements IService {
 
         // Load meshes configured by the project where World3D is being used.
         this.meshConstructors = await meshConstructors(this.babylonjs, this.scene);
+
+        // Setup skybox.
+        /* this.skybox = this.meshConstructors["SkyBox"]();
+        this.skybox.position = this.camera.position; */
 
         // Communicate to the outside world about events.
         this.scene.onPointerObservable.add((pointerInfo) => {
