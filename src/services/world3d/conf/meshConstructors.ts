@@ -215,11 +215,18 @@ export default async function(babylonjs: typeof BABYLON, scene: BABYLON.Scene) {
                 animatable.goToFrame(startFrames[i]);
             });
 
+            const body = BABYLON.MeshBuilder.CreateDisc(
+                "Interactables::portalFrame", 
+                {radius: 1, tessellation: 64}, scene);
+            body.material = createMaterial("Interactables::portalBodyMaterial");
+            body.visibility = 0.4;
+            body.parent = parent;
+
             const frame = BABYLON.MeshBuilder.CreateTorus(
             "Interactables::portalFrame", 
             {thickness: 0.1, diameter: 2, tessellation: 64}, scene);
             frame.rotate(BABYLON.Vector3.Left(), (1 / 2) * Math.PI);
-            frame.material = createMaterial("Interactables::portalBodyMaterial");
+            frame.material = createMaterial("Interactables::portalFrameMaterial");
             (frame.material as BABYLON.StandardMaterial).emissiveColor = 
                 new BABYLON.Color3(0.15, 0.05, 15);
             frame.visibility = 0.3;
