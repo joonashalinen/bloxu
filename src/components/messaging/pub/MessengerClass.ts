@@ -13,6 +13,7 @@ type Messenger = IMessenger<DMessage, DMessage>;
  */
 export default class MessengerClass<C> implements IMessenger<DMessage, DMessage> {
     emitter: EventEmitter = new EventEmitter();
+    errorPolicy: "crash" | "notify" = "crash";
 
     constructor(
         public wrappee: C, 
@@ -29,10 +30,14 @@ export default class MessengerClass<C> implements IMessenger<DMessage, DMessage>
      */
     async _callMethod(msg: DMessage) {
         var result: unknown;
-        try {
+        if (this.errorPolicy === "crash") {
             result = await this.wrappee[msg.message.type](...msg.message.args, msg);
-        } catch (e) {
-            result = {error: e.toString()};
+        } else {
+            try {
+                result = await this.wrappee[msg.message.type](...msg.message.args, msg);
+            } catch (e) {
+                result = {error: e.toString()};
+            }
         }
         // If the result is not the wrapped class itself or undefined then we assume 
         // that the result value matters and we send it as a response message.

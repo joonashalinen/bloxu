@@ -1,6 +1,16 @@
-import { AbstractMesh, Mesh, MeshBuilder, PhysicsAggregate, PhysicsShapeType, TransformNode } from "@babylonjs/core";
+import { AbstractMesh, Mesh, MeshBuilder, PhysicsAggregate, PhysicsShapeType, TransformNode, Vector3 } from "@babylonjs/core";
 import IPhysical from "./IPhysical";
 import IObject from "./IObject";
+
+export interface HitboxInfo {
+    width: number;
+    height: number;
+    depth: number;
+    position: Vector3;
+    absolutePosition: Vector3;
+    minBound: Vector3;
+    maxBound: Vector3;
+}
 
 /**
  * An object with physics.
@@ -8,6 +18,8 @@ import IObject from "./IObject";
 export default class Physical implements IPhysical, IObject {
     physicsAggregate: PhysicsAggregate;
     transformNode: Mesh;
+    hitboxSize: {width: number, height: number, depth: number};
+    terminalVelocity: number = -9.8;
 
     constructor(
         wrappable: AbstractMesh,
@@ -25,6 +37,7 @@ export default class Physical implements IPhysical, IObject {
                 depth: width
             };
         }
+        this.hitboxSize = hitboxSize;
         // wrappable.position.y = wrappable.position.y - height/2;
 
         // Create box wrapper for the given mesh.
@@ -45,8 +58,42 @@ export default class Physical implements IPhysical, IObject {
         this.physicsAggregate = new PhysicsAggregate(
             this.transformNode, 
             PhysicsShapeType.BOX, 
-            { mass: mass }, 
+            { mass: mass, friction: 0 }, 
             wrappable.getScene()
         );
+    }
+
+    /**
+     * Information about the hitbox of the Physical.
+     */
+    hitboxInfo(): HitboxInfo {
+        const bounds = this.transformNode.getHierarchyBoundingVectors();
+        return {
+            width: this.hitboxSize.width,
+            height: this.hitboxSize.height,
+            depth: this.hitboxSize.depth,
+            position: this.transformNode.position,
+            absolutePosition: this.transformNode.absolutePosition,
+            minBound: bounds.min,
+            maxBound: bounds.max
+        };
+    }
+
+    /**
+     * Whether the physics body is currently falling downwards 
+     * at terminal velocity due to gravity.
+     */
+    isInTerminalFreefall() {
+        return this.physicsAggregate.body.getLinearVelocity().y < this.terminalVelocity;
+    }
+
+    /**
+     * Convenience method for setting the y-component of the physics body's linear velocity.
+     */
+    setVerticalVelocity(y: number) {
+        // Note: velocity is a copy not a reference.
+        const velocity = this.physicsAggregate.body.getLinearVelocity();
+        velocity.y = y;
+        this.physicsAggregate.body.setLinearVelocity(velocity);
     }
 }

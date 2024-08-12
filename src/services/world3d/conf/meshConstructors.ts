@@ -14,7 +14,9 @@ export interface ICharacterAnimations {
     "moveLeft": BABYLON.AnimationGroup,
     "turnLeft": BABYLON.AnimationGroup,
     "turnRight": BABYLON.AnimationGroup,
-    "shoot": BABYLON.AnimationGroup
+    "shoot": BABYLON.AnimationGroup,
+    "jump": BABYLON.AnimationGroup,
+    "hover": BABYLON.AnimationGroup
 }
 
 export interface AnimatedMesh {
@@ -64,15 +66,18 @@ export default async function(babylonjs: typeof BABYLON, scene: BABYLON.Scene) {
             return mesh;
         },
         "Player": (id: string) => {
-            const entries = playerMeshImport.instantiateModelsToScene();
+            const entries = playerMeshImport
+                .instantiateModelsToScene((name: string) => {
+                return id + "-" + name;
+            });
             const rootMesh = entries.rootNodes[0] as BABYLON.Mesh;
             const characterMesh = rootMesh.getChildren()[0] as BABYLON.Mesh;
 
-            rootMesh!.rotate(babylonjs.Vector3.Up(), (-1) * Math.PI / 2);
-            characterMesh!.rotate(babylonjs.Vector3.Forward(), Math.PI / 2);
+            //rootMesh!.rotate(babylonjs.Vector3.Up(), (-1) * Math.PI / 2);
+            //characterMesh!.rotate(babylonjs.Vector3.Forward(), Math.PI / 2);
             rootMesh!.position = new BABYLON.Vector3(0, 0, 0);
             rootMesh!.scaling = rootMesh!.scaling.scale(0.3);
-            rootMesh.position.y = characterMesh.position.y - 0.8;
+            //characterMesh.position.y = characterMesh.position.y - 0.8;
             // entries.skeletons[0].bones.map((bone) => bone.scale(0.3, 0.3, 0.3, true));
             rootMesh!.setEnabled(true);
             characterMesh.id = id;
@@ -101,7 +106,7 @@ export default async function(babylonjs: typeof BABYLON, scene: BABYLON.Scene) {
                 "turnLeft": animationGroupsClone[15],
                 "shoot": animationGroupsClone[13],
                 "jump": animationGroupsClone[6],
-                "fall": animationGroupsClone[0]
+                "hover": animationGroupsClone[0]
             } as ICharacterAnimations;
 
             // Normalize animation speeds.

@@ -68,10 +68,10 @@ export default class GameMaster {
 
         // Spawn players.
         this.proxyMessenger.postMessage(
-            this.messageFactory.createRequest("player-1", "spawn", [{x: 4, y: 4, z: -5}])
+            this.messageFactory.createRequest("player-1", "spawn", [{x: 4, y: 6, z: -7}])
         );
         this.proxyMessenger.postMessage(
-            this.messageFactory.createRequest("player-2", "spawn", [{x: 0, y: 4, z: -5}])
+            this.messageFactory.createRequest("player-2", "spawn", [{x: 0, y: 6, z: -7}])
         );
 
         // Create map.
@@ -93,7 +93,7 @@ export default class GameMaster {
                             boundArgs: [this.localPlayerId],
                             f: function(this: World3D, playerId: string) {
                                 const playerBody = this.getObject(`Player:PlayerBody?${playerId}`) as PlayerBody;
-                                this.camera.lockedTarget = playerBody.mainMesh;
+                                this.camera.lockedTarget = playerBody.transformNode;
                                 this.camera.radius = 16;
                                 // If we are player 2, then we wish to rotate the camera 180 degrees.
                                 if (playerId === "player-2") {

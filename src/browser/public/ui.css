@@ -4,7 +4,8 @@ body {
 }
 
 #ui-main-menu-wrapper {
-    background-image: url("assets/images/ui_main_menu_background.jpg");
+    background: rgb(70, 124, 171);
+    background: linear-gradient(360deg, rgba(208, 247, 255, 1) 0%, rgba(70, 124, 171, 1) 100%);
     background-size: cover;
     font-family: 'Lilita One';
 }

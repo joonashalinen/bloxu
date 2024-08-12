@@ -20,5 +20,5 @@ export default interface IState {
     /**
      * When the state ends itself.
      */
-    onEnd(callback: (nextStateId: string, ...args: unknown[]) => void): IState;
+    onEnd(callback: (nextStateId: string, ...args: unknown[]) => void): IState | void;
 }

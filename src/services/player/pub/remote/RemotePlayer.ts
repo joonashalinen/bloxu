@@ -66,7 +66,7 @@ export default class RemotePlayer implements IPlayer, IService {
         await this.player.modifyWorld(
             [this.player.playerBodyId(), event],
             function(this: World3D, bodyId: string, event: DirectionEvent) {
-                const body = this.getObject(bodyId) as PlayerBody;
+                /* const body = this.getObject(bodyId) as PlayerBody;
                 const jumpState = body.actionStateMachine.states["jump"] as JumpState;
                 // We only want to force-update the state of the body 
                 // if we are not currently jumping. Force-updating state 
@@ -77,7 +77,7 @@ export default class RemotePlayer implements IPlayer, IService {
                     body.setState(event.body);
                 }
                 const directionVector = new this.babylonjs.Vector2(event.direction.x, event.direction.y);
-                body.move(directionVector);
+                body.move(directionVector); */
                 // Return something because SyncMessenger 
                 // requires that the receiving service returns a response.
                 // ClassMessenger on the other hand only returns a 
@@ -106,7 +106,7 @@ export default class RemotePlayer implements IPlayer, IService {
                         bodyId: string,
                         direction: DVector3
                     ) {
-                        const body = this.getObject(bodyId) as PlayerBody;
+                        /* const body = this.getObject(bodyId) as PlayerBody;
                         const shootState = (body.actionStateMachine.states["shoot"] as ShootState);
 
                         if (!shootState.isActive) {
@@ -116,7 +116,7 @@ export default class RemotePlayer implements IPlayer, IService {
                                 );
                             
                             shootState.shoot(new this.babylonjs.Vector3(direction.x, direction.y, direction.z));
-                        }
+                        } */
                     }
                 }
             ])

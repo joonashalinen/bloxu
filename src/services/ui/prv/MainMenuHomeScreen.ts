@@ -13,7 +13,7 @@ export default class MainMenuHomeScreen implements IState, IEventable, IScreen {
     buttonTitles: {[name: string]: string} = {
         "hostGame": "Host Game",
         "joinGame": "Join Game",
-        "playDemo": "Play Demo"
+        "playSinglePlayer": "Play Single"
     };
     title: HTMLElement;
 
@@ -23,11 +23,11 @@ export default class MainMenuHomeScreen implements IState, IEventable, IScreen {
     ) {
         // Create title element.
         this.title = document.createElement("h1");
-        this.title.innerText = "Sky Duel";
+        this.title.innerText = "Bloxu";
         this.title.classList.add("ui-main-menu-home-screen-title");
         this.wrapper.appendChild(this.title);
         // Create menu buttons.
-        ["playDemo", "hostGame", "joinGame"].forEach((name) => {
+        ["playSinglePlayer", "hostGame", "joinGame"].forEach((name) => {
             const button = document.createElement("button");
             button.innerText = this.buttonTitles[name];
             button.classList.add("styleless-button", "ui-main-menu-button");
@@ -44,8 +44,8 @@ export default class MainMenuHomeScreen implements IState, IEventable, IScreen {
             this.end();
             this.emitter.trigger("end", ["joinGame"]);
         });
-        this.buttons["playDemo"].addEventListener("click", () => {
-            this.emitter.trigger("playDemo");
+        this.buttons["playSinglePlayer"].addEventListener("click", () => {
+            this.emitter.trigger("playSinglePlayer");
         });
     }
 

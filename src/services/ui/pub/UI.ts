@@ -55,7 +55,7 @@ export default class UI {
             }
         });
 
-        this.mainMenu.emitter.on("playDemo", async () => {
+        this.mainMenu.emitter.on("playSinglePlayer", async () => {
             (await this.syncMessenger.postSyncMessage({
                 recipient: "gameMaster",
                 sender: "ui",

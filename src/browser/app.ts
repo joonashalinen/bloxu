@@ -109,6 +109,7 @@ class App {
             "onlineSynchronizer": onlineSynchronizerWorker
         };
         this.mediator = new Mediator(messengers);
+        this.mediator.emitter.on("error", (e) => console.log(e));
     }    
 
     constructor() {

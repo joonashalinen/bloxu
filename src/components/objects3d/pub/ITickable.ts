@@ -8,5 +8,5 @@ export default interface ITickable {
      * The purpose of this restriction is that objects in the 3D world 
      * will not behave differently when the frame rate changes.
      */
-    doOnTick(time: number): ITickable;
+    doOnTick(passedTime: number, absoluteTime?: number): ITickable;
 }

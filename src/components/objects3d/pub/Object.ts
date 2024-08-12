@@ -1,170 +1,218 @@
-import { PhysicsAggregate, TransformNode, Vector3 } from "@babylonjs/core";
+import { AbstractMesh, IPhysicsCollisionEvent, Observable, PhysicsAggregate, Quaternion, TransformNode, Vector2, Vector3 } from "@babylonjs/core";
 import IObject from "./IObject";
-import IMovable from "./IMovable";
-import Movable from "./Movable";
+import Physical from "./Physical";
+import EventEmitter from "../../events/pub/EventEmitter";
 
 /**
- * A generic object in the 3D world. Supports all the common operations 
- * we may wish to do an arbitrary object.
+ * An Object is a Mesh with physics together 
+ * with animations that can be relevant for an arbitrary
+ * object in the 3D environment of a game-like simulation. 
+ * As opposed to a PhysicsAggregate, an Object can 
+ * contain crude and unrealistic features that can still be useful 
+ * in game-like simulations. Object can also contain 
+ * helpful methods that neither Mesh nor PhysicsAggregate provide 
+ * in babylonjs.
  */
 export default class Object implements IObject {
-    direction = new Vector3(0, 0, 0);
-    speed: number = 10;
-    movementVelocity: Vector3;
-    lastPosition: Vector3;
-    gravityEnabled: boolean = true;
-    onlyUseForce: boolean = false;
-    isInAir: boolean = false;
-    inAirMotionDirection: "up" | "down" | "none";
-    maxVelocity: number | undefined;
     transformNode: TransformNode;
+    landingLedgeBuffer: number = 0.3;
+    asPhysical: Physical;
+    emitter: EventEmitter = new EventEmitter();
+    isInAir: boolean = false;
+    inAirDirection: 1 | -1;
+    lastUpdatedPosition: Vector3;
+    preventBounceOnLanding: boolean = true;
+    lastBumpPosition: Vector3 = new Vector3(0, 0, 0);
+    lastBumpTime: number = 0;
+    lastLandingTime: number = 0;
+    eventTimeWindow: number = 50;
+    protected _collisionObservable: Observable<IPhysicsCollisionEvent>;
 
-    constructor(public physicsAggregate: PhysicsAggregate) {
-        this.transformNode = this.physicsAggregate.transformNode;
-        this.lastPosition = this.physicsAggregate.body.transformNode.position.clone();
-    }
-
-    move(direction: Vector3, onlyInDirection: boolean = true) {
-        direction = direction.clone();
-        if (this.direction.normalize().subtract(direction.normalize()).length() > 0.01) {
-            if (onlyInDirection) {
-                this.direction = direction;
-            } else {
-                this.direction = this.direction.add(direction).normalize();
-            }
-            if (this.gravityEnabled) {
-                if (this.isInAir) {
-                    // If we have stopped moving while in air.
-                    if (direction.equals(new Vector3(0, 0, 0))) {
-                        // Remove all horizontal movement velocity.
-                        const currentVelocity =  this.physicsAggregate.body.getLinearVelocity();
-                        this.physicsAggregate.body.setLinearVelocity(new Vector3(0, currentVelocity.y, 0));
-                    } else {
-                        this.applyForce();
-                    }
-                } else if (this.onlyUseForce) {
-                    this.applyForce();
-                } else {
-                    this.updateVelocity();
-                }
-            } else {
-                this.updateVelocity();
-            }
-        }
-    }
-
-    setMotionDirectionInLocalSpace(velocity: Vector3) {
-        
-    }
-
-    /**
-     * Whether the Movable is currently in air, either falling or rising.
-     */
-    updateIsInAir() {
-        if (this.lastPosition !== undefined) {
-            const yDifference = this.lastPosition.y - this.physicsAggregate.body.transformNode.position.y;
-
-            // If we moved up.
-            if (yDifference < -0.00001) {
-                // If we have hit the ground and are currently bouncing off it.
-                if (this.inAirMotionDirection === "down") {
-                    this.endAirMotion();
-                } else {
-                    this.isInAir = true;
-                    this.inAirMotionDirection = "up";
-                }
-            } else if (yDifference > 0.00001) { 
-                // If we are here, then we moved down.
-                this.isInAir = true;
-                this.inAirMotionDirection = "down";
-            } else if (this.isInAir) {
-                // The motion is too small to be noticable and 
-                // thus we assume we have ended airborne motion.
-                this.endAirMotion();
-            }
-
-            if (yDifference > 0.00001 || yDifference < -0.00001) {
-                this.resetLastPosition();
-            }
+    constructor(wrappee: AbstractMesh | Physical) {
+        if (wrappee instanceof TransformNode) {
+            this.asPhysical = new Physical(wrappee, 1);
         } else {
-            this.isInAir = false;
+            this.asPhysical = wrappee;
         }
+
+        this.transformNode = this.asPhysical.transformNode;
+        this.lastUpdatedPosition = this.transformNode.position.clone();
+
+        this._collisionObservable = this.asPhysical.physicsAggregate
+            .body.getCollisionObservable();
+        this._collisionObservable.add(this._handleCollisionEvent.bind(this));
     }
 
     /**
-     * Makes the Movable stop its airborne motion.
+     * 3D Vector pointing in the direction the object is 
+     * facing.
      */
-    endAirMotion() {
-        this.isInAir = false;
-        this.inAirMotionDirection = "none";
-        this.updateVelocity();
+    facedDirection() {
+        return this.transformNode.getDirection(Vector3.Forward());
+    }
+
+    facedHorizontalDirection() {
+        const direction = this.facedDirection();
+        return new Vector2(direction.x, direction.z);
     }
 
     /**
-     * Apply an impulse to the physics body, moving it.
+     * The rotation angle of the object along the horizontal plane formed 
+     * by its forward and left axis vectors.
      */
-    applyImpulse() {
-        const mass = this.physicsAggregate.body.getMassProperties().mass;
-        const direction = this.direction.normalize().scale(mass! * this.speed * 1000);
-        this.physicsAggregate.body.applyImpulse(
-            direction, 
-            this.physicsAggregate.body.transformNode.absolutePosition
-        );
+    horizontalAngle() {
+        const eulerAngles = this.transformNode.rotationQuaternion.toEulerAngles();
+        return eulerAngles.y;
     }
 
     /**
-     * Apply a force to the physics body, moving it.
+     * Sets the rotation of the object along the horizontal plane formed 
+     * by its forward and left axis vectors.
      */
-    applyForce() {
-        const mass = this.physicsAggregate.body.getMassProperties().mass;
-        const direction = this.direction.normalize().scale(mass! * this.speed * 1000);
-        this.physicsAggregate.body.applyForce(
-            direction, 
-            this.physicsAggregate.body.transformNode.absolutePosition
-        );
+    setHorizontalAngle(angle: number) {
+        const eulerAngles = this.transformNode.rotationQuaternion.toEulerAngles();
+        eulerAngles.y = angle;
+        this.transformNode.rotationQuaternion = Quaternion.FromEulerAngles(
+            eulerAngles.x, eulerAngles.y, eulerAngles.z);
     }
 
     /**
-     * Update the velocity of the physics body.
+     * When the object has collided with a ground object 
+     * after being in the air. Listens to the "land" event.
      */
-    updateVelocity() {
-        const mass = this.physicsAggregate.body.getMassProperties().mass;
-        this.movementVelocity = this.direction.normalize().scale(mass! * this.speed);
-        this.physicsAggregate.body.setLinearVelocity(this.movementVelocity);
+    onLanding(callback: (event: IPhysicsCollisionEvent) => void) {
+        this.emitter.on("land", callback);
     }
 
-    doOnTick(time: number) {
-        if (this.gravityEnabled) {
-            this.updateIsInAir();
-        }
-        if (!this.direction.equals(new Vector3(0, 0, 0))) {
-            if (
-                this.maxVelocity === undefined || 
-                this.physicsAggregate.body.getLinearVelocity().length() < this.maxVelocity
-            ) {
-                if (this.gravityEnabled) {
-                    if (this.isInAir) {
-                        this.applyForce();
-                    } else if (this.onlyUseForce) {
-                        this.applyForce();
-                    } else {
-                        this.updateVelocity();
-                    }
-                } else {
-                    if (this.onlyUseForce) {
-                        this.applyForce();
-                    } else {
-                        this.updateVelocity();
-                    }
+    /**
+     * When the object has collided with a non-ground 
+     * object. Listens to the "bump" event.
+     */
+    onBump(callback: (event: IPhysicsCollisionEvent) => void) {
+        this.emitter.on("bump", callback);
+    }
+
+    /**
+     * When the object has become detached from a ground.
+     * Listens to the "airborne" event.
+     */
+    onAirborne(callback: () => void) {
+        this.emitter.on("airborne", callback);
+    }
+
+    /**
+     * When the physics body of the Object has 
+     * collided with another physics body.
+     */
+    protected _handleCollisionEvent(event: IPhysicsCollisionEvent) {
+        const myBounds = this.transformNode.getHierarchyBoundingVectors(false);
+        const otherBounds = event.collidedAgainst
+            .transformNode.getHierarchyBoundingVectors(false);
+        const timeNow = Date.now();
+
+        if (this.isInAir) {
+            if (myBounds.min.y >= otherBounds.max.y && this.isFalling()) {
+                // If we have bumped recently.
+                // We check this to avoid annoying unnecessary edge landing corrections 
+                // when the not trying to wall jump. This whole correction process here 
+                // is meant to prevent the ability to wall jump using small ledges on a wall.
+                /* if (timeNow - this.lastBumpTime < this.eventTimeWindow) {
+                    // Whether the object has landed on some kind of ledge.
+                    const isOnFrontLedge = (myBounds.max.z > otherBounds.min.z && 
+                        myBounds.min.z < otherBounds.min.z);
+                    const isOnBackLedge = (myBounds.min.z < otherBounds.max.z && 
+                        myBounds.max.z > otherBounds.max.z);
+                    const isOnRightLedge = (myBounds.max.x > otherBounds.min.x && 
+                        myBounds.min.x < otherBounds.min.x);
+                    const isOnLeftLedge = (myBounds.min.x < otherBounds.max.x && 
+                        myBounds.max.x > otherBounds.max.x);
+
+                    // If the object is on a ledge that is too small
+                    // to land on, we want to shift the object off of it.
+                    let correctedOverlap = false;
+                    if (isOnFrontLedge) {
+                        correctedOverlap = this._correctLedgeOverlap(myBounds.max,
+                            otherBounds.min, "z")
+                    };
+                    if (isOnBackLedge) {
+                        correctedOverlap = this._correctLedgeOverlap(myBounds.min,
+                            otherBounds.max, "z")
+                    };
+                    if (isOnRightLedge) {
+                        correctedOverlap = this._correctLedgeOverlap(myBounds.min,
+                            otherBounds.max, "x")
+                    };
+                    if (isOnLeftLedge) {
+                        correctedOverlap = this._correctLedgeOverlap(myBounds.max,
+                            otherBounds.min, "x")
+                    };
+
+                    // If we are on a ledge that is too small to land on,
+                    // we do not count that as a landing.
+                    if (correctedOverlap) return;
+                } */
+
+                if (this.preventBounceOnLanding) {
+                    this.asPhysical.setVerticalVelocity(0);
                 }
+                this.isInAir = false;
+                this.lastLandingTime = timeNow;
+                console.log("land");
+                this.emitter.trigger("land", [event]);
+            } else {
+                this.lastBumpTime = timeNow;
+                if (this.isFalling()) {
+                    this.transformNode.setAbsolutePosition(
+                        this.transformNode.absolutePosition.subtract(event.normal.scale(0.05))
+                    );
+                }
+                this.emitter.trigger("bump", [event]);
             }
         }
     }
 
     /**
-     * Set the last position to be the current position.
+     * Shorter convenience method for retrieving 
+     * the physics body of the Object. 
      */
-    resetLastPosition() {
-        this.lastPosition = this.physicsAggregate.body.transformNode.position.clone();
+    physicsBody() {
+        return this.asPhysical.physicsAggregate.body;
+    }
+
+    /**
+     * Update the object based on the passage of time.
+     */
+    doOnTick(passedTime: number, absoluteTime: number) {
+        if (Math.abs(this.transformNode.position.y - this.lastUpdatedPosition.y) > 0.05) {
+            this.isInAir = true;
+            this.inAirDirection = Math.sign(
+                this.transformNode.position.y - this.lastUpdatedPosition.y) as 1 | -1;
+            this.lastUpdatedPosition = this.transformNode.position.clone();
+            this.emitter.trigger("airborne");
+        }
+    }
+
+    /**
+     * Whether the object is in air and is moving down vertically.
+     */
+    isFalling() {
+        return this.inAirDirection < 0;
+    }
+
+    /**
+     * If the object is on a ledge that is too small 
+     * to land on, this method will correct the object's positioning 
+     * so that it will not land on the ledge.
+     */
+    private _correctLedgeOverlap(myBoundVec: Vector3, 
+        otherBoundVec: Vector3, coord: "x" | "z") {
+        const ledgeOverlap = myBoundVec[coord] - otherBoundVec[coord];
+        if (Math.abs(ledgeOverlap) < this.landingLedgeBuffer) {
+            this.transformNode.absolutePosition[coord] -= this.landingLedgeBuffer;
+            this.transformNode.setAbsolutePosition(
+                this.transformNode.absolutePosition);
+            return true;
+        }
+        return false;
     }
 }

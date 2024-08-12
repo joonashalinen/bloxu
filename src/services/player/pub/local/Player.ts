@@ -71,9 +71,10 @@ export default class Player implements IPlayer, IService {
         const angle = (await this.modifyWorld(
             [this.playerBodyId(), position], 
             function(this: World3D, bodyId: string, position: DVector2) {
+                const controller = this.getController(bodyId);
                 const body = this.getObject(bodyId) as PlayerBody;
-                body.point(new this.babylonjs.Vector2(position.x, position.y));
-                return body.bodyBuilder.topRotatable.angle;
+                controller.point(position);
+                return body.horizontalAngle();
         }))[0] as number;
         
         this.proxyMessenger.postMessage(
@@ -89,15 +90,12 @@ export default class Player implements IPlayer, IService {
         if (!this.spawned) {return}
         if (this.disableControls) {return}
 
-        const inBattleState = (await this.modifyWorld(
-            [this.playerBodyId(), key], 
-            function(this: World3D, bodyId: string, key: string) {
-                const body = this.getObject(bodyId) as PlayerBody;
-                body.pressFeatureKey(key);
-                return "battle" in body.actionModeStateMachine.activeStates;
-        }))[0];
+        await this.syncMessenger.postSyncMessage(
+            this.messageFactory.createRequest("world3d", "control", [
+                this.playerBodyId(), "pressFeatureKey", [key]])
+        );
 
-        if (key === " " && inBattleState) {
+        if (key === " ") {
             this.proxyMessenger.postMessage(
                 this.messageFactory.createEvent("*", "Player:<event>jump")
             );
@@ -112,37 +110,39 @@ export default class Player implements IPlayer, IService {
         if (!this.spawned) {return}
         if (this.disableControls) {return}
 
-        this.modifyWorld(
-            [this.playerBodyId(), key], 
-            function(this: World3D, bodyId: string, key: string) {
-                const body = this.getObject(bodyId) as PlayerBody;
-                body.releaseFeatureKey(key);
-        });
+        this.proxyMessenger.postMessage(
+            this.messageFactory.createRequest("world3d", "control", [
+                this.playerBodyId(), "releaseFeatureKey", [key]])
+        );
     }
     
     /**
      * When a pointer control has been pressed down (e.g. a mouse button).
      */
     async onControllerPointerTrigger(position: DVector2, buttonIndex: number, controllerIndex: number) {
-        if (buttonIndex !== 0) {return}
         if (controllerIndex !== 0) {return}
         if (!this.spawned) {return}
         if (this.disableControls) {return}
-
-        const state = (await this.syncMessenger.postSyncMessage(
-            this.messageFactory.createRequest("world3d", "modify", [
-                {
-                    boundArgs: [this.playerBodyId()],
-                    f: function(
-                        this: World3D,
-                        bodyId: string
-                    ) {
-                        const body = this.getObject(bodyId) as PlayerBody;
-                        body.doMainAction();
-                    }
-                }
-            ])
-        ))[0] as DirectionEvent;
+        
+        const state = (await this.modifyWorld(
+            [this.playerBodyId(), position, buttonIndex], 
+            function(this: World3D, bodyId: string, position: DVector2, 
+                buttonIndex: number) {
+                
+                const controller = this.getController(bodyId);
+                const body = this.getObject(bodyId) as PlayerBody;
+                controller.point(position);
+                controller.triggerPointer(buttonIndex);
+                const facedDirection = body.facedDirection();
+                return {
+                    direction: {
+                        x: facedDirection.x,
+                        y: facedDirection.y,
+                        z: facedDirection.z
+                    },
+                    body: body.state()
+                };
+        }))[0] as DirectionEvent;
 
         // Send a message to the environment that the player has shot.
         this.proxyMessenger.postMessage(
@@ -169,9 +169,9 @@ export default class Player implements IPlayer, IService {
                     args: [{
                         boundArgs: [this.playerBodyId(), direction],
                         f: function(this: World3D, bodyId: string, direction: DVector2) {
+                            const controller = this.getController(bodyId);
                             const body = this.getObject(bodyId) as PlayerBody;
-                            const directionVector = new this.babylonjs.Vector2(direction.x, direction.y);
-                            body.move(directionVector);
+                            controller.move(direction);
                             return {
                                 direction: direction,
                                 body: body.state()
@@ -203,28 +203,16 @@ export default class Player implements IPlayer, IService {
         // Create the player's body.
         this.proxyMessenger.postMessage(
             this.messageFactory.createRequest("world3d", "createObject", [
-                this.playerBodyId(),
-                "PlayerBody",
-                {
-                    boundArgs: [this.playerBodyId(), startingPosition],
-                    f: function(
-                        this: World3D,
-                        playerBodyId: string,
-                        startingPosition: DVector3
-                    ) {
-                        // Determine the arguments passed to PlayerBody's constructor.
-                        return [
-                            playerBodyId,
-                            startingPosition,
-                            this.scene,
-                            this.meshConstructors
-                        ];
-                    }
-                }
+                this.playerBodyId(), "PlayerBody", [startingPosition]
             ])
         );
 
-        if (this.disableControls) {
+        this.proxyMessenger.postMessage(
+            this.messageFactory.createRequest("world3d", "createController", [
+                "CreatureBodyController", this.playerBodyId()])
+        );
+
+/*         if (this.disableControls) {
             // Disable UI of body.
             this.proxyMessenger.postMessage(
                 this.messageFactory.createRequest("world3d", "modifyObject", [
@@ -241,7 +229,7 @@ export default class Player implements IPlayer, IService {
                     }
                 ])
             );
-        }
+        } */
 
         // Set event listeners.
         this.proxyMessenger.postMessage(
@@ -263,7 +251,7 @@ export default class Player implements IPlayer, IService {
                         if (!disableEvents) {
                             // Let the player's body handle updating its own 
                             // objects.
-                            playerBody.enableAutoUpdate();
+                            /* playerBody.enableAutoUpdate(); */
                             // Get notifications of when the player character gets hit with a projectile.
                             playerBody.emitter.on("projectileHit", () => {
                                 sendMsg("World3D:Player:<event>projectileHit", playerBody.state());
@@ -273,7 +261,7 @@ export default class Player implements IPlayer, IService {
                                 sendMsg("World3D:Player:<event>hitDeathAltitude", playerBody.state());
                             });
                             // Listen to block placement events.
-                            const buildState = (playerBody.actionModeStateMachine.states["build"] as BuildModeState);
+                            /* const buildState = (playerBody.actionModeStateMachine.states["build"] as BuildModeState);
                             const placementGrid = buildState.placeMeshState.eventablePlacementGrid;
                             placementGrid.emitter.on("place", (cell: Vector3, absolutePosition: Vector3) => {
                                 sendMsg(
@@ -283,9 +271,9 @@ export default class Player implements IPlayer, IService {
                                         absolutePosition: {x: absolutePosition.x, y: absolutePosition.y, z: absolutePosition.z}
                                     }
                                 );
-                            });
+                            }); */
                             // Listen to gun shot events.
-                            const shootState = (playerBody.actionStateMachine.states["shoot"] as ShootState);
+                            /* const shootState = (playerBody.actionStateMachine.states["shoot"] as ShootState);
                             shootState.emitter.on("shoot", (direction: Vector3) => {
                                 sendMsg(
                                     "World3D:Player:<event>shoot", 
@@ -294,7 +282,7 @@ export default class Player implements IPlayer, IService {
                                         body: playerBody.state()
                                     } as DirectionEvent
                                 );
-                            });
+                            }); */
                         }
                     }
                 }
@@ -387,7 +375,7 @@ export default class Player implements IPlayer, IService {
             [angle, this.playerBodyId()], 
             function(this: World3D, angle: number, bodyId: string) {
                 const body = this.getObject(bodyId) as PlayerBody;
-                body.setAngle(angle);
+                body.setHorizontalAngle(angle);
             }
         )
     }
@@ -398,7 +386,7 @@ export default class Player implements IPlayer, IService {
     placeBlockAbsolute(absolutePosition: DVector3) {
         if (!this.spawned) {return}
 
-        this.modifyWorld(
+        /* this.modifyWorld(
             [absolutePosition, this.playerBodyId()], 
             function(this: World3D, absolutePosition: DVector3, bodyId: string) {
                 const body = this.getObject(bodyId) as PlayerBody;
@@ -406,7 +394,7 @@ export default class Player implements IPlayer, IService {
                     new this.babylonjs.Vector3(absolutePosition.x, absolutePosition.y, absolutePosition.z)
                 );
             }
-        )
+        ) */
     }
 
     /**

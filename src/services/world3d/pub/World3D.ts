@@ -1,39 +1,40 @@
-import Movable from "../../../components/objects3d/pub/Movable";
 import * as babylonjs from "@babylonjs/core";
 import "@babylonjs/core/Debug/debugLayer";
 import "@babylonjs/inspector";
 import "@babylonjs/loaders";
 import { HavokPlugin } from "@babylonjs/core/Physics";
 import HavokPhysics from "@babylonjs/havok";
-import { Engine, Scene, ArcRotateCamera, Vector3, HemisphericLight, Mesh, MeshBuilder, Color4 } from "@babylonjs/core";
+import { Engine, Scene, Vector3, HemisphericLight, Mesh, Color4 } from "@babylonjs/core";
 import ProxyMessenger from "../../../components/messaging/pub/ProxyMessenger";
 import { DMessage } from "../../../components/messaging/pub/DMessage";
 import IService from "../../../components/services/pub/IService";
 import MessageFactory from "../../../components/messaging/pub/MessageFactory";
 import SyncMessenger from "../../../components/messaging/pub/SyncMessenger";
 import FunctionWrapper from "../../../components/services/pub/FunctionWrapper";
-import MeshLeash2D from "../../../components/graphics3d/pub/MeshLeash2D";
-import customObjectTypes from "../conf/customObjectTypes";
-import Pointer from "../../../components/objects3d/pub/Pointer";
 import meshConstructors from "../conf/meshConstructors";
+import objectConstructors from "../conf/objectConstructors";
+import { TObjectConstructor } from "../conf/objectConstructors";
+import controllerConstructors from "../conf/controllerConstructors";
 import Glow from "../../../components/graphics3d/pub/effects/Glow";
 import ITickable from "../../../components/objects3d/pub/ITickable";
 import maps from "../conf/maps/maps";
+import IController from "../../../components/objects3d/pub/IController";
 
 type Types = {[type: string]: Function};
 type Instances = {[name: string]: Object};
 type MeshConstructors = {[name: string]: Function};
+type ControllerConstructors = {[id: string]: (...args: unknown[]) => IController};
 
 /**
  * Class containing the state and operations of the world3d service.
  */
 export default class World3D implements IService {
     objects: Instances;
-    objectTypes: Types;
     effects: Instances;
     effectTypes: Types;
     skybox: Mesh;
     meshConstructors: {[name: string]: Function};
+    objectConstructors: {[name: string]: TObjectConstructor};
     proxyMessenger: ProxyMessenger<DMessage, DMessage>;
     syncMessenger: SyncMessenger;
     messageFactory: MessageFactory;
@@ -44,16 +45,15 @@ export default class World3D implements IService {
     camera: babylonjs.ArcRotateCamera;
     gravity: Vector3;
     glowLayer: babylonjs.GlowLayer;
+    controllers: {[id: string]: IController};
+    controllerConstructors: ControllerConstructors;
 
     constructor(document: Document) {
         this.objects = {};
-        this.objectTypes = {
-            "Movable": Movable,
-            "MeshLeash2D": MeshLeash2D,
-            "Pointer": Pointer,
-            ...customObjectTypes
-        };
-        
+        this.objectConstructors = {};
+        this.controllers = {};
+        this.controllerConstructors = controllerConstructors;
+
         this.effects = {};
         this.effectTypes = {
             "Glow": Glow
@@ -94,6 +94,17 @@ export default class World3D implements IService {
     }
 
     /**
+     * Get the IController for the Object 
+     * with the given id.
+     */
+    getController(id: string) {
+        if (!(id in this.controllers)) {
+            throw new Error("IController with given id '" + id + "' does not exist");
+        }
+        return this.controllers[id];
+    }
+
+    /**
      * Get an effect instance with given id if it exists.
      */
     getEffect(id: string) {
@@ -106,12 +117,30 @@ export default class World3D implements IService {
     /**
      * Create new object of given type with given id and args in the world.
      */
-    createObject(id: string, type: string, args: Array<unknown> | FunctionWrapper<Function> = []): World3D {
-        if (id in this.objects) {
-            throw new Error("Object with given id '" + id + "' already exists");
+    createObject(id: string, type: string, args: Array<unknown> | FunctionWrapper<Function> = []) {
+        const objectConstructor = this.objectConstructors[type];
+        if (objectConstructor === undefined) {
+            return false;
         }
-        this.objects[id] =this._create(type, this.objectTypes, args);
-        return this;
+        if (!Array.isArray(args)) {
+            args = args.f.apply(this, args.boundArgs) as unknown[];
+        }
+        this.objects[id] = objectConstructor(id, this.scene, ...args);
+        return true;
+    }
+
+    /**
+     * Create a new IController of the given type for the 
+     * object with the given id.
+     */
+    createController(type: string, objectId: string): boolean {
+        const controllerConstructor = this.controllerConstructors[type];
+        if (controllerConstructor === undefined) {
+            return false;
+        }
+        const obj = this.getObject(objectId);
+        this.controllers[objectId] = controllerConstructor(obj);
+        return true;
     }
 
     /**
@@ -126,18 +155,33 @@ export default class World3D implements IService {
     }
 
     /**
+     * Redirect a control input to the IController of the 
+     * object with the given objectId. The method specified by 
+     * controllerMethod will be called with the given args.
+     */
+    control(objectId: string, controllerMethod: string, args: unknown[] = []) {
+        const controller = this.controllers[objectId];
+        if (controller === undefined ||
+            typeof controller[controllerMethod]  !== "function") {
+            return false;
+        }
+        controller[controllerMethod](...args);
+        return true;
+    }
+
+    /**
      * Register a custom constructor for a new object type.
      * @param type - The type name for the object.
      * @param wrapper - The object containing boundArgs and the constructor function for creating objects of the specified type.
      */
-    registerObjectType(type: string, wrapper: FunctionWrapper<Function>): World3D {
+    /* registerObjectType(type: string, wrapper: FunctionWrapper<Function>): World3D {
         const { boundArgs, f: constructor } = wrapper;
         if (type in this.objectTypes) {
             throw new Error("Constructor for type '" + type + "' already exists");
         }
         this.objectTypes[type] = constructor.bind(this, ...boundArgs);
         return this;
-    }
+    } */
 
     /**
      * Create an object into the world via a given constructor function.
@@ -220,6 +264,8 @@ export default class World3D implements IService {
         // Load meshes configured by the project where World3D is being used.
         this.meshConstructors = await meshConstructors(this.babylonjs, this.scene);
 
+        this.objectConstructors = objectConstructors(this.meshConstructors);
+
         // Setup skybox.
         /* this.skybox = this.meshConstructors["SkyBox"]();
         this.skybox.position = this.camera.position; */
@@ -266,14 +312,24 @@ export default class World3D implements IService {
      * Run the render loop.
      */
     runRenderLoop() {
+        const startTime = Date.now();
+        let lastTime = startTime;
+
         this.engine.runRenderLoop(() => {
+            const timeNow = Date.now();
+            // Time passed in total since starting the render loop.
+            const absoluteTime = startTime - lastTime;
+            // Time passed since last update.
+            const timePassed = timeNow - lastTime;
+
             for (let id in this.objects) {
                 let obj = this.objects[id];
                 if ("doOnTick" in obj) {
-                    (obj as ITickable).doOnTick(0);
+                    (obj as ITickable).doOnTick(timePassed, absoluteTime);
                 }
             }
             this.scene.render();
+            lastTime = timeNow;
         });
     }
 
