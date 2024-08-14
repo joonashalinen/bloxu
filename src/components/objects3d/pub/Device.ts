@@ -14,10 +14,11 @@ export default class Device extends Object {
     perpetualMotionDirection: Vector3 = new Vector3(0, 0, 0);
     respectVerticalVelocity: boolean = true;
     perpetualMotionSpeed: number = 0;
-    
+
     directionalAnimation: DirectionalAnimation | undefined;
     horizontalRotationAnimation: RotationAnimation | undefined;
     disableRotationAnimationsWhenMoving: boolean = true;
+    ownsRotationAnimations: boolean = true;
     
     constructor(wrappee: AbstractMesh | Physical) {
         super(wrappee);
@@ -49,10 +50,16 @@ export default class Device extends Object {
     setPerpetualMotionDirection(direction: Vector3) {
         this.perpetualMotionDirection = direction.normalize();
         this.updateDirectionalAnimation(direction);
-        if (this._rotationAnimationBlockedByMoving()) {
-            this.horizontalRotationAnimation.disable();
-        } else if (direction.equals(Vector3.ZeroReadOnly)) {
-            this.horizontalRotationAnimation.enable();
+        if (this.horizontalRotationAnimation !== undefined &&
+            this.ownsRotationAnimations) {
+            if (this._rotationAnimationBlockedByMoving()) {
+                // Make sure rotation animations are off when moving.
+                this.horizontalRotationAnimation.disable();
+            } else if (!this.isInPerpetualMotion()) {
+                // If we have stopped moving, make sure to re-enable
+                // rotation animations.
+                this.horizontalRotationAnimation.enable();
+            }
         }
     }
 
@@ -62,6 +69,7 @@ export default class Device extends Object {
      * turning animations if such are set and enabled.
      */
     setHorizontalAngle(angle: number) {
+        if (!this.horizontalRotationEnabled) return;
         super.setHorizontalAngle(angle);
 
         // Update rotation animation.

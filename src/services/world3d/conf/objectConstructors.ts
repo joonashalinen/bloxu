@@ -1,4 +1,4 @@
-import { Color3, Scene, StandardMaterial, Vector2, Vector3 } from "@babylonjs/core";
+import { Color3, GlowLayer, MeshBuilder, Scene, StandardMaterial, Vector2, Vector3 } from "@babylonjs/core";
 import Object from "../../../components/objects3d/pub/Object";
 import { AnimatedMesh } from "./meshConstructors";
 import PlayerBody from "./custom_object_types/PlayerBody";
@@ -6,20 +6,26 @@ import RotationAnimation from "../../../components/graphics3d/pub/RotationAnimat
 import DirectionalAnimation from "../../../components/graphics3d/pub/DirectionalAnimation";
 import DVector3 from "../../../components/graphics3d/pub/DVector3";
 import Physical from "../../../components/objects3d/pub/Physical";
+import ProjectileWeapon from "../../../components/objects3d/pub/ProjectileWeapon";
+import Glow from "../../../components/graphics3d/pub/effects/Glow";
 
 export type TObjectConstructor = (id: string, scene: Scene, ...args: unknown[]) => Object;
 
-export default function (meshConstructors: {[name: string]: Function}) {
+export default function (
+    meshConstructors: {[name: string]: Function},
+    glowLayer: GlowLayer) {
     return {
         "PlayerBody": (id: string, scene: Scene, 
             startPosition: DVector3 = {x: 0, y: 0, z: 0}) => {
             const characterHeight = 1.6;
             const characterWidth = 0.8;
+            const characterMeshId = `PlayerBody:characterMesh?${id}`;
+
+            const pistolMesh = meshConstructors["PlasmaPistol"](`${characterMeshId}:pistolMesh`);
 
             // Create character mesh with animations.
-            const character = meshConstructors["Player"](
-                `PlayerBody:characterMesh?${id}`,
-                meshConstructors["PlasmaPistol"]) as AnimatedMesh;
+            const character = meshConstructors["Player"](characterMeshId,
+                pistolMesh) as AnimatedMesh;
 
             // Set character mesh color.
             const characterMaterial = new StandardMaterial("PlayerBody:mesh:material?" + id, scene);
@@ -39,6 +45,27 @@ export default function (meshConstructors: {[name: string]: Function}) {
 
             const body = new PlayerBody(physical, character.animations);
             body.runSpeed = 2.5;
+
+            const createProjectile = (id: string = "") => {
+                const ball = MeshBuilder.CreateSphere(
+                    `PlayerBody:ball?${id}`, 
+                    {diameter: 0.3}, 
+                    scene
+                );
+
+                // Add glow effect to ball.
+                const ballGlow = new Glow(glowLayer, scene);
+                ballGlow.apply(ball);
+                
+                return ball
+            };
+
+            const gun = new ProjectileWeapon(pistolMesh,
+                createProjectile, character.animations.shoot);
+            gun.projectileSpeed = 5;
+            gun.useDelay = 150;
+            body.items["gun"] = gun;
+            body.selectItem("gun");
 
             body.horizontalRotationAnimation = new RotationAnimation({
                 left: character.animations["turnLeft"],

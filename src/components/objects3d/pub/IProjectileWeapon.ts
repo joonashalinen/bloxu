@@ -1,14 +1,15 @@
 import { Vector3 } from "@babylonjs/core";
-import IWeapon from "./IWeapon";
-import IOriented from "./IOriented";
-import Movable from "./Movable";
+import Device from "./Device";
+import IItem from "./creatures/IItem";
 
-export default interface IProjectileWeapon extends IWeapon<IOriented> {
-    projectiles: Movable[];
+export default interface IProjectileWeapon extends IItem {
+    projectiles: Device[];
+    projectileSpeed: number;
+    aimedDirection: Vector3;
 
     /**
      * Shoot the projectile weapon in the direction of 
      * the given vector.
      */
-    shoot(direction: Vector3): IProjectileWeapon;
+    shoot(direction: Vector3): void;
 }

@@ -65,8 +65,7 @@ export default async function(babylonjs: typeof BABYLON, scene: BABYLON.Scene) {
             scene.addMesh(mesh!);
             return mesh;
         },
-        "Player": (id: string,
-            pistolConstructor: (id: string) => BABYLON.Mesh) => {
+        "Player": (id: string, pistolMesh: BABYLON.Mesh) => {
             
             const entries = playerMeshImport
                 .instantiateModelsToScene((name: string) => {
@@ -87,7 +86,6 @@ export default async function(babylonjs: typeof BABYLON, scene: BABYLON.Scene) {
             // @ts-ignore
             skeleton.scaling = new BABYLON.Vector3(0.3, 0.3, 0.3);
 
-            const pistolMesh = pistolConstructor(`${id}:pistolMesh`);
             pistolMesh.attachToBone(
                 skeleton.bones[23], 
                 rootMesh.getChildren()[0] as BABYLON.Mesh

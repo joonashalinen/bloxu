@@ -80,7 +80,7 @@ export default class World3D implements IService {
 
         this.engine = new Engine(this.canvas, true);
         this.scene = new Scene(this.engine);
-        /* this.glowLayer = new babylonjs.GlowLayer("mainGlowLayer", this.scene); */
+        this.glowLayer = new babylonjs.GlowLayer("mainGlowLayer", this.scene);
     }
 
     /**
@@ -264,7 +264,8 @@ export default class World3D implements IService {
         // Load meshes configured by the project where World3D is being used.
         this.meshConstructors = await meshConstructors(this.babylonjs, this.scene);
 
-        this.objectConstructors = objectConstructors(this.meshConstructors);
+        this.objectConstructors = objectConstructors(
+            this.meshConstructors, this.glowLayer);
 
         // Setup skybox.
         /* this.skybox = this.meshConstructors["SkyBox"]();

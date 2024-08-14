@@ -37,7 +37,7 @@ export default class ShootState extends OwningState<TStateResource> implements I
             }
         });
 
-        this.gun = new ProjectileWeapon(
+        /* this.gun = new ProjectileWeapon(
             pistolMesh,
             "plasmaPistol",
             (id: string) => {
@@ -53,7 +53,7 @@ export default class ShootState extends OwningState<TStateResource> implements I
                 
                 return ball
             }
-        );
+        ); */
 
         this.character.animations["shoot"].onAnimationGroupEndObservable.add(() => {
             if (!this._ignoreNextAnimationEnd) {

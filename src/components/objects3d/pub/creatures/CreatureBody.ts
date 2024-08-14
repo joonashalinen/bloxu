@@ -26,7 +26,6 @@ export default class CreatureBody extends Device implements ICreatureBodyActions
     actionStateMachine: StateMachine<ICreatureBodyState>;
     items: {[name: string]: IItem} = {};
     selectedItemName: string;
-    itemUseAnimations: {[name: string]: AnimationGroup} = {};
 
     constructor(wrappee: AbstractMesh | Physical, 
         animations: TCreatureAnimations) {
@@ -66,6 +65,8 @@ export default class CreatureBody extends Device implements ICreatureBodyActions
     doOnTick(passedTime: number, absoluteTime: number) {
         this.actionStateMachine.firstActiveState().doOnTick(
             passedTime, absoluteTime);
+        Object.values(this.items).forEach((item) => item.doOnTick(
+            passedTime, absoluteTime));
         super.doOnTick(passedTime, absoluteTime);
     }
 }

@@ -26,6 +26,7 @@ export default class Object implements IObject {
     lastBumpTime: number = 0;
     lastLandingTime: number = 0;
     eventTimeWindow: number = 50;
+    horizontalRotationEnabled = true;
     protected _collisionObservable: Observable<IPhysicsCollisionEvent>;
 
     constructor(wrappee: AbstractMesh | Physical) {
@@ -70,6 +71,7 @@ export default class Object implements IObject {
      * by its forward and left axis vectors.
      */
     setHorizontalAngle(angle: number) {
+        if (!this.horizontalRotationEnabled) return;
         const eulerAngles = this.transformNode.rotationQuaternion.toEulerAngles();
         eulerAngles.y = angle;
         this.transformNode.rotationQuaternion = Quaternion.FromEulerAngles(

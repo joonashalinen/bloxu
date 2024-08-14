@@ -16,13 +16,11 @@ export default class IdleState extends CreatureBodyState implements ICreatureBod
     start() {
         if (this.isActive) return;
         super.start();
-        this.idleAnimation.play();
     }
 
     end() {
         if (!this.isActive) return;
         super.end();
-        this.idleAnimation.stop();
     }
     
     doOnTick(passedTime: number, absoluteTime: number): void {

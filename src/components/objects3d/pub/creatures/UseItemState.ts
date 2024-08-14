@@ -13,9 +13,10 @@ export default class UseItemState extends CreatureBodyState implements ICreature
     itemName: string;
     nextState: string = "idle";
     private _itemUseEnded: boolean = false;
-    private _perpetualMotionDirection: Vector3 = new Vector3(0, 0, 0);
-    private _animation: AnimationGroup;
     private _item: IItem;
+    private _rotationAnimationEnabled: boolean;
+    private _bodyOwnsRotationAnimations: boolean;
+    private _horizontalRotationEnabled: boolean;
 
     constructor(creatureBody: CreatureBody) {
         super(creatureBody);
@@ -32,30 +33,30 @@ export default class UseItemState extends CreatureBodyState implements ICreature
     start(actionIndex: number) {
         if (this.isActive) return;
         super.start();
+        this._itemUseEnded = false;
         this.itemName = this.creatureBody.selectedItemName;
         this._item = this.creatureBody.items[this.itemName];
+
+        this._horizontalRotationEnabled = this.creatureBody
+            .horizontalRotationEnabled;
+        this.creatureBody.horizontalRotationEnabled = false;
+
+        this._rotationAnimationEnabled = this.creatureBody
+            .horizontalRotationAnimation.enabled();
+        this._bodyOwnsRotationAnimations = this.creatureBody
+            .ownsRotationAnimations;
+        this.creatureBody.ownsRotationAnimations = false;
+        this.creatureBody.perpetualMotionSpeed = 0;
+
+        if (this._rotationAnimationEnabled) {
+            this.creatureBody.horizontalRotationAnimation.disable();
+        }
 
         if (this._item === undefined) {
             throw new Error("Entered UseItemState with no item selected.");
         }
 
-        const animationName = this.creatureBody
-            .itemUseAnimations[this.itemName] === 
-            undefined ? this.itemName : "*";
-        
-        if (this.creatureBody.itemUseAnimations[animationName] !== 
-            undefined) {
-            
-            this._animation = this.creatureBody
-                .itemUseAnimations[animationName];
-            this._animation.play();
-        } else {
-            this._animation = undefined;
-        }
-        
-        this._perpetualMotionDirection = this.creatureBody
-            .perpetualMotionDirection.clone();
-
+        this._item.aimedDirection = this.creatureBody.facedDirection();
         this._item.onItemUseEnded(this._handleItemUseEnded);
 
         if (actionIndex === 0) {
@@ -68,15 +69,14 @@ export default class UseItemState extends CreatureBodyState implements ICreature
     end() {
         if (!this.isActive) return;
         super.end();
-        this._item.offItemUseEnded(this._handleItemUseEnded);
-        if (this._animation !== undefined) {
-            this._animation.stop();
+        this.creatureBody.horizontalRotationEnabled = this
+            ._horizontalRotationEnabled;
+        if (this._rotationAnimationEnabled) {
+            this.creatureBody.horizontalRotationAnimation.enable();
         }
-    }
-
-    setPerpetualMotionDirection(direction: Vector3): void {
-        if (!this.isActive) return;
-        this._perpetualMotionDirection = direction;
+        this.creatureBody.ownsRotationAnimations = this
+            ._bodyOwnsRotationAnimations;
+        this._item.offItemUseEnded(this._handleItemUseEnded);
     }
 
     jump(): void {
@@ -86,9 +86,8 @@ export default class UseItemState extends CreatureBodyState implements ICreature
     doOnTick(passedTime: number, absoluteTime: number): void {
         if (!this.isActive) return;
         if (this._itemUseEnded) {
-            if (!this._perpetualMotionDirection.equals(Vector3.ZeroReadOnly)) {
-                Device.prototype.setPerpetualMotionDirection.apply(
-                    this.creatureBody, [this._perpetualMotionDirection]);
+            if (!this.creatureBody.perpetualMotionDirection.equals(
+                Vector3.ZeroReadOnly)) {
                 this.endWithEvent("move");
             } else {
                 this.endWithEvent("idle");
