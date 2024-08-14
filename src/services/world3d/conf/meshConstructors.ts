@@ -65,7 +65,9 @@ export default async function(babylonjs: typeof BABYLON, scene: BABYLON.Scene) {
             scene.addMesh(mesh!);
             return mesh;
         },
-        "Player": (id: string) => {
+        "Player": (id: string,
+            pistolConstructor: (id: string) => BABYLON.Mesh) => {
+            
             const entries = playerMeshImport
                 .instantiateModelsToScene((name: string) => {
                 return id + "-" + name;
@@ -73,12 +75,8 @@ export default async function(babylonjs: typeof BABYLON, scene: BABYLON.Scene) {
             const rootMesh = entries.rootNodes[0] as BABYLON.Mesh;
             const characterMesh = rootMesh.getChildren()[0] as BABYLON.Mesh;
 
-            //rootMesh!.rotate(babylonjs.Vector3.Up(), (-1) * Math.PI / 2);
-            //characterMesh!.rotate(babylonjs.Vector3.Forward(), Math.PI / 2);
             rootMesh!.position = new BABYLON.Vector3(0, 0, 0);
             rootMesh!.scaling = rootMesh!.scaling.scale(0.3);
-            //characterMesh.position.y = characterMesh.position.y - 0.8;
-            // entries.skeletons[0].bones.map((bone) => bone.scale(0.3, 0.3, 0.3, true));
             rootMesh!.setEnabled(true);
             characterMesh.id = id;
             rootMesh.id = "Root:" + id;
@@ -89,7 +87,18 @@ export default async function(babylonjs: typeof BABYLON, scene: BABYLON.Scene) {
             // @ts-ignore
             skeleton.scaling = new BABYLON.Vector3(0.3, 0.3, 0.3);
 
+            const pistolMesh = pistolConstructor(`${id}:pistolMesh`);
+            pistolMesh.attachToBone(
+                skeleton.bones[23], 
+                rootMesh.getChildren()[0] as BABYLON.Mesh
+            );
+            pistolMesh.setEnabled(true);
+
             const animationGroupsClone = entries.animationGroups;
+            animationGroupsClone.forEach((animation) => {
+                animation.enableBlending = true;
+                animation.blendingSpeed = 0.2;
+            });
 
             // Label animations.
             const animationGroups = {

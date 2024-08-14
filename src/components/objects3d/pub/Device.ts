@@ -37,10 +37,6 @@ export default class Device extends Object {
             const relativeMotionDirection = Vector3.TransformNormal(
                 direction.clone(), this.transformNode.getWorldMatrix().transpose())
             this.directionalAnimation.setDirection(relativeMotionDirection);
-
-            if (this._rotationAnimationBlockedByMoving()) {
-                this.horizontalRotationAnimation.disable();
-            }
         }
     }
 
@@ -53,6 +49,11 @@ export default class Device extends Object {
     setPerpetualMotionDirection(direction: Vector3) {
         this.perpetualMotionDirection = direction.normalize();
         this.updateDirectionalAnimation(direction);
+        if (this._rotationAnimationBlockedByMoving()) {
+            this.horizontalRotationAnimation.disable();
+        } else if (direction.equals(Vector3.ZeroReadOnly)) {
+            this.horizontalRotationAnimation.enable();
+        }
     }
 
     /**

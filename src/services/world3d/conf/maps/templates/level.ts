@@ -37,25 +37,15 @@ export default async function level(
         }
 
         if (meshName.includes("Blocks")) {
-            // const rotations = parseFloat((Math.random() * 4).toFixed(0));
-            const rotations = 0;
-            if (!meshName.includes("Blocks::grassyDirt")) {
-                mesh.rotationQuaternion = Quaternion.FromEulerAngles(0, (Math.PI / 2) * rotations, 0);
-            }
-
             const meshParent = mesh.parent;
             mesh.setParent(null);
             const physicalMesh = new Physical(mesh, 0, {
                 width: 1.4, height: 1.4, depth: 1.4});
-            //physicalMesh.transformNode.setParent(meshParent);
+            
+            //const rotations = parseFloat((Math.random() * 4).toFixed(0));
+            //physicalMesh.physicsAggregate.body.transformNode.rotation = new Vector3(0, (Math.PI / 2) * rotations, 0);
+            //physicalMesh.transformNode.rotationQuaternion = Quaternion.FromEulerAngles(0, (Math.PI / 2) * rotations, 0);
         }
-
-        /* new PhysicsAggregate(
-            mesh, 
-            PhysicsShapeType.MESH, 
-            { mass: 0 }, 
-            scene
-        ); */
     });
     return rootMesh;
 }

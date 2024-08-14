@@ -17,7 +17,9 @@ export default function (meshConstructors: {[name: string]: Function}) {
             const characterWidth = 0.8;
 
             // Create character mesh with animations.
-            const character = meshConstructors["Player"](`PlayerBody:characterMesh?${id}`) as AnimatedMesh;
+            const character = meshConstructors["Player"](
+                `PlayerBody:characterMesh?${id}`,
+                meshConstructors["PlasmaPistol"]) as AnimatedMesh;
 
             // Set character mesh color.
             const characterMaterial = new StandardMaterial("PlayerBody:mesh:material?" + id, scene);
@@ -40,7 +42,8 @@ export default function (meshConstructors: {[name: string]: Function}) {
 
             body.horizontalRotationAnimation = new RotationAnimation({
                 left: character.animations["turnLeft"],
-                right: character.animations["turnRight"]
+                right: character.animations["turnRight"],
+                idle: character.animations["idle"]
             });
 
             const movementDirections = [

@@ -11,8 +11,8 @@ import CreatureBodyState from "./CreatureBodyState";
 export default class JumpState extends CreatureBodyState implements ICreatureBodyState {
     timeAtJumpStart: number = 0;
     jumpFactor: number = 6.5;
-    /* private _basePerpetualMotionDirection: Vector3; */
     private _creatureHasLanded = false;
+    private _restoreRotationAnimation: boolean;
     
     constructor(creatureBody: CreatureBody,
         public jumpAnimation: AnimationGroup) {
@@ -34,13 +34,14 @@ export default class JumpState extends CreatureBodyState implements ICreatureBod
         this._creatureHasLanded = false;
         this.timeAtJumpStart = 0;
 
-        /* this._basePerpetualMotionDirection = this.creatureBody
-            .perpetualMotionDirection.clone(); */
-
         // Play the jumping animation.
         this.jumpAnimation.speedRatio = 0.4;
         this.jumpAnimation.play();
         this.jumpAnimation.goToFrame(50);
+
+        this._restoreRotationAnimation = this.creatureBody
+            .horizontalRotationAnimation.enabled();
+        this.creatureBody.horizontalRotationAnimation.disable();
 
         const bodyMass = this.creatureBody.physicsBody()
             .getMassProperties().mass;
@@ -48,16 +49,15 @@ export default class JumpState extends CreatureBodyState implements ICreatureBod
             new Vector3(0, bodyMass * this.jumpFactor, 0), 
             this.creatureBody.transformNode.absolutePosition
         );
-
-        //this._updatePerpetualMotionDirection(0);
     }
 
     end(): void {
         if (!this.isActive) return;
         super.end();
         this.jumpAnimation.stop();
-        /* Device.prototype.setPerpetualMotionDirection.apply(
-            this.creatureBody, this._basePerpetualMotionDirection); */
+        if (this._restoreRotationAnimation) {
+            this.creatureBody.horizontalRotationAnimation.enable();
+        }
     }
 
     /**
@@ -76,30 +76,7 @@ export default class JumpState extends CreatureBodyState implements ICreatureBod
             } else {
                 this.endWithEvent("move");
             }
-        }/*  else {
-            this._updatePerpetualMotionDirection(absoluteTime);
-        } */
-    }
-
-    /**
-     * Updates the perpetual motion direction of the 
-     * Creature such that it reflects the current state of the jump.
-     */
-    private _updatePerpetualMotionDirection(absoluteTime: number) {
-       /*  // How much time has passed in total since we started the jump.
-        const totalTimePassed = absoluteTime - this.timeAtJumpStart;
-        // Scale the sine coefficient such that it reaches its first
-        // maximum when 1 second has passed. This way the 
-        // jump will reach its maximum height after 1 second.
-        // The maximum is reached at PI / 2. Thus, we divide this 
-        // by 1000 to obtain our desired factor.
-        const sineScalingFactor = (Math.PI / 2) / 1000;
-        const upComponent = Vector3.Up().scaleInPlace(
-            Math.sin(sineScalingFactor * totalTimePassed));
-        
-        const direction = upComponent.addInPlace(this._basePerpetualMotionDirection);
-        Device.prototype.setPerpetualMotionDirection.apply(
-            this.creatureBody, direction); */
+        }
     }
 
     /**

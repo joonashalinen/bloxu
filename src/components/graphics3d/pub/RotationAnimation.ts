@@ -13,13 +13,14 @@ export default class RotationAnimation extends Animation {
     angle: number = 0;
     originalAnimationSpeed: number;
     currentAnimationSpeed: number;
+    idleTimeout: unknown;
 
     turnAngleDifference = new TimeAdjustedDifference();
     turnAngleMovingAverage = new MovingAverage(300);
 
     constructor(
-        public animations: {
-            left: AnimationGroup, right: AnimationGroup},
+        public animations: {left: AnimationGroup,
+            right: AnimationGroup, idle: AnimationGroup},
         public blendingSpeed: number = 0.2) {
         super();
 
@@ -34,7 +35,24 @@ export default class RotationAnimation extends Animation {
     }
 
     setAngle(angle: number) {
-        if (angle.toPrecision(3) === this.angle.toPrecision(3)) {return this}
+        if (angle.toPrecision(3) === this.angle.toPrecision(3)) {return}
+        // Clear timeout meant to return to idle animation once 
+        // no turning is happening anymore. We want to reset 
+        // the timeout, since because we are here, then 
+        // turning is clearly still happening.
+        if (this.idleTimeout !== undefined) {
+            clearTimeout(this.idleTimeout as number);
+        }
+
+        this.idleTimeout = setTimeout(() => {
+            if (!this.enabled()) return;
+            if (this.currentAnimation !== undefined) {
+                this.currentAnimation.stop();
+            }
+            this.currentAnimation = this.animations.idle;
+            this.currentAnimation.play(true);
+        }, 100);
+
         // Determine turn direction.
         const direction = angle < this.angle ? "left" : "right";
 

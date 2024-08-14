@@ -54,6 +54,7 @@ export default class Physical implements IPhysical, IObject {
 
         this.transformNode.setAbsolutePosition(wrappable.absolutePosition.clone());
         this.transformNode.addChild(wrappable);
+        wrappable.setParent(this.transformNode);
 
         this.physicsAggregate = new PhysicsAggregate(
             this.transformNode, 
