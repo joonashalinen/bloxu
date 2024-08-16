@@ -20,5 +20,5 @@ export default class EventablePlacementGrid implements IPlaceable, IEventable {
         const absolutePosition = this.placementGrid.grid.meshes[cell.x][cell.y][cell.z].absolutePosition;
         this.emitter.trigger("place", [cell, absolutePosition]);
         return this;
-    }    
+    }
 }

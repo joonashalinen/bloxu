@@ -93,4 +93,9 @@ export default class RotationAnimation extends Animation {
             animation.play(true);
         }
     }
+
+    disable() {
+        super.disable();
+        this.currentAnimation = this.animations.idle;
+    }
 }

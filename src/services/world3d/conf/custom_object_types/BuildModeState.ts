@@ -7,7 +7,7 @@ import RotateState from "../../../../components/objects3d/pub/creatures/RotateSt
 import IMovableState from "../../../../components/objects3d/pub/creatures/IMovableState";
 import IRotatableState from "../../../../components/objects3d/pub/creatures/IRotatableState";
 import IState from "../../../../components/computation/pub/IState";
-import MeshGrid from "../../../../components/objects3d/pub/MeshGrid";
+import Grid from "../../../../components/objects3d/pub/Grid";
 import PlaceMeshInGridState from "./PlaceMeshInGridState";
 import { IPointable } from "../../../../components/graphics2d/pub/IPointable";
 import ITickable from "../../../../components/objects3d/pub/ITickable";

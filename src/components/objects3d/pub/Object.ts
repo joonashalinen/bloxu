@@ -1,4 +1,4 @@
-import { AbstractMesh, IPhysicsCollisionEvent, Observable, PhysicsAggregate, Quaternion, TransformNode, Vector2, Vector3 } from "@babylonjs/core";
+import { AbstractMesh, IPhysicsCollisionEvent, Mesh, Observable, PhysicsAggregate, Quaternion, TransformNode, Vector2, Vector3 } from "@babylonjs/core";
 import IObject from "./IObject";
 import Physical from "./Physical";
 import EventEmitter from "../../events/pub/EventEmitter";
@@ -18,6 +18,7 @@ export default class Object implements IObject {
     landingLedgeBuffer: number = 0.3;
     asPhysical: Physical;
     emitter: EventEmitter = new EventEmitter();
+    isInVoid: boolean = false;
     isInAir: boolean = false;
     inAirDirection: 1 | -1;
     lastUpdatedPosition: Vector3;
@@ -114,46 +115,6 @@ export default class Object implements IObject {
 
         if (this.isInAir) {
             if (myBounds.min.y >= otherBounds.max.y && this.isFalling()) {
-                // If we have bumped recently.
-                // We check this to avoid annoying unnecessary edge landing corrections 
-                // when the not trying to wall jump. This whole correction process here 
-                // is meant to prevent the ability to wall jump using small ledges on a wall.
-                /* if (timeNow - this.lastBumpTime < this.eventTimeWindow) {
-                    // Whether the object has landed on some kind of ledge.
-                    const isOnFrontLedge = (myBounds.max.z > otherBounds.min.z && 
-                        myBounds.min.z < otherBounds.min.z);
-                    const isOnBackLedge = (myBounds.min.z < otherBounds.max.z && 
-                        myBounds.max.z > otherBounds.max.z);
-                    const isOnRightLedge = (myBounds.max.x > otherBounds.min.x && 
-                        myBounds.min.x < otherBounds.min.x);
-                    const isOnLeftLedge = (myBounds.min.x < otherBounds.max.x && 
-                        myBounds.max.x > otherBounds.max.x);
-
-                    // If the object is on a ledge that is too small
-                    // to land on, we want to shift the object off of it.
-                    let correctedOverlap = false;
-                    if (isOnFrontLedge) {
-                        correctedOverlap = this._correctLedgeOverlap(myBounds.max,
-                            otherBounds.min, "z")
-                    };
-                    if (isOnBackLedge) {
-                        correctedOverlap = this._correctLedgeOverlap(myBounds.min,
-                            otherBounds.max, "z")
-                    };
-                    if (isOnRightLedge) {
-                        correctedOverlap = this._correctLedgeOverlap(myBounds.min,
-                            otherBounds.max, "x")
-                    };
-                    if (isOnLeftLedge) {
-                        correctedOverlap = this._correctLedgeOverlap(myBounds.max,
-                            otherBounds.min, "x")
-                    };
-
-                    // If we are on a ledge that is too small to land on,
-                    // we do not count that as a landing.
-                    if (correctedOverlap) return;
-                } */
-
                 if (this.preventBounceOnLanding) {
                     this.asPhysical.setVerticalVelocity(0);
                 }
@@ -202,19 +163,35 @@ export default class Object implements IObject {
     }
 
     /**
-     * If the object is on a ledge that is too small 
-     * to land on, this method will correct the object's positioning 
-     * so that it will not land on the ledge.
+     * Makes the object disappear from the world but 
+     * the object can still be brought back by calling 
+     * .bringBackFromTheVoid().
      */
-    private _correctLedgeOverlap(myBoundVec: Vector3, 
-        otherBoundVec: Vector3, coord: "x" | "z") {
-        const ledgeOverlap = myBoundVec[coord] - otherBoundVec[coord];
-        if (Math.abs(ledgeOverlap) < this.landingLedgeBuffer) {
-            this.transformNode.absolutePosition[coord] -= this.landingLedgeBuffer;
-            this.transformNode.setAbsolutePosition(
-                this.transformNode.absolutePosition);
-            return true;
-        }
-        return false;
+    teleportToVoid() {
+        if (this.isInVoid) return;
+        this.isInVoid = true;
+        this.transformNode.setEnabled(false);
+        this.asPhysical.disable();
+    }
+
+    /**
+     * Makes the object reappear into the 
+     * world if it had been disappeared by 
+     * calling .teleportToVoid().
+     */
+    bringBackFromTheVoid() {
+        if (!this.isInVoid) return;
+        this.isInVoid = false;
+        this.transformNode.setEnabled(true);
+        this.asPhysical.enable();
+    }
+
+    /**
+     * Returns the base mesh of the Object, which is different 
+     * than the .transformNode that was made when the 
+     * Object was made Physical.
+     */
+    unwrappedMesh() {
+        return this.transformNode.getChildMeshes().at(0);
     }
 }

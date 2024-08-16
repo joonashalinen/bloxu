@@ -4,5 +4,5 @@ export default interface IPlaceable {
     /**
      * Place an object at the given coordinate.
      */
-    place(position: Vector3): IPlaceable;
+    place(position: Vector3): void;
 }

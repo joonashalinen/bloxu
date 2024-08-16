@@ -1,18 +1,22 @@
 import { AbstractMesh, AnimationGroup, TransformNode, Vector3 } from "@babylonjs/core";
-import IOriented from "./IOriented";
 import IProjectileWeapon from "./IProjectileWeapon";
 import Device from "./Device";
 import Physical from "./Physical";
-import EventEmitter from "../../events/pub/EventEmitter";
-import Item from "./creatures/Item";
+import ISelector from "./items/ISelector";
+import ObjectRegistry from "./ObjectRegistry";
+import Selector from "./items/Selector";
 
 /**
  * An IWeapon implementation that shoots projectiles. The holder of the weapon 
  * should be an IOriented so that it has an orientation direction.
  */
-export default class ProjectileWeapon extends Item implements IProjectileWeapon {
+export default class ProjectileWeapon extends Selector implements IProjectileWeapon, ISelector {
     projectiles: Device[] = [];
     projectileSpeed: number = 1;
+    projectileTimeout: number = 60000;
+    objectRegistry: ObjectRegistry;
+    destroyProjectileOnObjectHit: boolean = true;
+    isActive: boolean = true;
 
     constructor(
         public transformNode: TransformNode,
@@ -22,15 +26,18 @@ export default class ProjectileWeapon extends Item implements IProjectileWeapon 
         super(shootAnimation);
     }
 
-    doMainAction(): void {
-        super.doMainAction();
+    activate(): void {
+        if (this.isActive) return;
+        this.isActive = true;
     }
 
-    /**
-     * When a projectile shot from the weapon collides with a mesh.
-     */
-    onCollide(callback: (mesh: TransformNode) => void): void {
-        throw new Error("Method not implemented.");
+    deactivate(): void {
+        if (!this.isActive) return;
+        this.isActive = false;
+    }
+
+    doMainAction(): void {
+        super.doMainAction();
     }
 
     shoot(direction: Vector3) {
@@ -53,6 +60,7 @@ export default class ProjectileWeapon extends Item implements IProjectileWeapon 
         const projectile = new Device(
             new Physical(projectileMesh, 0.1));
 
+        // Set the physics properties of the projectile.
         projectile.asPhysical.physicsAggregate.body.disablePreStep = false;
         projectile.transformNode.setAbsolutePosition(
             this.transformNode.absolutePosition
@@ -61,29 +69,39 @@ export default class ProjectileWeapon extends Item implements IProjectileWeapon 
         projectile.respectVerticalVelocity = false;
         projectile.perpetualMotionSpeed = this.projectileSpeed;
         projectile.setPerpetualMotionDirection(normalizedDirection);
-        
-        // Make the projetile destroy blocks.
-        // This should not really be here
-        // and should be refactored to be elsewhere.
-        /* physicsAggregate.body.setCollisionCallbackEnabled(true);
-        physicsAggregate.body.getCollisionObservable().add((event) => {
+
+        // Make the projectile trigger a 'selectObject' event when 
+        // it hits an object.
+        projectile.physicsBody().setCollisionCallbackEnabled(true);
+        projectile.physicsBody().getCollisionObservable().add((event) => {
             const otherMesh = event.collidedAgainst.transformNode;
-            // Destroy block.
-            if (
-                otherMesh.id.includes("PlaceMeshInGridState:object") || 
-                otherMesh.id.includes("FloatingCube")
-            ) {
-                event.collidedAgainst.disablePreStep = true;
-                otherMesh.setEnabled(false);
-                event.collidedAgainst.dispose();
+            if (this.objectRegistry &&
+                this.objectRegistry.hasObjectWithMeshId(otherMesh.id)) {
+                const object = this.objectRegistry.getObjectWithMeshId(otherMesh.id);
+                if (this.destroyProjectileOnObjectHit) 
+                    this.destroyProjectile(projectile);
+                this.emitter.trigger("select", [{
+                    object: object, 
+                    absolutePosition: object.transformNode.absolutePosition.clone()
+                }]);
             }
-            // Destroy projectile.
-            movableProjectile.move(new Vector3(0, 0, 0));
-            physicsAggregate.body.transformNode.setEnabled(false);
-            physicsAggregate.body.dispose();
-        }); */
+        });
 
         this.projectiles.push(projectile);
+
+        // Set timeout for removing the projectile 
+        // after it has existed for too long.
+        setTimeout(() => {
+            
+        }, this.projectileTimeout);
+    }
+
+    destroyProjectile(projectile: Device) {
+        this.projectiles.splice(
+            this.projectiles.indexOf(projectile), 1);
+        projectile.transformNode.getScene().removeMesh(
+            projectile.transformNode as AbstractMesh, true);
+        projectile.physicsBody().dispose();
     }
 
     doOnTick(passedTime: number, absoluteTime: number) {

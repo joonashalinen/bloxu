@@ -1,5 +1,5 @@
 import { AbstractMesh, MeshBuilder, TransformNode, Vector2 } from "@babylonjs/core";
-import MeshGrid from "../MeshGrid";
+import Grid from "../Grid";
 import { IPointable } from "../../../graphics2d/pub/IPointable";
 import PlacementGrid from "./PlacementGrid";
 import Object from "../Object";
@@ -15,7 +15,7 @@ export default class PointablePlacementGrid<T extends IPlaceable> implements IPo
     pointedMesh: AbstractMesh | undefined;
 
     constructor(
-        public grid: MeshGrid,
+        public grid: Grid,
         public placementGrid: T
     ) {
         grid.map((mesh) => this.unhighlightMesh(mesh));

@@ -3,7 +3,7 @@ import IState from "../../../../components/computation/pub/IState";
 import EventEmitter from "../../../../components/events/pub/EventEmitter";
 import IEventable from "../../../../components/events/pub/IEventable";
 import EventableMovable from "../../../../components/objects3d/pub/EventableMovable";
-import MeshGrid from "../../../../components/objects3d/pub/MeshGrid";
+import Grid from "../../../../components/objects3d/pub/Grid";
 import PointablePlacementGrid from "../../../../components/objects3d/pub/menus/PointablePlacementGrid";
 import { IPointable } from "../../../../components/graphics2d/pub/IPointable";
 import IActionableState from "../../../../components/objects3d/pub/creatures/IActionableState";
@@ -38,13 +38,13 @@ export default class PlaceMeshInGridState implements IState, IEventable, IPointa
     constructor(
         public baseId: string,
         public movedMesh: TransformNode,
-        public grid: MeshGrid,
+        public grid: Grid,
         public makeObject: (id: string) => IObject | Physical
     ) {
         grid.transformNode.setEnabled(false);
 
         // Calculate size of the block that is being used.
-        const blockBoundingPoints = grid.meshPrototype.getHierarchyBoundingVectors();
+        const blockBoundingPoints = grid.prototypeMesh.getHierarchyBoundingVectors();
         this.blockSize = blockBoundingPoints.max.x - blockBoundingPoints.min.x;
 
         // Make a GridFollower to implement making the 

@@ -1,4 +1,4 @@
-import { Color3, GlowLayer, MeshBuilder, Scene, StandardMaterial, Vector2, Vector3 } from "@babylonjs/core";
+import { AbstractMesh, Color3, GlowLayer, Mesh, MeshBuilder, Scene, StandardMaterial, Vector2, Vector3 } from "@babylonjs/core";
 import Object from "../../../components/objects3d/pub/Object";
 import { AnimatedMesh } from "./meshConstructors";
 import PlayerBody from "./custom_object_types/PlayerBody";
@@ -8,17 +8,23 @@ import DVector3 from "../../../components/graphics3d/pub/DVector3";
 import Physical from "../../../components/objects3d/pub/Physical";
 import ProjectileWeapon from "../../../components/objects3d/pub/ProjectileWeapon";
 import Glow from "../../../components/graphics3d/pub/effects/Glow";
+import ObjectRegistry from "../../../components/objects3d/pub/ObjectRegistry";
+import PickerPlacer from "../../../components/objects3d/pub/items/PickerPlacer";
+import GridMenu from "../../../components/objects3d/pub/menus/GridMenu";
+import Grid from "../../../components/objects3d/pub/Grid";
 
-export type TObjectConstructor = (id: string, scene: Scene, ...args: unknown[]) => Object;
+export type TObjectConstructor = (id: string,  ...args: unknown[]) => Object;
 
 export default function (
+    scene: Scene,
     meshConstructors: {[name: string]: Function},
+    objectRegistry: ObjectRegistry,
     glowLayer: GlowLayer) {
     return {
-        "PlayerBody": (id: string, scene: Scene, 
-            startPosition: DVector3 = {x: 0, y: 0, z: 0}) => {
+        "PlayerBody": (id: string, startPosition: DVector3 = {x: 0, y: 0, z: 0}) => {
             const characterHeight = 1.6;
             const characterWidth = 0.8;
+            const blockSize = 1.4;
             const characterMeshId = `PlayerBody:characterMesh?${id}`;
 
             const pistolMesh = meshConstructors["PlasmaPistol"](`${characterMeshId}:pistolMesh`);
@@ -60,12 +66,23 @@ export default function (
                 return ball
             };
 
-            const gun = new ProjectileWeapon(pistolMesh,
+            const picker = new ProjectileWeapon(pistolMesh,
                 createProjectile, character.animations.shoot);
-            gun.projectileSpeed = 5;
-            gun.useDelay = 150;
-            body.items["gun"] = gun;
-            body.selectItem("gun");
+            picker.projectileSpeed = 5;
+            picker.useDelay = 150;
+            picker.objectRegistry = objectRegistry;
+
+            const placer = new GridMenu(new Grid(
+                Grid.createSpherePrototype(blockSize, 0.2),
+                blockSize, {x: 3, y: 1, z: 3}));
+            placer.followedNode = body.transformNode;
+
+            const pickerPlacer = new PickerPlacer(picker, placer);
+            pickerPlacer.onPick((info) => {
+                //placer.grid.prototypeMesh = info.object!.transformNode as AbstractMesh
+            });
+            body.items["pickerPlacer"] = pickerPlacer;
+            body.selectItem("pickerPlacer");
 
             body.horizontalRotationAnimation = new RotationAnimation({
                 left: character.animations["turnLeft"],
@@ -119,6 +136,11 @@ export default function (
             character.mesh.position.y -= characterHeight / 2;
 
             return body;
+        },
+        "Object": (id: string, size: number, mesh: Mesh, mass: number) => {
+            const physical = new Physical(mesh, mass, {
+                width: size, height: size, depth: size});
+            return new Object(physical);
         }
     }; 
 }

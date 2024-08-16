@@ -35,7 +35,7 @@ export default class GridVector {
     }
 
     /**
-     * Rounds to the nearest lesser grid point.
+     * Rounds to the nearest grid point.
      */
     round() {
         return (new Vector3(

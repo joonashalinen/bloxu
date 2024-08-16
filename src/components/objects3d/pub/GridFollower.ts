@@ -1,6 +1,6 @@
 import { TransformNode, Vector3 } from "@babylonjs/core";
 import ITickable from "./ITickable";
-import MeshGrid from "./MeshGrid";
+import Grid from "./Grid";
 import GridVector from "../../graphics3d/pub/GridVector";
 import IObject from "./IObject";
 import IFollower from "./IFollower";

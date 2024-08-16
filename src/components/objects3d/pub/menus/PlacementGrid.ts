@@ -1,6 +1,6 @@
 import { Vector3 } from "@babylonjs/core";
 import IObject from "../IObject";
-import MeshGrid from "../MeshGrid";
+import Grid from "../Grid";
 import IPlaceable from "./IPlaceable";
 
 /**
@@ -12,7 +12,7 @@ export default class PlacementGrid implements IPlaceable {
     }
 
     constructor(
-        public grid: MeshGrid,
+        public grid: Grid,
         public createObject: () => IObject
     ) {
         

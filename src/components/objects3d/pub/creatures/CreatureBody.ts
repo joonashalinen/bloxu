@@ -10,6 +10,7 @@ import IdleState from "./IdleStateV2";
 import IItem from "./IItem";
 import UseItemState from "./UseItemState";
 import ICreatureBodyActions from "./ICreatureBodyActions";
+import DVector2 from "../../../graphics3d/pub/DVector2";
 
 export interface TCreatureAnimations {
     "jump": AnimationGroup,
@@ -62,11 +63,29 @@ export default class CreatureBody extends Device implements ICreatureBodyActions
         this.actionStateMachine.firstActiveState().jump();
     }
 
+    /**
+     * The item that is currently held by the creature 
+     * if an item is held.
+     */
+    selectedItem() {
+        if (this.selectedItemName !== undefined) {
+            return this.items[this.selectedItemName];
+        } else {
+            return undefined;
+        }
+    }
+
     doOnTick(passedTime: number, absoluteTime: number) {
         this.actionStateMachine.firstActiveState().doOnTick(
             passedTime, absoluteTime);
-        Object.values(this.items).forEach((item) => item.doOnTick(
-            passedTime, absoluteTime));
+        const selectedItem = this.selectedItem();
+        if (selectedItem !== undefined) {
+            selectedItem.doOnTick(passedTime, absoluteTime);
+        }
         super.doOnTick(passedTime, absoluteTime);
+    }
+
+    point(position: DVector2) {
+        
     }
 }

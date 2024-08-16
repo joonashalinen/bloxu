@@ -1,19 +1,37 @@
 import { AnimationGroup, Vector3 } from "@babylonjs/core";
 import EventEmitter from "../../../events/pub/EventEmitter";
 import IItem from "./IItem";
+import IMenu from "../menus/IMenu";
 
 /**
  * Base class for IItem implementations.
  */
 export default class Item implements IItem {
     hasSecondaryAction: boolean = false;
-    aimedDirection: Vector3 = new Vector3(1, 0, 0);
     emitter: EventEmitter = new EventEmitter();
     useDelay: number = 0;
+    protected _menu: IMenu;
     protected _itemUsed = false;
     protected _animationEnded = false;
-    
+    protected _aimedDirection: Vector3 = new Vector3(1, 0, 0);
+
     constructor(public useAnimation: AnimationGroup = undefined) {
+    }
+
+    public get menu() {
+        return this._menu;
+    }
+
+    public set menu(menu) {
+        this._menu = menu;
+    }
+
+    public get aimedDirection() {
+        return this._aimedDirection;
+    }
+
+    public set aimedDirection(aimedDirection: Vector3) {
+        this._aimedDirection = aimedDirection;
     }
 
     onItemUseEnded(callback: () => void): void {

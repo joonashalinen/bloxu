@@ -20,10 +20,11 @@ export default class Physical implements IPhysical, IObject {
     transformNode: Mesh;
     hitboxSize: {width: number, height: number, depth: number};
     terminalVelocity: number = -9.8;
+    enabled: boolean = true;
 
     constructor(
-        wrappable: AbstractMesh,
-        mass: number,
+        public wrappable: AbstractMesh,
+        public mass: number,
         hitboxSize?: {width: number, height: number, depth: number}
     ) {
         // Calculate the size for the box wrapper.
@@ -96,5 +97,30 @@ export default class Physical implements IPhysical, IObject {
         const velocity = this.physicsAggregate.body.getLinearVelocity();
         velocity.y = y;
         this.physicsAggregate.body.setLinearVelocity(velocity);
+    }
+
+    /**
+     * Disables physics for the object. Note: this will 
+     * result in the current PhysicsAggregate being disposed.
+     */
+    disable() {
+        if (!this.enabled) return;
+        this.enabled = false;
+        this.physicsAggregate.dispose();
+    }
+
+    /**
+     * Enables physics for the object if they had been disabled.
+     * Note: this will result in the creation of a new PhysicsAggregate.
+     */
+    enable() {
+        if (this.enabled) return;
+        this.enabled = true;
+        this.physicsAggregate = new PhysicsAggregate(
+            this.transformNode, 
+            PhysicsShapeType.BOX, 
+            { mass: this.mass, friction: 0 }, 
+            this.wrappable.getScene()
+        );
     }
 }

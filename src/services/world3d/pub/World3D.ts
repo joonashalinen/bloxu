@@ -19,22 +19,24 @@ import Glow from "../../../components/graphics3d/pub/effects/Glow";
 import ITickable from "../../../components/objects3d/pub/ITickable";
 import maps from "../conf/maps/maps";
 import IController from "../../../components/objects3d/pub/IController";
+import ObjectRegistry from "../../../components/objects3d/pub/ObjectRegistry";
 
 type Types = {[type: string]: Function};
 type Instances = {[name: string]: Object};
 type MeshConstructors = {[name: string]: Function};
 type ControllerConstructors = {[id: string]: (...args: unknown[]) => IController};
+type MapGenerator = (scene: Scene,
+    meshConstructors: MeshConstructors, objects: ObjectRegistry) => Promise<Mesh>;
 
 /**
  * Class containing the state and operations of the world3d service.
  */
 export default class World3D implements IService {
-    objects: Instances;
+    objects: ObjectRegistry;
     effects: Instances;
     effectTypes: Types;
     skybox: Mesh;
     meshConstructors: {[name: string]: Function};
-    objectConstructors: {[name: string]: TObjectConstructor};
     proxyMessenger: ProxyMessenger<DMessage, DMessage>;
     syncMessenger: SyncMessenger;
     messageFactory: MessageFactory;
@@ -49,8 +51,7 @@ export default class World3D implements IService {
     controllerConstructors: ControllerConstructors;
 
     constructor(document: Document) {
-        this.objects = {};
-        this.objectConstructors = {};
+        this.objects = new ObjectRegistry();
         this.controllers = {};
         this.controllerConstructors = controllerConstructors;
 
@@ -87,10 +88,10 @@ export default class World3D implements IService {
      * Get an object in the world with given id if it exists.
      */
     getObject(id: string) {
-        if (!(id in this.objects)) {
+        if (!this.objects.hasObject(id)) {
             throw new Error("Object with given id '" + id + "' does not exist");
         }
-        return this.objects[id];
+        return this.objects.getObject(id);
     }
 
     /**
@@ -118,14 +119,10 @@ export default class World3D implements IService {
      * Create new object of given type with given id and args in the world.
      */
     createObject(id: string, type: string, args: Array<unknown> | FunctionWrapper<Function> = []) {
-        const objectConstructor = this.objectConstructors[type];
-        if (objectConstructor === undefined) {
-            return false;
-        }
         if (!Array.isArray(args)) {
             args = args.f.apply(this, args.boundArgs) as unknown[];
         }
-        this.objects[id] = objectConstructor(id, this.scene, ...args);
+        this.objects.createObject(id, type, args);
         return true;
     }
 
@@ -190,10 +187,10 @@ export default class World3D implements IService {
      */
     createCustomObject(id: string, wrapper: FunctionWrapper<Function>): void {
         const { boundArgs, f: create } = wrapper;
-        if (id in this.objects) {
+        if (this.objects.hasObject(id)) {
             throw new Error("Object with given id '" + id + "' already exists");
         }
-        this.objects[id] = create.bind(this)(...boundArgs);
+        this.objects.addObject(id, create.bind(this)(...boundArgs));
     }
 
     /**
@@ -204,7 +201,7 @@ export default class World3D implements IService {
     modifyObject(id: string, wrapper: FunctionWrapper<Function>): World3D {
         const { boundArgs, f: modifier } = wrapper;
         var obj = this.getObject(id);
-        this.objects[id] = modifier.bind(this, ...boundArgs)(obj);
+        modifier.bind(this, ...boundArgs)(obj);
         return this;
     }
 
@@ -214,9 +211,8 @@ export default class World3D implements IService {
      */
     async selectMap(id: string) {
         if (maps[id]) {
-            const mapGenerator: (scene: Scene, meshConstructors: MeshConstructors) 
-                => Promise<Mesh> = maps[id];
-            await mapGenerator(this.scene, this.meshConstructors);
+            const mapGenerator: MapGenerator = maps[id];
+            await mapGenerator(this.scene, this.meshConstructors, this.objects);
             return true;
         } else {
             return false;
@@ -264,8 +260,8 @@ export default class World3D implements IService {
         // Load meshes configured by the project where World3D is being used.
         this.meshConstructors = await meshConstructors(this.babylonjs, this.scene);
 
-        this.objectConstructors = objectConstructors(
-            this.meshConstructors, this.glowLayer);
+        this.objects.objectConstructors = objectConstructors(
+            this.scene, this.meshConstructors, this.objects, this.glowLayer);
 
         // Setup skybox.
         /* this.skybox = this.meshConstructors["SkyBox"]();
@@ -323,12 +319,7 @@ export default class World3D implements IService {
             // Time passed since last update.
             const timePassed = timeNow - lastTime;
 
-            for (let id in this.objects) {
-                let obj = this.objects[id];
-                if ("doOnTick" in obj) {
-                    (obj as ITickable).doOnTick(timePassed, absoluteTime);
-                }
-            }
+            this.objects.doOnTick(timePassed, absoluteTime);
             this.scene.render();
             lastTime = timeNow;
         });
