@@ -22,11 +22,6 @@ export default class PickerPlacer extends Item {
                     this.picker.deactivate();
                     this.placer.activate();
                     const previewMeshName = "PickerPlacer:previewMesh?" + info.object.transformNode.name;
-                    console.log(previewMeshName);
-                    if (this.placer.previewMesh) {
-                        console.log(this.placer.previewMesh.name);
-                    }
-                    console.log("");
                     if (this.placer.previewMesh === undefined ||
                         this.placer.previewMesh.name !== previewMeshName) {
                         const previewMesh = (info.object.transformNode as AbstractMesh).clone(
