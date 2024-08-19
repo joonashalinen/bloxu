@@ -22,6 +22,11 @@ export default class PickerPlacer extends Item {
                     this.picker.deactivate();
                     this.placer.activate();
                     const previewMeshName = "PickerPlacer:previewMesh?" + info.object.transformNode.name;
+                    console.log(previewMeshName);
+                    if (this.placer.previewMesh) {
+                        console.log(this.placer.previewMesh.name);
+                    }
+                    console.log("");
                     if (this.placer.previewMesh === undefined ||
                         this.placer.previewMesh.name !== previewMeshName) {
                         const previewMesh = (info.object.transformNode as AbstractMesh).clone(
@@ -121,9 +126,14 @@ export default class PickerPlacer extends Item {
      */
     private _placeHeldObject() {
         const object = this.heldObjects.pop();
+        // If placing the object fails then we revert the attempt.
         if (!this.placer.placeObject(object)) {
             this.heldObjects.push(object);
             return;
+        }
+        if (this.placer.previewMesh !== undefined) {
+            this.placer.previewMesh.getScene().removeMesh(this.placer.previewMesh);
+            this.placer.previewMesh.dispose();
         }
         this.placer.deactivate();
         this.picker.activate();
