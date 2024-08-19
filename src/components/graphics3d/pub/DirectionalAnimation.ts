@@ -11,19 +11,13 @@ export default class DirectionalAnimation extends Animation {
 
     constructor(
         public directions: Array<Vector2>,
-        public animations: Array<AnimationGroup>,
-        blendingSpeed: number = 0.2) {
+        public animations: Array<AnimationGroup>) {
         super();
 
-        if (this.animations.length !== 
-            this.directions.length) {
-            throw new Error("animationDirections must have the " + 
-                "same length as directionalAnimations");
+        if (this.animations.length !== this.directions.length) {
+            throw new Error("There must be equally as many " + 
+                "directions given as there are given animations.");
         }
-        animations.forEach((anim) => {
-            anim.enableBlending = true;
-            anim.blendingSpeed = blendingSpeed;
-        });
         this.directions = directions;
         this.animations = animations;
     }

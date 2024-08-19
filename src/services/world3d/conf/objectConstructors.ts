@@ -103,7 +103,7 @@ export default function (
             ];
 
             const directionAnimations = [
-                character.animations["idle"],
+                undefined,
                 character.animations["moveForward"],
                 character.animations["moveForwardRight"],
                 character.animations["moveRight"],

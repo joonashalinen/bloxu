@@ -13,6 +13,8 @@ export default class JumpState extends CreatureBodyState implements ICreatureBod
     jumpFactor: number = 6.5;
     private _creatureHasLanded = false;
     private _restoreRotationAnimation: boolean;
+    private _restoreDirectionalAnimation: boolean;
+    private _creatureOwnsRotationAnimations: boolean;
     
     constructor(creatureBody: CreatureBody,
         public jumpAnimation: AnimationGroup) {
@@ -39,9 +41,14 @@ export default class JumpState extends CreatureBodyState implements ICreatureBod
         this.jumpAnimation.play();
         this.jumpAnimation.goToFrame(50);
 
-        this._restoreRotationAnimation = this.creatureBody
-            .horizontalRotationAnimation.enabled();
+        this._restoreRotationAnimation = this.creatureBody.horizontalRotationAnimation.enabled();
         this.creatureBody.horizontalRotationAnimation.disable();
+
+        this._creatureOwnsRotationAnimations = this.creatureBody.ownsRotationAnimations;
+        this.creatureBody.ownsRotationAnimations = false;
+
+        this._restoreDirectionalAnimation = this.creatureBody.directionalAnimation.enabled();
+        this.creatureBody.directionalAnimation.disable();
 
         const bodyMass = this.creatureBody.physicsBody()
             .getMassProperties().mass;
@@ -49,14 +56,19 @@ export default class JumpState extends CreatureBodyState implements ICreatureBod
             new Vector3(0, bodyMass * this.jumpFactor, 0), 
             this.creatureBody.transformNode.absolutePosition
         );
+        console.log("started jump state");
     }
 
     end(): void {
         if (!this.isActive) return;
         super.end();
         this.jumpAnimation.stop();
+        this.creatureBody.ownsRotationAnimations = this._creatureOwnsRotationAnimations;
         if (this._restoreRotationAnimation) {
             this.creatureBody.horizontalRotationAnimation.enable();
+        }
+        if (this._restoreDirectionalAnimation) {
+            this.creatureBody.directionalAnimation.enable();
         }
     }
 
