@@ -21,15 +21,14 @@ export default class PickerPlacer extends Item {
                     this.heldObjects.push(info.object);
                     this.picker.deactivate();
                     this.placer.activate();
-                    const previewMeshName = "PickerPlacer:previewMesh?" + info.object.transformNode.name;
-                    if (this.placer.previewMesh === undefined ||
-                        this.placer.previewMesh.name !== previewMeshName) {
-                        const previewMesh = (info.object.transformNode as AbstractMesh).clone(
-                            "PickerPlacer:previewMesh?" + info.object.transformNode.name, null);
-                        previewMesh.setEnabled(false);
-                        previewMesh.getChildMeshes().at(0).visibility = 0.5;
-                        this.placer.previewMesh = previewMesh;
-                    }
+
+                    // Set preview mesh.
+                    const previewMesh = (info.object.transformNode as AbstractMesh).clone(
+                        "PickerPlacer:previewMesh?" + info.object.transformNode.name, null);
+                    previewMesh.setEnabled(false);
+                    previewMesh.getChildMeshes().at(0).visibility = 0.5;
+                    this.placer.previewMesh = previewMesh;
+
                     this.emitter.trigger("pick", [info]);
                 }
             }
