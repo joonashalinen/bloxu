@@ -13,13 +13,12 @@ import SyncMessenger from "../../../components/messaging/pub/SyncMessenger";
 import FunctionWrapper from "../../../components/services/pub/FunctionWrapper";
 import meshConstructors from "../conf/meshConstructors";
 import objectConstructors from "../conf/objectConstructors";
-import { TObjectConstructor } from "../conf/objectConstructors";
 import controllerConstructors from "../conf/controllerConstructors";
 import Glow from "../../../components/graphics3d/pub/effects/Glow";
-import ITickable from "../../../components/objects3d/pub/ITickable";
 import maps from "../conf/maps/maps";
 import IController from "../../../components/objects3d/pub/IController";
 import ObjectRegistry from "../../../components/objects3d/pub/ObjectRegistry";
+import createGlobals from "../conf/globals";
 
 type Types = {[type: string]: Function};
 type Instances = {[name: string]: Object};
@@ -49,11 +48,13 @@ export default class World3D implements IService {
     glowLayer: babylonjs.GlowLayer;
     controllers: {[id: string]: IController};
     controllerConstructors: ControllerConstructors;
+    globals: {[name: string]: unknown};
 
     constructor(document: Document) {
         this.objects = new ObjectRegistry();
         this.controllers = {};
         this.controllerConstructors = controllerConstructors;
+        this.globals = createGlobals();
 
         this.effects = {};
         this.effectTypes = {
@@ -261,7 +262,7 @@ export default class World3D implements IService {
         this.meshConstructors = await meshConstructors(this.babylonjs, this.scene);
 
         this.objects.objectConstructors = objectConstructors(
-            this.scene, this.meshConstructors, this.objects, this.glowLayer);
+            this.scene, this.meshConstructors, this.objects, this.glowLayer, this.globals);
 
         // Setup skybox.
         /* this.skybox = this.meshConstructors["SkyBox"]();

@@ -126,6 +126,7 @@ export default class PickerPlacer extends Item {
             this.heldObjects.push(object);
             return;
         }
+        // Delete the preview mesh.
         if (this.placer.previewMesh !== undefined) {
             this.placer.previewMesh.getScene().removeMesh(this.placer.previewMesh);
             this.placer.previewMesh.dispose();

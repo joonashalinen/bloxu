@@ -1,4 +1,5 @@
 import { TObjectConstructor } from "../../../services/world3d/conf/objectConstructors";
+import HistoryCollection from "../../data_structures/pub/HistoryCollection";
 import Object from "./Object";
 
 /**
@@ -8,6 +9,7 @@ import Object from "./Object";
  */
 export default class ObjectRegistry {
     objectConstructors: {[typeName: string]: TObjectConstructor} = {};
+    history: HistoryCollection<Object> = new HistoryCollection();
     private _objectsById: {[name: string]: Object} = {};
     private _objectsByMeshId: {[name: string]: Object} = {};
 
@@ -33,6 +35,7 @@ export default class ObjectRegistry {
         
         this._objectsByMeshId[meshId] = object;
         this._objectsById[id] = object;
+        this.history.setHistory(id, object.history);
     }
 
     /**

@@ -1,10 +1,11 @@
 import { AbstractMesh, TransformNode, Vector3 } from "@babylonjs/core";
 import EventEmitter from "../../../events/pub/EventEmitter";
 import Object from "../Object";
-import Grid, { TGridMapper } from "../Grid";
 import Menu from "./Menu";
 import GridVector from "../../../graphics3d/pub/GridVector";
 import IPlacer from "../items/IPlacer";
+import ObjectGrid from "../ObjectGrid";
+import MeshGrid, { TGridMapper } from "../../../graphics3d/pub/MeshGrid";
 
 /**
  * A menu that consists of a cubic grid 
@@ -19,14 +20,13 @@ export default class GridMenu extends Menu implements IPlacer {
     pointedCell: Vector3;
 
     constructor(
-        public grid: Grid
+        public grid: MeshGrid,
+        public objectGrid: ObjectGrid = undefined
     ) {
         super();
         this.transformNode = grid.transformNode;
-        this.grid.baseOffset.addInPlace(
-            new Vector3(-grid.width()/2 + grid.cellSize/2, 0, -grid.depth() / 2 + grid.cellSize/2));
         this.createFollowVector = () => (new GridVector(
-            this.followedNode.absolutePosition, this.grid.cellSize, this.grid.totalOffset())).round();
+            this.followedNode.absolutePosition, this.grid.cellSize)).round();
         grid.map(this.unpreview.bind(this));
     }
 
@@ -51,8 +51,24 @@ export default class GridMenu extends Menu implements IPlacer {
 
         const absolutePosition = this.grid.meshes
             [this.pointedCell.x][this.pointedCell.y][this.pointedCell.z].absolutePosition;
-        object.transformNode.setAbsolutePosition(absolutePosition);
+        
+        // We do not allow placing if the possible associated
+        // object grid already has an object placed at the cell we are about to place
+        // into. Note: the coordinates of .grid are local to the possible object followed by
+        // GridMenu, whereas the coordinates of .objectGrid are absolute.
+        if ((this.objectGrid !== undefined &&
+            this.objectGrid.cellIsOccupiedAtPosition(absolutePosition))) {
+            this.emitter.trigger("useEnd");
+            return false;
+        }
+        
+        if (this.objectGrid !== undefined) {
+            this.objectGrid.placeAtPosition(absolutePosition, object);
+        } else {
+            object.transformNode.setAbsolutePosition(absolutePosition);
+        }
         if (object.isInVoid) object.bringBackFromTheVoid();
+
         this.emitter.trigger("select", [{
             object: object,
             absolutePosition: object.transformNode.absolutePosition.clone(),
@@ -102,14 +118,14 @@ export default class GridMenu extends Menu implements IPlacer {
 
     private _defaultPreview(mesh: AbstractMesh) {
         if (this.previewMesh !== undefined) {
-            if (mesh.name.includes("Grid:Prototype")) {
+            if (mesh.name.includes("MeshGrid:Prototype")) {
                 this.previewMesh.setAbsolutePosition((mesh.parent as AbstractMesh).absolutePosition.clone());
             } else {
                 this.previewMesh.setAbsolutePosition(mesh.absolutePosition.clone());
             }
             if (!this.previewMesh.isEnabled()) this.previewMesh.setEnabled(true);
         } else {
-            if (mesh.name.includes("?Grid:Wrapper") && !mesh.name.includes("Grid:Prototype")) {
+            if (mesh.name.includes("?MeshGrid:Wrapper") && !mesh.name.includes("MeshGrid:Prototype")) {
                 mesh.getChildMeshes().at(0).visibility = 1;
             } else {
                 mesh.visibility = 1;
@@ -122,7 +138,7 @@ export default class GridMenu extends Menu implements IPlacer {
         if (this.previewMesh !== undefined) {
             if (this.previewMesh.isEnabled()) this.previewMesh.setEnabled(false);
         } else {
-            if (mesh.name.includes("?Grid:Wrapper") && !mesh.name.includes("Grid:Prototype")) {
+            if (mesh.name.includes("?MeshGrid:Wrapper") && !mesh.name.includes("MeshGrid:Prototype")) {
                 mesh.getChildMeshes().at(0).visibility = 0.5;
             } else {
                 mesh.visibility = 0.5;

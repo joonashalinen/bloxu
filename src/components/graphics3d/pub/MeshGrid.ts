@@ -1,12 +1,11 @@
 import { AbstractMesh, MeshBuilder, TransformNode, Vector3 } from "@babylonjs/core";
-import IObject from "./IObject";
 
 export type TGridMapper = (mesh: AbstractMesh, cellIndex: Vector3) => AbstractMesh;
 
 /**
  * A cubic 3D grid where each cell contains a copy of a given mesh.
  */
-export default class Grid implements IObject {
+export default class MeshGrid {
     transformNode: TransformNode;
     meshes: AbstractMesh[][][];
     offset: Vector3 = new Vector3(0, 0, 0);
@@ -20,7 +19,7 @@ export default class Grid implements IObject {
     ) {
         this._prototypeMesh = prototypeMesh;
         this.transformNode = new TransformNode(
-            `Grid:transformNode?${prototypeMesh.name}`,
+            `MeshGrid:transformNode?${prototypeMesh.name}`,
             prototypeMesh.getScene()
         );
         this.transformNode.setAbsolutePosition(new Vector3(0, 0, 0));
@@ -35,7 +34,7 @@ export default class Grid implements IObject {
                 
                 for (let z = 0; z < gridSize.z; z++) {
                     const mesh = prototypeMesh.clone(
-                        `Grid:meshes:${x}:${y}:${z}?${prototypeMesh.name}`, 
+                        `MeshGrid:meshes:${x}:${y}:${z}?${prototypeMesh.name}`, 
                         this.transformNode
                     )!;
                     mesh.setEnabled(true);
@@ -60,8 +59,8 @@ export default class Grid implements IObject {
      * is useful as a prototype mesh for Grid.
      */
     static createSpherePrototype(cellSize: number, sphereSizeRatio: number) {
-        const wrapper = MeshBuilder.CreateBox("Grid:Wrapper", {size: cellSize});
-        const sphere = MeshBuilder.CreateSphere("Grid:Prototype", {diameter: cellSize * sphereSizeRatio});
+        const wrapper = MeshBuilder.CreateBox("MeshGrid:Wrapper", {size: cellSize});
+        const sphere = MeshBuilder.CreateSphere("MeshGrid:Prototype", {diameter: cellSize * sphereSizeRatio});
         wrapper.addChild(sphere);
         wrapper.visibility = 0;
         sphere.position.y += cellSize / 2;
@@ -76,7 +75,7 @@ export default class Grid implements IObject {
         this._prototypeMesh = prototypeMesh;
         this.map((mesh, cellIndex) => {
             const newMesh = prototypeMesh.clone(
-                `Grid:meshes:${cellIndex.x}:${cellIndex.y}:${cellIndex.z}?${prototypeMesh.name}`, 
+                `MeshGrid:meshes:${cellIndex.x}:${cellIndex.y}:${cellIndex.z}?${prototypeMesh.name}`, 
                 this.transformNode
             )!;
             newMesh.setAbsolutePosition(mesh.absolutePosition.clone());
@@ -103,8 +102,15 @@ export default class Grid implements IObject {
      * in the grid based on its cell coordinate.
      */
     calculateMeshPosition(cellIndex: Vector3): Vector3 {
-        return new Vector3(
-            cellIndex.x * this.cellSize, cellIndex.y * this.cellSize, cellIndex.z * this.cellSize);
+        // To make the grid be centered at the center position of .transformNode, 
+        // we must shift the local mesh coordinates to the left by the size of the grid.
+        const centeringOffset = new Vector3(-this.width()/2,-this.height()/2,-this.depth()/2);
+        // We also need to adjust for the fact that the mesh's local coordinate space begins 
+        // at the center of the mesh.
+        const localOriginOffset = new Vector3(this.cellSize / 2, this.cellSize / 2, this.cellSize / 2);
+        return (new Vector3(
+            cellIndex.x * this.cellSize, cellIndex.y * this.cellSize, cellIndex.z * this.cellSize)
+            .addInPlace(centeringOffset).addInPlace(localOriginOffset));
     }
 
     /**
@@ -112,7 +118,7 @@ export default class Grid implements IObject {
      */
     meshIsInGrid(mesh: AbstractMesh) {
         return (
-            mesh.name.includes("Grid:meshes") && 
+            mesh.name.includes("MeshGrid:meshes") && 
             mesh.name.includes(this.prototypeMesh.name)
         );
     }
@@ -122,7 +128,7 @@ export default class Grid implements IObject {
      */
     meshCellCoordinates(mesh: AbstractMesh): Vector3 {
         const coordinates = mesh.name
-            .split("Grid:meshes")[1]
+            .split("MeshGrid:meshes")[1]
             .split(this.prototypeMesh.name)[0]
             .split("?")[0]
             .slice(1)
@@ -132,7 +138,7 @@ export default class Grid implements IObject {
     }
 
     /**
-     * Move the Grid up vertically by .cellSize amount.
+     * Move the grid up vertically by .cellSize amount.
      */
     raise() {
         this.offset.y += this.cellSize;

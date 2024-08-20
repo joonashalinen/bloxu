@@ -11,7 +11,8 @@ import Glow from "../../../components/graphics3d/pub/effects/Glow";
 import ObjectRegistry from "../../../components/objects3d/pub/ObjectRegistry";
 import PickerPlacer from "../../../components/objects3d/pub/items/PickerPlacer";
 import GridMenu from "../../../components/objects3d/pub/menus/GridMenu";
-import Grid from "../../../components/objects3d/pub/Grid";
+import ObjectGrid from "../../../components/objects3d/pub/ObjectGrid";
+import MeshGrid from "../../../components/graphics3d/pub/MeshGrid";
 
 export type TObjectConstructor = (id: string,  ...args: unknown[]) => Object;
 
@@ -19,7 +20,8 @@ export default function (
     scene: Scene,
     meshConstructors: {[name: string]: Function},
     objectRegistry: ObjectRegistry,
-    glowLayer: GlowLayer) {
+    glowLayer: GlowLayer,
+    globals: {[name: string]: unknown}) {
     return {
         "PlayerBody": (id: string, startPosition: DVector3 = {x: 0, y: 0, z: 0}) => {
             const characterHeight = 1.6;
@@ -72,15 +74,16 @@ export default function (
             picker.useDelay = 150;
             picker.objectRegistry = objectRegistry;
 
-            const placer = new GridMenu(new Grid(
-                Grid.createSpherePrototype(blockSize, 0.2),
-                blockSize, {x: 3, y: 1, z: 3}));
+            const placer = new GridMenu(
+                new MeshGrid(
+                    MeshGrid.createSpherePrototype(blockSize, 0.2),
+                    blockSize, {x: 3, y: 1, z: 3}
+                ),
+                globals.objectGrid as ObjectGrid
+            );
             placer.followedNode = body.transformNode;
 
             const pickerPlacer = new PickerPlacer(picker, placer);
-            pickerPlacer.onPick((info) => {
-                //placer.grid.prototypeMesh = info.object!.transformNode as AbstractMesh
-            });
             body.items["pickerPlacer"] = pickerPlacer;
             body.selectItem("pickerPlacer");
 

@@ -2,6 +2,10 @@ import { AbstractMesh, IPhysicsCollisionEvent, Mesh, Observable, PhysicsAggregat
 import IObject from "./IObject";
 import Physical from "./Physical";
 import EventEmitter from "../../events/pub/EventEmitter";
+import History from "../../data_structures/pub/History";
+import Action from "../../computation/pub/Action";
+
+export type TSaveToHistoryPredicate = (method: string, args: unknown[], self: Object) => boolean;
 
 /**
  * An Object is a Mesh with physics together 
@@ -28,6 +32,10 @@ export default class Object implements IObject {
     lastLandingTime: number = 0;
     eventTimeWindow: number = 50;
     horizontalRotationEnabled = true;
+    history: History<Object> = new History();
+    useHistory: boolean = false;
+    saveToHistoryPredicate: TSaveToHistoryPredicate = () => false;
+    id: string = "";
     protected _collisionObservable: Observable<IPhysicsCollisionEvent>;
 
     constructor(wrappee: AbstractMesh | Physical) {
@@ -37,6 +45,7 @@ export default class Object implements IObject {
             this.asPhysical = wrappee;
         }
 
+        this.history = new History();
         this.transformNode = this.asPhysical.transformNode;
         this.lastUpdatedPosition = this.transformNode.position.clone();
 
@@ -169,9 +178,13 @@ export default class Object implements IObject {
      */
     teleportToVoid() {
         if (this.isInVoid) return;
-        this.isInVoid = true;
-        this.transformNode.setEnabled(false);
-        this.asPhysical.disable();
+
+        this.changeState("teleportToVoid", [],
+            () => {
+                this.isInVoid = true;
+                this.transformNode.setEnabled(false);
+                this.asPhysical.disable();
+            }, this.bringBackFromTheVoid);
     }
 
     /**
@@ -181,9 +194,13 @@ export default class Object implements IObject {
      */
     bringBackFromTheVoid() {
         if (!this.isInVoid) return;
-        this.isInVoid = false;
-        this.transformNode.setEnabled(true);
-        this.asPhysical.enable();
+
+        this.changeState("bringBackFromTheVoid", [],
+            () => {
+                this.isInVoid = false;
+                this.transformNode.setEnabled(true);
+                this.asPhysical.enable();
+            }, this.teleportToVoid);
     }
 
     /**
@@ -193,5 +210,51 @@ export default class Object implements IObject {
      */
     unwrappedMesh() {
         return this.transformNode.getChildMeshes().at(0);
+    }
+
+    /**
+     * Performs an action on the object that changes 
+     * the state of the object and can be undone.
+     */
+    changeState(actionName: string, actionArgs: unknown[],
+        performer: (object: Object) => void,
+        undoer: (object: Object) => void) {
+        
+        if (this.useHistory) {
+            if (this.saveToHistoryPredicate(actionName, actionArgs, this)) {
+                this.history.performAction(new Action<Object>(this, performer, this._asUndo(undoer)));
+            }
+        } else {
+            performer(this);
+        }
+    }
+
+    /**
+     * Sets the absolute position of the object in the world 
+     * to the given position, also moving the mesh.
+     */
+    setAbsolutePosition(position: Vector3) {
+        const originalPosition = this.transformNode.absolutePosition.clone();
+        this.changeState("setAbsolutePosition", [position],
+            () => {
+                this.transformNode.setAbsolutePosition(position);
+            }, () => {
+                this.transformNode.setAbsolutePosition(originalPosition);
+        });
+    }
+
+    /**
+     * Returns the given lambda as a function that can be called 
+     * to undo a state-changing operation done on the Object.
+     * This is needed because otherwise we might add to the Object's 
+     * history when undoing.
+     */
+    private _asUndo(f: (object: Object) => void) {
+        return (object: Object) => {
+            const originalPredicate = this.saveToHistoryPredicate;
+            this.saveToHistoryPredicate = () => false;
+            f(object);
+            this.saveToHistoryPredicate = originalPredicate;
+        };
     }
 }
