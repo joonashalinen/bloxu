@@ -1,4 +1,4 @@
-import { Mesh, PhysicsAggregate, PhysicsShapeType, Quaternion, Scene, SceneLoader, Vector3 } from "@babylonjs/core";
+import { Mesh, PhysicsAggregate, PhysicsShapeType, Quaternion, Scene, SceneLoader, Space, Vector3 } from "@babylonjs/core";
 import MeshSize from "../../../../../components/graphics3d/pub/MeshSize";
 import Physical from "../../../../../components/objects3d/pub/Physical";
 import ObjectRegistry from "../../../../../components/objects3d/pub/ObjectRegistry";
@@ -49,12 +49,14 @@ export default async function level(
         }
 
         if (meshName.includes("Blocks")) {
+            // Do random rotation around the y-axis to bring some 
+            // variety to the look of the blocks, since they often have different textures
+            // on different sides.
+            const rotations = parseFloat((Math.random() * 4).toFixed(0));
+            mesh.rotate(Vector3.Up(), (Math.PI / 2) * rotations, Space.WORLD);
+
             mesh.setParent(null);
             objects.createObject(mesh.id, "Object", [blockSize, mesh, 0]);
-
-            //const rotations = parseFloat((Math.random() * 4).toFixed(0));
-            //physicalMesh.physicsAggregate.body.transformNode.rotation = new Vector3(0, (Math.PI / 2) * rotations, 0);
-            //physicalMesh.transformNode.rotationQuaternion = Quaternion.FromEulerAngles(0, (Math.PI / 2) * rotations, 0);
         }
     });
     return rootMesh;
