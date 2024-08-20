@@ -1,4 +1,5 @@
-import { AbstractMesh, Vector3 } from "@babylonjs/core";
+import { AbstractMesh, Color3, HighlightLayer, StandardMaterial, Vector3 } from "@babylonjs/core";
+import "@babylonjs/core/Rendering/outlineRenderer";
 import Item from "../items/Item";
 import ISelector, { DSelectInfo } from "./ISelector";
 import Object from "../Object";
@@ -9,18 +10,34 @@ import IPlacer from "./IPlacer";
  */
 export default class PickerPlacer extends Item {
     heldObjects: Object[] = [];
+    affectedObjects: Object[] = [];
     maxHeldObjects: number = 1;
+    maxAffectedObjects: number = 1;
+    overlayColor: Color3 = new Color3(0, 0, 1);
+    overlayAlpha = 0.2;
+    overlayPickedObjects: boolean = true;
 
     constructor(public picker: ISelector, public placer: IPlacer & ISelector) {
         super();
         // Set event listeners for the picker.
         this.picker.onSelect((info) => {
             if (info.object !== undefined) {
-                if (this.canPick()) {
+                if (this.canPick() && this.canPickObject(info.object)) {
                     info.object.teleportToVoid();
                     this.heldObjects.push(info.object);
                     this.picker.deactivate();
                     this.placer.activate();
+
+                    if (this.overlayPickedObjects) {
+                        // Show overlay for the picked object.
+                        info.object.rootMesh().renderOverlay = true;
+                        info.object.rootMesh().overlayAlpha = this.overlayAlpha;
+                        info.object.rootMesh().overlayColor = this.overlayColor;
+                    }
+
+                    if (!this.affectedObjects.includes(info.object)) {
+                        this.affectedObjects.push(info.object);
+                    }
 
                     // Set preview mesh.
                     const previewMesh = (info.object.transformNode as AbstractMesh).clone(
@@ -67,6 +84,14 @@ export default class PickerPlacer extends Item {
      */
     canPick() {
         return this.heldObjects.length < this.maxHeldObjects;
+    }
+
+    /**
+     * Whether we can pick the selected object.
+     */
+    canPickObject(object: Object) {
+        return (this.affectedObjects.length < this.maxAffectedObjects || 
+            this.affectedObjects.includes(object))
     }
 
     /**
@@ -130,6 +155,7 @@ export default class PickerPlacer extends Item {
             this.placer.previewMesh.getScene().removeMesh(this.placer.previewMesh);
             this.placer.previewMesh.dispose();
         }
+
         this.placer.deactivate();
         this.picker.activate();
         const placeInfo: DSelectInfo = {

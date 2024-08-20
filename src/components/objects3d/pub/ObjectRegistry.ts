@@ -83,6 +83,7 @@ export default class ObjectRegistry {
                 '${type}' set in ObjectRegistry.`);
         }
         const object = objectConstructor(id, ...args);
+        object.id = id;
         this.addObject(id, object);
         return object;
     }

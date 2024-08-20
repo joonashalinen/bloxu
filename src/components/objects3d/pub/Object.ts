@@ -204,8 +204,8 @@ export default class Object {
      * than the .transformNode that was made when the 
      * Object was made Physical.
      */
-    unwrappedMesh() {
-        return this.transformNode.getChildMeshes().at(0);
+    rootMesh(): Mesh {
+        return this.transformNode.getChildMeshes().at(0) as Mesh;
     }
 
     /**

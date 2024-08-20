@@ -35,6 +35,10 @@ export default function (
             const character = meshConstructors["Player"](characterMeshId,
                 pistolMesh) as AnimatedMesh;
 
+            character.mesh.renderOutline = true;
+            character.mesh.outlineColor = new Color3(0, 0, 0);
+            character.mesh.outlineWidth = 2;
+
             // Set character mesh color.
             const characterMaterial = new StandardMaterial("PlayerBody:mesh:material?" + id, scene);
             const color = id.includes("player-1") ? 
@@ -63,6 +67,9 @@ export default function (
 
                 // Add glow effect to ball.
                 const ballGlow = new Glow(glowLayer, scene);
+                ballGlow.color = id.includes("player-1") ? 
+                    new Color3(1, 0.6, 0) : 
+                    ballGlow.color;
                 ballGlow.apply(ball);
                 
                 return ball
@@ -84,6 +91,11 @@ export default function (
             placer.followedNode = body.transformNode;
 
             const pickerPlacer = new PickerPlacer(picker, placer);
+            const overlayColor = id.includes("player-1") ? 
+                new Color3(1, 0.6, 0) : 
+                new Color3(0.49, 0.59, 0.75);
+            pickerPlacer.overlayColor = overlayColor;
+
             body.items["pickerPlacer"] = pickerPlacer;
             body.selectItem("pickerPlacer");
 
