@@ -24,8 +24,8 @@ export default function (
     globals: {[name: string]: unknown}) {
     return {
         "PlayerBody": (id: string, startPosition: DVector3 = {x: 0, y: 0, z: 0}) => {
-            const characterHeight = 1.6;
-            const characterWidth = 0.8;
+            const characterHeight = 1.55;
+            const characterWidth = 0.4;
             const blockSize = 1.4;
             const characterMeshId = `PlayerBody:characterMesh?${id}`;
 
