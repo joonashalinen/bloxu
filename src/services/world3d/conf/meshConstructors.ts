@@ -175,7 +175,7 @@ export default async function(babylonjs: typeof BABYLON, scene: BABYLON.Scene) {
         "Interactables::portal": () => {
             function createMaterial(name: string) {
                 const material = new BABYLON.StandardMaterial(name, scene);
-                const color = new BABYLON.Color3(1, 0.74, 1);
+                const color = new BABYLON.Color3(0, 0, 0.1);
                 material.diffuseColor = color;
                 return material;
             }
@@ -239,8 +239,6 @@ export default async function(babylonjs: typeof BABYLON, scene: BABYLON.Scene) {
             {thickness: 0.1, diameter: 2, tessellation: 64}, scene);
             frame.rotate(BABYLON.Vector3.Left(), (1 / 2) * Math.PI);
             frame.material = createMaterial("Interactables::portalFrameMaterial");
-            (frame.material as BABYLON.StandardMaterial).emissiveColor = 
-                new BABYLON.Color3(0.15, 0.05, 15);
             frame.visibility = 0.3;
             frame.parent = parent;
 
