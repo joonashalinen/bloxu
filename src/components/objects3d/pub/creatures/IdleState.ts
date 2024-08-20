@@ -1,38 +1,36 @@
-import { AnimationGroup } from "@babylonjs/core";
-import IOwningState from "../../../../components/computation/pub/IOwningState";
-import EventEmitter from "../../../../components/events/pub/EventEmitter";
-import TStateResource from "./TStateResource";
-import OwningState from "../../../computation/pub/OwningState";
+import { AnimationGroup, Vector3 } from "@babylonjs/core";
+import ICreatureBodyState from "../../../computation/pub/ICreatureBodyState";
+import CreatureBody from "./CreatureBody";
+import CreatureBodyState from "./CreatureBodyState";
 
 /**
- * State for a creature where they are idle.
+ * A state of a Creature where the Creature is 
+ * idle, not doing anything.
  */
-export default class IdleState extends OwningState<TStateResource> {
-    wantedResources: Set<TStateResource> = new Set(["animation"]);
-
-    constructor(
-        public idleAnimation: AnimationGroup,
-    ) {
-        super();
+export default class IdleState extends CreatureBodyState implements ICreatureBodyState {
+    constructor(creatureBody: CreatureBody,
+        public idleAnimation: AnimationGroup) {
+        super(creatureBody);
     }
 
-    give(resources: Set<TStateResource>): Set<TStateResource> {
-        const givenResources = super.give(resources);
-
-        if (resources.has("animation")) {
-            this.idleAnimation.play(true);
-        }
-
-        return givenResources;
+    start() {
+        if (this.isActive) return;
+        super.start();
+        this.idleAnimation.start(true);
     }
 
-    take(resources: Set<TStateResource>): Set<TStateResource> {
-        const takenResources = super.take(resources);
-
-        if (resources.has("animation")) {
-            this.idleAnimation.stop();
+    end() {
+        if (!this.isActive) return;
+        super.end();
+        this.idleAnimation.stop();
+    }
+    
+    doOnTick(passedTime: number, absoluteTime: number): void {
+        if (!this.isActive) return;
+        if (this._jumped) {
+            this.endWithEvent("jump");
+        } else if (this._moved) {
+            this.endWithEvent("move");
         }
-
-        return takenResources;
     }
 }

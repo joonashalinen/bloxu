@@ -1,82 +1,38 @@
 import { Vector3 } from "@babylonjs/core";
-import AnimatedMovable from "../AnimatedMovable";
-import IMovable from "../IMovable";
-import IMovableState from "./IMovableState";
-import TStateResource from "./TStateResource";
-import OwningState from "../../../computation/pub/OwningState";
-import IToggleable from "../../../misc/pub/IToggleable";
-import EventableMovable from "../EventableMovable";
-import ITickable from "../ITickable";
-import Movable from "../Movable";
+import ICreatureBodyState from "../../../computation/pub/ICreatureBodyState";
+import CreatureBody from "./CreatureBody";
+import CreatureBodyState from "./CreatureBodyState";
+import Device from "../Device";
 
 /**
- * State of a creature where the creature is currently moving in a direction.
+ * A state of a Creature where the Creature 
+ * is currently in perpetual motion.
  */
-export default class MoveState extends OwningState<TStateResource> implements IMovableState, ITickable {
-    wantedResources: Set<TStateResource> = new Set(["animation", "movement"]);
-    lastDirection: Vector3 = new Vector3(0, 0, 0);
+export default class MoveState extends CreatureBodyState implements ICreatureBodyState {
 
-    constructor(
-        public movable: IMovable & IToggleable,
-        public tickableMovable: ITickable,
-        public animatedMovable: AnimatedMovable,
-        public eventableMovable: EventableMovable
-    ) {
-        super();
-
-        eventableMovable.emitter.on("moveEnd", () => {
-            this._endSelf("idle");
-        });
-
-        eventableMovable.emitter.on("move", () => {
-            this.lastDirection = this.movable.direction;
-        });
+    constructor(creatureBody: CreatureBody) {
+        super(creatureBody);
     }
 
-    doOnTick(time: number): ITickable {
-        if (this.ownedResources.has("movement")) {
-            this.tickableMovable.doOnTick(time);
-        }
-        return this;
+    start(...args: unknown[]): void {
+        if (this.isActive) return;
+        super.start();
+        this._jumped = false;
+        this.creatureBody.directionalAnimation.enable();
     }
 
-    move(direction: Vector3): IMovableState {
-        this.lastDirection = direction;
-        if (this.ownedResources.has("movement")) {
-            this.movable.move(direction);
-        }
-        return this;
+    end(): void {
+        if (!this.isActive) return;
+        super.end();
+        this.creatureBody.directionalAnimation.disable();
     }
 
-    give(resources: Set<TStateResource>): Set<TStateResource> {
-        const givenResources = super.give(resources);
-        
-        if (givenResources.has("animation")) {
-            this.animatedMovable.enableAnimations();
+    doOnTick(passedTime: number, absoluteTime: number): void {
+        if (!this.isActive) return;
+        if (this._jumped) {
+            this.endWithEvent("jump");
+        } else if (!this.creatureBody.isInPerpetualMotion()) {
+            this.endWithEvent("idle");
         }
-        if (givenResources.has("movement")) {
-            this.movable.enable();
-        }
-
-        if (givenResources.has("animation") || givenResources.has("movement")) {
-            if (!(this.lastDirection.equals(new Vector3(0, 0, 0)))) {
-                this.movable.move(this.lastDirection);
-            }
-        }
-
-        return givenResources;
-    }
-
-    take(resources: Set<TStateResource>): Set<TStateResource> {
-        const takenResources = super.take(resources);
-
-        if (takenResources.has("animation")) {
-            this.animatedMovable.disableAnimations();
-        }
-        if (takenResources.has("movement")) {
-            this.movable.disable();
-        }
-
-        return takenResources;
     }
 }

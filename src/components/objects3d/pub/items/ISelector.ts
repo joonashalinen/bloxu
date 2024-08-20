@@ -1,6 +1,6 @@
 import { Vector3 } from "@babylonjs/core";
 import EventEmitter from "../../../events/pub/EventEmitter";
-import IItem from "../creatures/IItem";
+import IItem from "../items/IItem";
 import Object from "../Object";
 
 export interface DSelectInfo {

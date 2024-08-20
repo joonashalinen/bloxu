@@ -1,6 +1,4 @@
 import { AbstractMesh, Mesh, MeshBuilder, PhysicsAggregate, PhysicsShapeType, TransformNode, Vector3 } from "@babylonjs/core";
-import IPhysical from "./IPhysical";
-import IObject from "./IObject";
 
 export interface HitboxInfo {
     width: number;
@@ -15,7 +13,7 @@ export interface HitboxInfo {
 /**
  * An object with physics.
  */
-export default class Physical implements IPhysical, IObject {
+export default class Physical {
     physicsAggregate: PhysicsAggregate;
     transformNode: Mesh;
     hitboxSize: {width: number, height: number, depth: number};

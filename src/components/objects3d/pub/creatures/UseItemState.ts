@@ -1,7 +1,7 @@
 import { AnimationGroup, Vector3 } from "@babylonjs/core";
 import ICreatureBodyState from "../../../computation/pub/ICreatureBodyState";
 import CreatureBody from "./CreatureBody";
-import IItem from "./IItem";
+import IItem from "../items/IItem";
 import CreatureBodyState from "./CreatureBodyState";
 import Device from "../Device";
 

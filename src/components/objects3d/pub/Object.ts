@@ -1,5 +1,4 @@
 import { AbstractMesh, IPhysicsCollisionEvent, Mesh, Observable, PhysicsAggregate, Quaternion, TransformNode, Vector2, Vector3 } from "@babylonjs/core";
-import IObject from "./IObject";
 import Physical from "./Physical";
 import EventEmitter from "../../events/pub/EventEmitter";
 import History from "../../data_structures/pub/History";
@@ -17,7 +16,7 @@ export type TSaveToHistoryPredicate = (method: string, args: unknown[], self: Ob
  * helpful methods that neither Mesh nor PhysicsAggregate provide 
  * in babylonjs.
  */
-export default class Object implements IObject {
+export default class Object {
     transformNode: TransformNode;
     landingLedgeBuffer: number = 0.3;
     asPhysical: Physical;

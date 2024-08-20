@@ -8,11 +8,6 @@ import PlayerBody from "../../../world3d/conf/custom_object_types/PlayerBody";
 import SyncMessenger from "../../../../components/messaging/pub/SyncMessenger";
 import DPlayerBody from "../../../world3d/conf/custom_object_types/DPlayerBody";
 import DVector2 from "../../../../components/graphics3d/pub/DVector2";
-import MouseRotatable from "../../../../components/objects3d/pub/MouseRotatable";
-import BuildModeState from "../../../world3d/conf/custom_object_types/BuildModeState";
-import { Vector3 } from "@babylonjs/core";
-import BattleModeState from "../../../world3d/conf/custom_object_types/BattleModeState";
-import ShootState from "../../../world3d/conf/custom_object_types/ShootState";
 import IService from "../../../../components/services/pub/IService";
 
 export type DirectionEvent = {direction: DVector2 | DVector3, body: DPlayerBody};

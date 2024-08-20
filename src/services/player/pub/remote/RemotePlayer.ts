@@ -1,13 +1,8 @@
 import DVector3 from "../../../../components/graphics3d/pub/DVector3";
-import PlayerBody from "../../../world3d/conf/custom_object_types/PlayerBody";
 import World3D from "../../../world3d/pub/World3D";
 import IPlayer from "../IPlayer";
 import Player, { DirectionEvent } from "../local/Player";
-import DVector2 from "../../../../components/graphics3d/pub/DVector2";
 import DPlayerBody from "../../../world3d/conf/custom_object_types/DPlayerBody";
-import ShootState from "../../../world3d/conf/custom_object_types/ShootState";
-import TStateResource from "../../../../components/objects3d/pub/creatures/TStateResource";
-import JumpState from "../../../../components/objects3d/pub/creatures/JumpState";
 import IService from "../../../../components/services/pub/IService";
 import { DMessage } from "../../../../components/messaging/pub/DMessage";
 import MessageFactory from "../../../../components/messaging/pub/MessageFactory";

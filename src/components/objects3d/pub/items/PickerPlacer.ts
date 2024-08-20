@@ -1,5 +1,5 @@
 import { AbstractMesh, Vector3 } from "@babylonjs/core";
-import Item from "../creatures/Item";
+import Item from "../items/Item";
 import ISelector, { DSelectInfo } from "./ISelector";
 import Object from "../Object";
 import IPlacer from "./IPlacer";

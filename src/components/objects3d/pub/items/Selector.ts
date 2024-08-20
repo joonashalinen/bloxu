@@ -1,5 +1,5 @@
 import { AnimationGroup } from "@babylonjs/core";
-import Item from "../creatures/Item";
+import Item from "../items/Item";
 import ISelector, { DSelectInfo } from "./ISelector";
 
 /**
