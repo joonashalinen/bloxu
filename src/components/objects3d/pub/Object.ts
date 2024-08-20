@@ -116,13 +116,10 @@ export default class Object {
      * collided with another physics body.
      */
     protected _handleCollisionEvent(event: IPhysicsCollisionEvent) {
-        const myBounds = this.transformNode.getHierarchyBoundingVectors(false);
-        const otherBounds = event.collidedAgainst
-            .transformNode.getHierarchyBoundingVectors(false);
         const timeNow = Date.now();
 
         if (this.isInAir) {
-            if (myBounds.min.y >= otherBounds.max.y && this.isFalling()) {
+            if (event.normal.y < 0 && this.isFalling()) {
                 if (this.preventBounceOnLanding) {
                     this.asPhysical.setVerticalVelocity(0);
                 }
