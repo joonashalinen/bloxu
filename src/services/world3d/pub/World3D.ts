@@ -242,7 +242,7 @@ export default class World3D implements IService {
         this.scene.ambientColor = new babylonjs.Color3(0.15, 0.3, 0.6);
         //this.scene.clearColor = new Color4(0.75, 0.97, 1, 1);
         this._setupVerticalGradientBackground(
-            new babylonjs.Color3(0.82, 0.97, 1), new babylonjs.Color3(0.38, 0.61, 0.8));
+            new babylonjs.Color3(0.93, 0.99, 1), new babylonjs.Color3(0.61, 0.82, 1));
 
         // hide/show the Inspector
         window.addEventListener("keydown", (ev) => {
