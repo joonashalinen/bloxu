@@ -83,6 +83,10 @@ export default class World3D implements IService {
         this.engine = new Engine(this.canvas, true);
         this.scene = new Scene(this.engine);
         this.glowLayer = new babylonjs.GlowLayer("mainGlowLayer", this.scene);
+
+        document.defaultView.addEventListener("resize", () => {
+            this.engine.resize();
+        });
     }
 
     /**
