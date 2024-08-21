@@ -236,7 +236,9 @@ export default class World3D implements IService {
         light.intensity = light.intensity * 1.3;
         light.specular.scaleInPlace(0);
         this.scene.ambientColor = new babylonjs.Color3(0.15, 0.3, 0.6);
-        this.scene.clearColor = new Color4(0.75, 0.97, 1, 1);
+        //this.scene.clearColor = new Color4(0.75, 0.97, 1, 1);
+        this._setupVerticalGradientBackground(
+            new babylonjs.Color3(0.82, 0.97, 1), new babylonjs.Color3(0.27, 0.49, 0.67));
 
         // hide/show the Inspector
         window.addEventListener("keydown", (ev) => {
@@ -360,5 +362,40 @@ export default class World3D implements IService {
         }
         const obj = new (types[type] as typeof Object)(...args as Array<unknown>) ;
         return obj;
+    }
+
+    /**
+     * Sets up the background to be a vertical gradient.
+     */
+    _setupVerticalGradientBackground(startColor: babylonjs.Color3, endColor: babylonjs.Color3) {
+        // Create a render target.
+        var rtt = new babylonjs.RenderTargetTexture("", 200, this.scene)
+        
+        // Create the background from it
+        var background = new babylonjs.Layer("back", null, this.scene);
+        background.isBackground = true;
+        background.texture = rtt;
+        
+        // Create the background effect.
+        var renderImage = new babylonjs.EffectWrapper({
+            engine: this.engine,
+            fragmentShader: `
+                varying vec2 vUV;
+
+                void main(void) {
+                    vec3 startColor = vec3(${startColor.r}, ${startColor.g}, ${startColor.b});
+                    vec3 endColor = vec3(${endColor.r}, ${endColor.g}, ${endColor.b});
+                    gl_FragColor = vec4(mix(startColor, endColor, vUV.y), 1.0);
+                }
+            `
+        });
+        
+        // When the effect has been ready,
+        // Create the effect render and change which effects will be renderered
+        renderImage.effect.executeWhenCompiled(() => {
+            // Render the effect in the RTT.
+            var renderer = new babylonjs.EffectRenderer(this.engine);
+            renderer.render(renderImage, rtt);
+        });
     }
 }
