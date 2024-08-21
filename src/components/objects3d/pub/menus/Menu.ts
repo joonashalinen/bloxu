@@ -6,7 +6,6 @@ import Selector from "../items/Selector";
  * Base implementation for IMenu.
  */
 export default class Menu extends Selector implements IMenu {
-    transformNode: TransformNode;
     followedNode: TransformNode;
     offset: Vector3 = new Vector3(0, 0, 0);
     createFollowVector: (passedTime: number, absoluteTime: number) => Vector3 = 

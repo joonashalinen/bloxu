@@ -65,13 +65,20 @@ export default class PickerPlacer extends Item {
         });
     }
 
+    public get transformNode() {
+        if (this.canPick()) {
+            return this.picker.transformNode;
+        } else if (this.canPlace()) {
+            return this.placer.transformNode;
+        }
+    }
+
     public get menu() {
         if (this.canPick()) {
             return this.picker.menu;
         } else if (this.canPlace()) {
             return this.placer.menu;
         }
-        return undefined;
     }
 
     public set aimedDirection(aimedDirection: Vector3) {

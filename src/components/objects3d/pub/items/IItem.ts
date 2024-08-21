@@ -1,8 +1,10 @@
-import { AnimationGroup, Vector3 } from "@babylonjs/core";
+import { AnimationGroup, TransformNode, Vector3 } from "@babylonjs/core";
 import EventEmitter from "../../../events/pub/EventEmitter";
 import IMenu from "../menus/IMenu";
 
 export default interface IItem {
+    get transformNode(): TransformNode;
+    set transformNode(transformNode: TransformNode);
     emitter: EventEmitter;
     hasSecondaryAction: boolean;
     aimedDirection: Vector3;

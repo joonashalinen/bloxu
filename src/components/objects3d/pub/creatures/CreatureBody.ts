@@ -89,4 +89,28 @@ export default class CreatureBody extends Device implements ICreatureBodyActions
     point(position: DVector2) {
         
     }
+
+    /**
+     * Teleports the creature into the void, making it no longer responsive.
+     */
+    teleportToVoid() {
+        if (this.isInVoid) return;
+        const selectedItem = this.selectedItem();
+        if (selectedItem !== undefined && selectedItem.transformNode !== undefined) {
+            selectedItem.transformNode.setEnabled(false);
+        }
+        super.teleportToVoid();
+    }
+
+    /**
+     * Undoes the effect of .teleportToVoid().
+     */
+    bringBackFromTheVoid() {
+        if (!this.isInVoid) return;
+        const selectedItem = this.selectedItem();
+        if (selectedItem !== undefined && selectedItem.transformNode !== undefined) {
+            selectedItem.transformNode.setEnabled(true);
+        }
+        super.bringBackFromTheVoid();
+    }
 }

@@ -1,4 +1,4 @@
-import { AnimationGroup, Vector3 } from "@babylonjs/core";
+import { AnimationGroup, TransformNode, Vector3 } from "@babylonjs/core";
 import EventEmitter from "../../../events/pub/EventEmitter";
 import IItem from "./IItem";
 import IMenu from "../menus/IMenu";
@@ -7,6 +7,7 @@ import IMenu from "../menus/IMenu";
  * Base class for IItem implementations.
  */
 export default class Item implements IItem {
+    private _transformNode: TransformNode;
     hasSecondaryAction: boolean = false;
     emitter: EventEmitter = new EventEmitter();
     useDelay: number = 0;
@@ -16,6 +17,14 @@ export default class Item implements IItem {
     protected _aimedDirection: Vector3 = new Vector3(1, 0, 0);
 
     constructor(public useAnimation: AnimationGroup = undefined) {
+    }
+
+    public get transformNode() {
+        return this._transformNode;
+    }
+
+    public set transformNode(transformNode) {
+        this._transformNode = transformNode;
     }
 
     public get menu() {

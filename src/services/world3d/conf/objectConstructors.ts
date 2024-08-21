@@ -6,7 +6,6 @@ import RotationAnimation from "../../../components/graphics3d/pub/RotationAnimat
 import DirectionalAnimation from "../../../components/graphics3d/pub/DirectionalAnimation";
 import DVector3 from "../../../components/graphics3d/pub/DVector3";
 import Physical from "../../../components/objects3d/pub/Physical";
-import ProjectileWeapon from "../../../components/objects3d/pub/ProjectileWeapon";
 import Glow from "../../../components/graphics3d/pub/effects/Glow";
 import ObjectManager from "../../../components/objects3d/pub/ObjectManager";
 import PickerPlacer from "../../../components/objects3d/pub/items/PickerPlacer";
@@ -14,6 +13,7 @@ import GridMenu from "../../../components/objects3d/pub/menus/GridMenu";
 import ObjectGrid from "../../../components/objects3d/pub/ObjectGrid";
 import MeshGrid from "../../../components/graphics3d/pub/MeshGrid";
 import Portal from "../../../components/objects3d/pub/Portal";
+import ProjectileWeapon from "../../../components/objects3d/pub/items/ProjectileWeapon";
 
 export type TObjectConstructor = (id: string,  ...args: unknown[]) => Object;
 

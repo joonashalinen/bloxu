@@ -1,14 +1,13 @@
 import { AbstractMesh, AnimationGroup, TransformNode, Vector3 } from "@babylonjs/core";
 import IProjectileWeapon from "./IProjectileWeapon";
-import Device from "./Device";
-import Physical from "./Physical";
-import ISelector from "./items/ISelector";
-import ObjectManager from "./ObjectManager";
-import Selector from "./items/Selector";
+import Device from "../Device";
+import ObjectManager from "../ObjectManager";
+import Physical from "../Physical";
+import ISelector from "./ISelector";
+import Selector from "./Selector";
 
 /**
- * An IWeapon implementation that shoots projectiles. The holder of the weapon 
- * should be an IOriented so that it has an orientation direction.
+ * An item that shoots projectiles.
  */
 export default class ProjectileWeapon extends Selector implements IProjectileWeapon, ISelector {
     projectiles: Device[] = [];
@@ -19,11 +18,12 @@ export default class ProjectileWeapon extends Selector implements IProjectileWea
     isActive: boolean = true;
 
     constructor(
-        public transformNode: TransformNode,
+        transformNode: TransformNode,
         public makeProjectileMesh: (id: string) => AbstractMesh,
         public shootAnimation?: AnimationGroup
     ) {
         super(shootAnimation);
+        this.transformNode = transformNode;
     }
 
     activate(): void {
