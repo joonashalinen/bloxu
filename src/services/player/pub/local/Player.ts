@@ -23,7 +23,7 @@ export default class Player implements IPlayer, IService {
     syncMessenger: SyncMessenger;
     messageFactory: MessageFactory;
     spawned: boolean;
-    disableControls: boolean;
+    controlsDisabled: boolean;
     disableEvents: boolean;
     isAlive: boolean;
 
@@ -45,7 +45,7 @@ export default class Player implements IPlayer, IService {
         this.proxyMessenger = new ProxyMessenger<DMessage, DMessage>();
         this.syncMessenger = new SyncMessenger(this.proxyMessenger);
         this.messageFactory = new MessageFactory(playerId);
-        this.disableControls = false;
+        this.controlsDisabled = true;
         this.disableEvents = false;
     }
 
@@ -61,7 +61,7 @@ export default class Player implements IPlayer, IService {
      */
     async onControllerPoint(position: DVector2, controllerIndex: number) {
         if (!this.spawned) {return}
-        if (this.disableControls) {return}
+        if (this.controlsDisabled) {return}
 
         const angle = (await this.modifyWorld(
             [this.playerBodyId(), position], 
@@ -83,7 +83,7 @@ export default class Player implements IPlayer, IService {
     async onControllerKeyDown(key: string, controllerIndex: number) {
         if (controllerIndex !== 0) {return}
         if (!this.spawned) {return}
-        if (this.disableControls) {return}
+        if (this.controlsDisabled) {return}
 
         await this.syncMessenger.postSyncMessage(
             this.messageFactory.createRequest("world3d", "control", [
@@ -103,7 +103,7 @@ export default class Player implements IPlayer, IService {
     async onControllerKeyUp(key: string, controllerIndex: number) {
         if (controllerIndex !== 0) {return}
         if (!this.spawned) {return}
-        if (this.disableControls) {return}
+        if (this.controlsDisabled) {return}
 
         this.proxyMessenger.postMessage(
             this.messageFactory.createRequest("world3d", "control", [
@@ -117,7 +117,7 @@ export default class Player implements IPlayer, IService {
     async onControllerPointerTrigger(position: DVector2, buttonIndex: number, controllerIndex: number) {
         if (controllerIndex !== 0) {return}
         if (!this.spawned) {return}
-        if (this.disableControls) {return}
+        if (this.controlsDisabled) {return}
         
         const state = (await this.modifyWorld(
             [this.playerBodyId(), position, buttonIndex], 
@@ -150,7 +150,7 @@ export default class Player implements IPlayer, IService {
      * direction control has changed (for example, the thumb joystick or WASD keys).
      */
     async onControllerDirectionChange(direction: DVector2, controllerIndex: number) {
-        if (this.disableControls) {return}
+        if (this.controlsDisabled) {return}
         if (controllerIndex !== 0) {return}
         
         if (this.initialized && this.spawned) {
@@ -207,7 +207,11 @@ export default class Player implements IPlayer, IService {
                 "CreatureBodyController", this.playerBodyId()])
         );
 
-/*         if (this.disableControls) {
+        if (!this.controlsDisabled) {
+            this._makeBodyCameraTarget();
+        }
+
+/*         if (this.controlsDisabled) {
             // Disable UI of body.
             this.proxyMessenger.postMessage(
                 this.messageFactory.createRequest("world3d", "modifyObject", [
@@ -390,6 +394,39 @@ export default class Player implements IPlayer, IService {
                 );
             }
         ) */
+    }
+
+    /**
+     * Disables controls for the player.
+     */
+    disableControls() {
+        if (this.controlsDisabled) return;
+        this.onControllerDirectionChange({x: 0, y: 0}, 0);
+        this.controlsDisabled = true;
+    }
+
+    /**
+     * Enables controls for the player.
+     */
+    async enableControls() {
+        if (!this.controlsDisabled) return;
+        this.controlsDisabled = false;
+        if (this.spawned) {
+            await this._makeBodyCameraTarget();
+        }
+    }
+
+    /**
+     * Makes the player's body the centered target of the camera.
+     */
+    private async _makeBodyCameraTarget() {
+        await this.modifyWorld([this.playerId],
+            function(this: World3D, playerId: string) {
+                const playerBody = this.getObject(`Player:PlayerBody?${playerId}`) as PlayerBody;
+                this.camera.lockedTarget = playerBody.transformNode;
+                this.camera.radius = 16;
+            }
+        )
     }
 
     /**

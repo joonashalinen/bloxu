@@ -72,6 +72,13 @@ class App {
         var player2NativeWorker = new Worker(new URL('../services/player/pub/index.ts', import.meta.url), {name: "player-2"})
         var player2Worker = new WebWorker(player2NativeWorker);
 
+        // Create PlayerCoordinator service.
+        var playerCoordinatorNativeWorker = new Worker(
+            new URL('../services/player_coordinator/pub/index.ts', import.meta.url), 
+            {name: "playerCoordinator"}
+        )
+        var playerCoordinatorWorker = new WebWorker(playerCoordinatorNativeWorker);
+
         // Create GameMaster service.
         var gameMasterNativeWorker = new Worker(
             new URL('../services/game_master/pub/index.ts', import.meta.url), 
@@ -93,6 +100,7 @@ class App {
         await world3d.initialize();
         await ioService.initialize();
         await this.initializeService(gameMasterWorker, "gameMaster");
+        await this.initializeService(playerCoordinatorWorker, "playerCoordinator");
         await this.initializeService(onlineSynchronizerWorker, "onlineSynchronizer");
         console.log("all services initialized");
         // We can now make the UI visible.
@@ -104,6 +112,7 @@ class App {
             "world3d": new MessengerClass(world3d, world3d.proxyMessenger, "world3d"),
             "player-1": player1Worker,
             "player-2": player2Worker,
+            "playerCoordinator": playerCoordinatorWorker,
             "gameMaster": gameMasterWorker,
             "ioService": new MessengerClass(ioService, ioService.proxyMessenger, "ioService"),
             "onlineSynchronizer": onlineSynchronizerWorker

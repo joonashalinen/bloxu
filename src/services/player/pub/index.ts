@@ -14,11 +14,11 @@ function main() {
         var player: IPlayer & IService;
         if (msg.type === "request" && msg.message.type === "beMainPlayer") {
             player = new Player(self.name);
+            (player as Player).enableControls();
         } else if (msg.type === "request" && msg.message.type === "beRemotePlayer") {
             player = new RemotePlayer(self.name);
         } else if (msg.type === "request" && msg.message.type === "beAIPlayer") {
             player = new Player(self.name);
-            (player as Player).disableControls = true;
         }
 
         if (player !== undefined) {

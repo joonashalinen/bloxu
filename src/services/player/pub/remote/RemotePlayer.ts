@@ -21,7 +21,7 @@ export default class RemotePlayer implements IPlayer, IService {
 
     constructor(playerId: string) {
         this.player = new Player(playerId);
-        this.player.disableControls = true;
+        this.player.controlsDisabled = true;
         this.player.disableEvents = true;
         this.proxyMessenger = this.player.proxyMessenger;
         this.syncMessenger = this.player.syncMessenger;
@@ -154,8 +154,8 @@ export default class RemotePlayer implements IPlayer, IService {
      * When the remote player has jumped.
      */
     async onRemoteJump() {
-        this.player.disableControls = false;
+        this.player.controlsDisabled = false;
         await this.player.onControllerKeyDown(" ", 0);
-        this.player.disableControls = true;
+        this.player.controlsDisabled = true;
     }
 }

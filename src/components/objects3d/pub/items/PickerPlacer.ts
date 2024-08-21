@@ -14,7 +14,7 @@ export default class PickerPlacer extends Item {
     maxHeldObjects: number = 1;
     maxAffectedObjects: number = 1;
     overlayColor: Color3 = new Color3(0, 0, 1);
-    overlayAlpha = 0.2;
+    overlayAlpha = 0.4;
     overlayPickedObjects: boolean = true;
 
     constructor(public picker: ISelector, public placer: IPlacer & ISelector) {
