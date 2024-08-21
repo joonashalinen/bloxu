@@ -35,7 +35,6 @@ export default class Object {
     useHistory: boolean = false;
     saveToHistoryPredicate: TSaveToHistoryPredicate = () => false;
     id: string = "";
-    protected _collisionObservable: Observable<IPhysicsCollisionEvent>;
 
     constructor(wrappee: AbstractMesh | Physical) {
         if (wrappee instanceof TransformNode) {
@@ -48,9 +47,8 @@ export default class Object {
         this.transformNode = this.asPhysical.transformNode;
         this.lastUpdatedPosition = this.transformNode.position.clone();
 
-        this._collisionObservable = this.asPhysical.physicsAggregate
-            .body.getCollisionObservable();
-        this._collisionObservable.add(this._handleCollisionEvent.bind(this));
+        this.asPhysical.physicsAggregate.body.getCollisionObservable()
+            .add(this._handleCollisionEvent.bind(this));
     }
 
     /**

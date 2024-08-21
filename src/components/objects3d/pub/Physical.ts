@@ -1,4 +1,4 @@
-import { AbstractMesh, Mesh, MeshBuilder, PhysicsAggregate, PhysicsShapeType, TransformNode, Vector3 } from "@babylonjs/core";
+import { AbstractMesh, IPhysicsCollisionEvent, Mesh, MeshBuilder, Observer, PhysicsAggregate, PhysicsShapeType, TransformNode, Vector3 } from "@babylonjs/core";
 
 export interface HitboxInfo {
     width: number;
@@ -19,6 +19,7 @@ export default class Physical {
     hitboxSize: {width: number, height: number, depth: number};
     terminalVelocity: number = -9.8;
     enabled: boolean = true;
+    private _collisionObservers: Observer<IPhysicsCollisionEvent>[] = [];
 
     constructor(
         public wrappable: AbstractMesh,
@@ -105,6 +106,7 @@ export default class Physical {
     disable() {
         if (!this.enabled) return;
         this.enabled = false;
+        this._collisionObservers = [...this.physicsAggregate.body.getCollisionObservable().observers];
         this.physicsAggregate.dispose();
     }
 
@@ -121,5 +123,10 @@ export default class Physical {
             { mass: this.mass, friction: 0 }, 
             this.wrappable.getScene()
         );
+        this._collisionObservers.forEach((observer) => {
+            this.physicsAggregate.body.getCollisionObservable().add(
+                observer.callback, observer.mask, false,
+                observer.scope, observer.unregisterOnNextCall);
+        });
     }
 }
