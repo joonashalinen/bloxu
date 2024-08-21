@@ -17,7 +17,7 @@ import controllerConstructors from "../conf/controllerConstructors";
 import Glow from "../../../components/graphics3d/pub/effects/Glow";
 import maps from "../conf/maps/maps";
 import IController from "../../../components/objects3d/pub/IController";
-import ObjectRegistry from "../../../components/objects3d/pub/ObjectRegistry";
+import ObjectManager from "../../../components/objects3d/pub/ObjectManager";
 import createGlobals from "../conf/globals";
 
 type Types = {[type: string]: Function};
@@ -25,13 +25,13 @@ type Instances = {[name: string]: Object};
 type MeshConstructors = {[name: string]: Function};
 type ControllerConstructors = {[id: string]: (...args: unknown[]) => IController};
 type MapGenerator = (scene: Scene,
-    meshConstructors: MeshConstructors, objects: ObjectRegistry) => Promise<Mesh>;
+    meshConstructors: MeshConstructors, objects: ObjectManager) => Promise<Mesh>;
 
 /**
  * Class containing the state and operations of the world3d service.
  */
 export default class World3D implements IService {
-    objects: ObjectRegistry;
+    objects: ObjectManager;
     effects: Instances;
     effectTypes: Types;
     skybox: Mesh;
@@ -51,7 +51,7 @@ export default class World3D implements IService {
     globals: {[name: string]: unknown};
 
     constructor(document: Document) {
-        this.objects = new ObjectRegistry();
+        this.objects = new ObjectManager();
         this.controllers = {};
         this.controllerConstructors = controllerConstructors;
         this.globals = createGlobals();

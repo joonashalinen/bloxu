@@ -3,7 +3,7 @@ import IProjectileWeapon from "./IProjectileWeapon";
 import Device from "./Device";
 import Physical from "./Physical";
 import ISelector from "./items/ISelector";
-import ObjectRegistry from "./ObjectRegistry";
+import ObjectManager from "./ObjectManager";
 import Selector from "./items/Selector";
 
 /**
@@ -14,7 +14,7 @@ export default class ProjectileWeapon extends Selector implements IProjectileWea
     projectiles: Device[] = [];
     projectileSpeed: number = 1;
     projectileTimeout: number = 60000;
-    objectRegistry: ObjectRegistry;
+    objectRegistry: ObjectManager;
     destroyProjectileOnObjectHit: boolean = true;
     isActive: boolean = true;
 

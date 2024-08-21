@@ -8,18 +8,19 @@ import DVector3 from "../../../components/graphics3d/pub/DVector3";
 import Physical from "../../../components/objects3d/pub/Physical";
 import ProjectileWeapon from "../../../components/objects3d/pub/ProjectileWeapon";
 import Glow from "../../../components/graphics3d/pub/effects/Glow";
-import ObjectRegistry from "../../../components/objects3d/pub/ObjectRegistry";
+import ObjectManager from "../../../components/objects3d/pub/ObjectManager";
 import PickerPlacer from "../../../components/objects3d/pub/items/PickerPlacer";
 import GridMenu from "../../../components/objects3d/pub/menus/GridMenu";
 import ObjectGrid from "../../../components/objects3d/pub/ObjectGrid";
 import MeshGrid from "../../../components/graphics3d/pub/MeshGrid";
+import Portal from "../../../components/objects3d/pub/Portal";
 
 export type TObjectConstructor = (id: string,  ...args: unknown[]) => Object;
 
 export default function (
     scene: Scene,
     meshConstructors: {[name: string]: Function},
-    objectRegistry: ObjectRegistry,
+    objectRegistry: ObjectManager,
     glowLayer: GlowLayer,
     globals: {[name: string]: unknown}) {
     return {
@@ -156,6 +157,7 @@ export default function (
             const physical = new Physical(mesh, mass, {
                 width: size, height: size, depth: size});
             return new Object(physical);
-        }
+        },
+        "Interactables::portal": (id: string, mesh: AbstractMesh) => new Portal(mesh)
     }; 
 }

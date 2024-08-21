@@ -7,7 +7,7 @@ import Object from "./Object";
  * the single source of truth for all existing Objects 
  * and their corresponding owners and mesh ids.
  */
-export default class ObjectRegistry {
+export default class ObjectManager {
     objectConstructors: {[typeName: string]: TObjectConstructor} = {};
     history: HistoryCollection<Object> = new HistoryCollection();
     private _objectsById: {[name: string]: Object} = {};
@@ -26,16 +26,25 @@ export default class ObjectRegistry {
         const meshId = object.transformNode.id;
         if (this.hasObjectWithMeshId(meshId)) {
             throw new Error(`Object with mesh id '${meshId}' 
-                already exists in ObjectRegistry`);
+                already exists in ObjectManager`);
         }
         if (this.hasObject(id)) {
             throw new Error(`Object with id '${id}' 
-                already exists in ObjectRegistry`);
+                already exists in ObjectManager`);
         }
         
         this._objectsByMeshId[meshId] = object;
         this._objectsById[id] = object;
         this.history.setHistory(id, object.history);
+
+        object.onCollision((event) => {
+            const otherMesh = event.collidedAgainst.transformNode;
+            if (this.hasObjectWithMeshId(otherMesh.id)) {
+                const otherObject = this.getObjectWithMeshId(otherMesh.id);
+                object.handleObjectCollision(otherObject);
+                otherObject.handleObjectCollision(object);
+            }
+        });
     }
 
     /**
@@ -80,10 +89,10 @@ export default class ObjectRegistry {
         const objectConstructor = this.objectConstructors[type];
         if (objectConstructor === undefined) {
             throw new Error(`No object constructor for type 
-                '${type}' set in ObjectRegistry.`);
+                '${type}' set in ObjectManager.`);
         }
         const object = objectConstructor(id, ...args);
-        object.id = id;
+        object.id = type + "?" + id;
         this.addObject(id, object);
         return object;
     }

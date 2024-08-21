@@ -76,6 +76,7 @@ export default class CreatureBody extends Device implements ICreatureBodyActions
     }
 
     doOnTick(passedTime: number, absoluteTime: number) {
+        if (this.isInVoid) return;
         this.actionStateMachine.firstActiveState().doOnTick(
             passedTime, absoluteTime);
         const selectedItem = this.selectedItem();

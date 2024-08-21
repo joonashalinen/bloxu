@@ -1,6 +1,7 @@
 import * as BABYLON from "@babylonjs/core";
 import "@babylonjs/loaders"
 import AssetLoader from "../prv/AssetLoader";
+import MeshSize from "../../../components/graphics3d/pub/MeshSize";
 
 export interface ICharacterAnimations {
     "idle": BABYLON.AnimationGroup, 
@@ -172,7 +173,7 @@ export default async function(babylonjs: typeof BABYLON, scene: BABYLON.Scene) {
         "Blocks::dirt": () => plainConstructor("Blocks::dirt"),
         "Blocks::grassyDirt": () => plainConstructor("Blocks::grassyDirt"),
         "Blocks::stone": () => plainConstructor("Blocks::stone"),
-        "Interactables::portal": () => {
+        "Interactables::portal": (id: string) => {
             function createMaterial(name: string) {
                 const material = new BABYLON.StandardMaterial(name, scene);
                 const color = new BABYLON.Color3(0, 0, 0.1);
@@ -217,7 +218,11 @@ export default async function(babylonjs: typeof BABYLON, scene: BABYLON.Scene) {
                 return torus;
             }
 
-            const parent = new BABYLON.TransformNode("Interactables::portal", scene);
+            
+            const parent = BABYLON.MeshBuilder.CreateBox("Interactables::portal?" + id, 
+                {width: 2, depth: 0.5, height: 2}, scene);
+            parent.id = "Interactables::portal?" + id;
+            parent.visibility = 0;
 
             const toruses = [0, 0, 0].map(createTorusWithAnimationStartFrame);
             const startFrames = [0, 4, 8];

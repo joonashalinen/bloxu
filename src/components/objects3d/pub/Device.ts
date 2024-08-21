@@ -1,4 +1,4 @@
-import { AbstractMesh, AnimationGroup, Vector2, Vector3 } from "@babylonjs/core";
+import { AbstractMesh, Vector3 } from "@babylonjs/core";
 import Object from "./Object";
 import Physical from "./Physical";
 import DirectionalAnimation from "../../graphics3d/pub/DirectionalAnimation";
@@ -21,6 +21,7 @@ export default class Device extends Object {
     ownsRotationAnimations: boolean = true;
     
     constructor(wrappee: AbstractMesh | Physical) {
+        
         super(wrappee);
     }
 
@@ -121,7 +122,16 @@ export default class Device extends Object {
     }
 
     doOnTick(passedTime: number, absoluteTime: number) {
+        if (this.isInVoid) return;
         this._updateLinearVelocity();
         super.doOnTick(passedTime, absoluteTime);
+    }
+    
+    /**
+     * What to do when an object collides with the device.
+     * By default does nothing, but inheriting classes 
+     * can provide their own implementations.
+     */
+    handleCollidedAgainstObjectEvent(object: Object) {
     }
 }

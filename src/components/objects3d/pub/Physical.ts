@@ -30,10 +30,11 @@ export default class Physical {
             const boundingPoints = wrappable.getHierarchyBoundingVectors();
             const width = boundingPoints.max.x - boundingPoints.min.x;
             const height = boundingPoints.max.y - boundingPoints.min.y;
+            const depth = boundingPoints.max.z - boundingPoints.min.z;
             hitboxSize = {
                 width,
                 height,
-                depth: width
+                depth
             };
         }
         this.hitboxSize = hitboxSize;

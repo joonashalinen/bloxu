@@ -39,7 +39,7 @@ export default class Object {
 
     constructor(wrappee: AbstractMesh | Physical) {
         if (wrappee instanceof TransformNode) {
-            this.asPhysical = new Physical(wrappee, 1);
+            this.asPhysical = new Physical(wrappee, 0);
         } else {
             this.asPhysical = wrappee;
         }
@@ -137,6 +137,8 @@ export default class Object {
                 this.emitter.trigger("bump", [event]);
             }
         }
+
+        this.emitter.trigger("collision", [event]);
     }
 
     /**
@@ -151,6 +153,7 @@ export default class Object {
      * Update the object based on the passage of time.
      */
     doOnTick(passedTime: number, absoluteTime: number) {
+        if (this.isInVoid) return;
         if (Math.abs(this.transformNode.position.y - this.lastUpdatedPosition.y) > 0.05) {
             this.isInAir = true;
             this.inAirDirection = Math.sign(
@@ -237,6 +240,20 @@ export default class Object {
             }, () => {
                 this.transformNode.setAbsolutePosition(originalPosition);
         });
+    }
+
+    /**
+     * Listen to collisions on the physics body.
+     */
+    onCollision(callback: (event: IPhysicsCollisionEvent) => void) {
+        this.emitter.on("collision", callback);
+    }
+
+    offCollision(callback: (event: IPhysicsCollisionEvent) => void) {
+        this.emitter.off("collision", callback);
+    }
+
+    handleObjectCollision(object: Object) {
     }
 
     /**

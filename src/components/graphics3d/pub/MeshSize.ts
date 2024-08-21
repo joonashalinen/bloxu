@@ -17,6 +17,30 @@ export default class MeshSize {
     }
 
     /**
+     * The width of the bounding box of the mesh in world coordinates.
+     */
+    width() {
+        const bounds = this.mesh.getHierarchyBoundingVectors();
+        return bounds.max.x - bounds.min.x;
+    }
+
+    /**
+     * The height of the bounding box of the mesh in world coordinates.
+     */
+    height() {
+        const bounds = this.mesh.getHierarchyBoundingVectors();
+        return bounds.max.y - bounds.min.y;
+    }
+
+    /**
+     * The height of the bounding box of the mesh in world coordinates.
+     */
+    depth() {
+        const bounds = this.mesh.getHierarchyBoundingVectors();
+        return bounds.max.z - bounds.min.z;
+    }
+
+    /**
      * Scales the mesh so that its diameter is the same 
      * as the given diameter.
      */
