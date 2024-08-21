@@ -85,30 +85,6 @@ export default class GameMaster {
             }
         }))[0] as boolean;
 
-        // Center camera on the local player.
-        setTimeout(() => {
-                this.proxyMessenger.postMessage(
-                    this.messageFactory.createRequest("world3d", "modify", [
-                        {
-                            boundArgs: [this.localPlayerId],
-                            f: function(this: World3D, playerId: string) {
-                                const playerBody = this.getObject(`Player:PlayerBody?${playerId}`) as PlayerBody;
-                                this.camera.lockedTarget = playerBody.transformNode;
-                                this.camera.radius = 16;
-                                // If we are player 2, then we wish to rotate the camera 180 degrees.
-                                if (playerId === "player-2") {
-                                    this.camera.alpha = this.camera.alpha + Math.PI
-                                }
-                            }
-                        }
-                    ])
-                );
-            },
-            // We give some time for the Player service to create the body.
-            // This is a dirty, unreliable hack and should be fixed.
-            500
-        );
-
         this.gameRunning = true;
     }
 
