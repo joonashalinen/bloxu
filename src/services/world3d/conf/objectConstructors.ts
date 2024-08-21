@@ -94,7 +94,7 @@ export default function (
             const pickerPlacer = new PickerPlacer(picker, placer);
             const overlayColor = id.includes("player-1") ? 
                 new Color3(1, 0.6, 0) : 
-                new Color3(0.49, 0.59, 0.75);
+                new Color3(0.3, 0.7, 1);
             pickerPlacer.overlayColor = overlayColor;
 
             body.items["pickerPlacer"] = pickerPlacer;
