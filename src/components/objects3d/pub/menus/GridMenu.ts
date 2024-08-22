@@ -3,9 +3,11 @@ import EventEmitter from "../../../events/pub/EventEmitter";
 import Object from "../Object";
 import Menu from "./Menu";
 import GridVector from "../../../graphics3d/pub/GridVector";
-import IPlacer from "../items/IPlacer";
+import IPlacer, { TMeshMapper } from "../items/IPlacer";
 import ObjectGrid from "../ObjectGrid";
-import MeshGrid, { TGridMapper } from "../../../graphics3d/pub/MeshGrid";
+import MeshGrid from "../../../graphics3d/pub/MeshGrid";
+import Placer from "../items/Placer";
+import { DSelectInfo } from "../items/ISelector";
 
 /**
  * A menu that consists of a cubic grid 
@@ -13,17 +15,40 @@ import MeshGrid, { TGridMapper } from "../../../graphics3d/pub/MeshGrid";
  */
 export default class GridMenu extends Menu implements IPlacer {
     emitter = new EventEmitter();
-    previewMesh: AbstractMesh;
-    preview: TGridMapper =  this._defaultPreview.bind(this);
-    unpreview: TGridMapper = this._defaultUnpreview.bind(this);
-    getObjectToPlace: () => Object;
     pointedCell: Vector3;
 
+    public get preview() {return this.asPlacer.preview;}
+    public set preview(previewer) {this.asPlacer.preview = previewer;}
+
+    public get unpreview() {return this.asPlacer.unpreview;}
+    public set unpreview(unpreviewer) {this.asPlacer.unpreview = unpreviewer;}
+
+    public get previewMesh() {return this.asPlacer.previewMesh;}
+    public set previewMesh(previewMesh) {this.asPlacer.previewMesh = previewMesh;}
+
+    public get heldObjects() {return this.asPlacer.heldObjects;}
+    public set heldObjects(heldObjects) {this.asPlacer.heldObjects = heldObjects;}
+
+    public get maxHeldObjects() {return this.asPlacer.maxHeldObjects;}
+    public set maxHeldObjects(maxHeldObjects) {this.asPlacer.maxHeldObjects = maxHeldObjects;}
+
+    public get objectGrid() {return this.asPlacer.objectGrid;}
+    public set objectGrid(objectGrid) {this.asPlacer.objectGrid = objectGrid;}
+
+    public get placementPosition() {return this.asPlacer.placementPosition;}
+    public set placementPosition(placementPosition) {this.asPlacer.placementPosition = placementPosition;}
+
+    public get getObjectToPlace() {return this.asPlacer.getObjectToPlace;}
+    public set getObjectToPlace(getObjectToPlace) {this.asPlacer.getObjectToPlace = getObjectToPlace;}
+
     constructor(
-        public grid: MeshGrid,
-        public objectGrid: ObjectGrid = undefined
+        public asPlacer: Placer,
+        public grid: MeshGrid
     ) {
         super();
+        this.preview = this._defaultPreview.bind(this);
+        this.unpreview = this._defaultUnpreview.bind(this);
+        
         this.transformNode = grid.transformNode;
         this.createFollowVector = () => (new GridVector(
             this.followedNode.absolutePosition, this.grid.cellSize)).round();
@@ -31,51 +56,37 @@ export default class GridMenu extends Menu implements IPlacer {
     }
 
     doMainAction() {
-        if (this.getObjectToPlace !== undefined && this.pointedCell !== undefined) {
-            this.placeObject(this.getObjectToPlace());
-        } else {
-            this.emitter.trigger("useEnd");
-        }
+        this.asPlacer.doMainAction();
     }
 
-    /**
-     * Place an object at the given grid cell coordinates.
-     * or at the pointed mesh if such exists. Returns a boolean 
-     * indicating whether the object was placed or not.
-     */
-    placeObject(object: Object) {
-        if (this.pointedCell === undefined) {
-            this.emitter.trigger("useEnd");
-            return false;
-        }
+    override onSelect(callback: (info: DSelectInfo) => void): void {
+        this.asPlacer.onSelect(callback);
+    }
+    override offSelect(callback: (info: DSelectInfo) => void): void {
+        this.asPlacer.offSelect(callback);
+    }
 
-        const absolutePosition = this.grid.meshes
-            [this.pointedCell.x][this.pointedCell.y][this.pointedCell.z].absolutePosition;
-        
-        // We do not allow placing if the possible associated
-        // object grid already has an object placed at the cell we are about to place
-        // into. Note: the coordinates of .grid are local to the possible object followed by
-        // GridMenu, whereas the coordinates of .objectGrid are absolute.
-        if ((this.objectGrid !== undefined &&
-            this.objectGrid.cellIsOccupiedAtPosition(absolutePosition))) {
-            this.emitter.trigger("useEnd");
-            return false;
-        }
-        
-        if (this.objectGrid !== undefined) {
-            this.objectGrid.placeAtPosition(absolutePosition, object);
-        } else {
-            object.transformNode.setAbsolutePosition(absolutePosition);
-        }
-        if (object.isInVoid) object.bringBackFromTheVoid();
+    override onItemUseEnded(callback: () => void): void {
+        this.asPlacer.onItemUseEnded(callback)
+    }
+    override offItemUseEnded(callback: () => void): void {
+        this.asPlacer.offItemUseEnded(callback)
+    }
 
-        this.emitter.trigger("select", [{
-            object: object,
-            absolutePosition: object.transformNode.absolutePosition.clone(),
-            gridCell: this.pointedCell}]);
-        this.emitter.trigger("useEnd");
+    canPlaceHeldObject(): boolean {
+        return this.asPlacer.canPlaceHeldObject();
+    }
+    
+    placeHeldObject(): boolean {
+        return this.asPlacer.placeHeldObject();
+    }
 
-        return true;
+    placeObject(object: Object): boolean {
+        return this.asPlacer.placeObject(object);
+    }
+
+    setPreviewMeshFromObject(object: Object): void {
+        this.asPlacer.setPreviewMeshFromObject(object);
     }
 
     /**
@@ -90,8 +101,10 @@ export default class GridMenu extends Menu implements IPlacer {
         if (pickInfo.hit) {
             const pickedMesh = pickInfo.pickedMesh!;
             const cellCoordinates = this.grid.meshCellCoordinates(pickedMesh);
-            this.preview(pickedMesh, cellCoordinates);
+            this.preview(pickedMesh);
             this.pointedCell = cellCoordinates;
+            this.placementPosition = this.grid.meshes
+                [this.pointedCell.x][this.pointedCell.y][this.pointedCell.z].absolutePosition;
         }
     }
 
@@ -102,8 +115,7 @@ export default class GridMenu extends Menu implements IPlacer {
     stopPointingAtMesh() {
         if (this.pointedCell !== undefined) {
             this.unpreview(
-                this.grid.meshes[this.pointedCell.x][this.pointedCell.y][this.pointedCell.z],
-                this.pointedCell);
+                this.grid.meshes[this.pointedCell.x][this.pointedCell.y][this.pointedCell.z]);
             this.pointedCell = undefined;
         }
     }
@@ -113,7 +125,7 @@ export default class GridMenu extends Menu implements IPlacer {
      */
     setGridPrototypeMesh(prototypeMesh: AbstractMesh) {
         this.grid.prototypeMesh = prototypeMesh;
-        this.grid.map((mesh, celIIndex) => this.unpreview(mesh, celIIndex));
+        this.grid.map((mesh) => this.unpreview(mesh));
     }
 
     private _defaultPreview(mesh: AbstractMesh) {

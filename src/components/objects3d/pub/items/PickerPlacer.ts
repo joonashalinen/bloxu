@@ -9,9 +9,7 @@ import IPlacer from "./IPlacer";
  * An item that can pick objects and then place them.
  */
 export default class PickerPlacer extends Item {
-    heldObjects: Object[] = [];
     ownedObjects: Object[] = [];
-    maxHeldObjects: number = 1;
     maxAffectedObjects: number = 1;
     overlayColor: Color3 = new Color3(0, 0, 1);
     overlayAlpha = 0.4;
@@ -25,7 +23,7 @@ export default class PickerPlacer extends Item {
                 if (this.canPick() && this.canPickObject(info.object)) {
 
                     info.object.teleportToVoid();
-                    this.heldObjects.push(info.object);
+                    this.placer.heldObjects.push(info.object);
                     this.picker.deactivate();
                     this.placer.activate();
 
@@ -51,13 +49,7 @@ export default class PickerPlacer extends Item {
                         info.object.onChangeState(ownershipChangeListener);
                     }
 
-                    // Set preview mesh.
-                    const previewMesh = (info.object.transformNode as AbstractMesh).clone(
-                        "PickerPlacer:previewMesh?" + info.object.transformNode.name, null);
-                    previewMesh.setEnabled(false);
-                    previewMesh.getChildMeshes().at(0).visibility = 0.5;
-                    this.placer.previewMesh = previewMesh;
-
+                    this.placer.setPreviewMeshFromObject(info.object);
                     this.emitter.trigger("pick", [info]);
                 }
             }
@@ -67,11 +59,6 @@ export default class PickerPlacer extends Item {
         });
 
         // Set event listeners for the placer.
-        this.placer.onSelect((info) => {
-            if (this.canPlace()) {
-                this._placeHeldObject();
-            }
-        });
         this.placer.onItemUseEnded(() => {
             this.emitter.trigger("useEnd");
         });
@@ -80,7 +67,7 @@ export default class PickerPlacer extends Item {
     public get transformNode() {
         if (this.canPick()) {
             return this.picker.transformNode;
-        } else if (this.canPlace()) {
+        } else if (this.placer.canPlaceHeldObject()) {
             return this.placer.transformNode;
         }
     }
@@ -88,7 +75,7 @@ export default class PickerPlacer extends Item {
     public get menu() {
         if (this.canPick()) {
             return this.picker.menu;
-        } else if (this.canPlace()) {
+        } else if (this.placer.canPlaceHeldObject()) {
             return this.placer.menu;
         }
     }
@@ -102,7 +89,7 @@ export default class PickerPlacer extends Item {
      * Whether we can use the picker.
      */
     canPick() {
-        return this.heldObjects.length < this.maxHeldObjects;
+        return this.placer.heldObjects.length < this.placer.maxHeldObjects;
     }
 
     /**
@@ -113,17 +100,10 @@ export default class PickerPlacer extends Item {
             this.ownedObjects.includes(object))
     }
 
-    /**
-     * Whether we can use the placer.
-     */
-    canPlace() {
-        return this.heldObjects.length > 0;
-    }
-
     doMainAction() {
         if (this.canPick()) {
             this.picker.doMainAction();
-        } else if (this.canPlace()){
+        } else if (this.placer.canPlaceHeldObject()){
             this._placeHeldObject();
         }
     }
@@ -131,7 +111,7 @@ export default class PickerPlacer extends Item {
     doSecondaryAction() {
         if (this.canPick()) {
             this.picker.doSecondaryAction();
-        } else if (this.canPlace()){
+        } else if (this.placer.canPlaceHeldObject()){
             this.placer.doSecondaryAction();
         }
     }
@@ -154,7 +134,7 @@ export default class PickerPlacer extends Item {
     doOnTick(passedTime: number, absoluteTime: number) {
         if (this.canPick()) {
             this.picker.doOnTick(passedTime, absoluteTime);
-        } else if (this.canPlace()){
+        } else if (this.placer.canPlaceHeldObject()){
             this.placer.doOnTick(passedTime, absoluteTime);
         }
     }
@@ -163,24 +143,9 @@ export default class PickerPlacer extends Item {
      * Places the last held object using .placer.
      */
     private _placeHeldObject() {
-        const object = this.heldObjects.pop();
-        // If placing the object fails then we revert the attempt.
-        if (!this.placer.placeObject(object)) {
-            this.heldObjects.push(object);
-            return;
+        if (this.placer.placeHeldObject()) {
+            this.placer.deactivate();
+            this.picker.activate();
         }
-        // Delete the preview mesh.
-        if (this.placer.previewMesh !== undefined) {
-            this.placer.previewMesh.getScene().removeMesh(this.placer.previewMesh);
-            this.placer.previewMesh.dispose();
-        }
-
-        this.placer.deactivate();
-        this.picker.activate();
-        const placeInfo: DSelectInfo = {
-            object: object,
-            absolutePosition: object.transformNode.absolutePosition
-        };
-        this.emitter.trigger("place", [placeInfo]);
     }
 }

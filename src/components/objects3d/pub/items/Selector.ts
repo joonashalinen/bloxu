@@ -20,11 +20,11 @@ export default class Selector extends Item implements ISelector {
         this.isActive = false;
     }
 
-    onSelect(callback: (info: DSelectInfo) => void): void{
+    onSelect(callback: (info: DSelectInfo) => void): void {
         this.emitter.on("select", callback);
     }
 
-    offSelect(callback: (info: DSelectInfo) => void): void{
+    offSelect(callback: (info: DSelectInfo) => void): void {
         this.emitter.off("select", callback);
     }
 }

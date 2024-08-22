@@ -15,6 +15,7 @@ import MeshGrid from "../../../components/graphics3d/pub/MeshGrid";
 import Portal from "../../../components/objects3d/pub/Portal";
 import ProjectileWeapon from "../../../components/objects3d/pub/items/ProjectileWeapon";
 import JumpState from "../../../components/objects3d/pub/creatures/JumpState";
+import Placer from "../../../components/objects3d/pub/items/Placer";
 
 export type TObjectConstructor = (id: string,  ...args: unknown[]) => Object3;
 
@@ -106,11 +107,11 @@ export default function (
             picker.objectRegistry = objectRegistry;
 
             const placer = new GridMenu(
+                new Placer(globals.objectGrid as ObjectGrid),
                 new MeshGrid(
                     MeshGrid.createSpherePrototype(blockSize, 0.2),
                     blockSize, {x: 3, y: 1, z: 3}
-                ),
-                globals.objectGrid as ObjectGrid
+                )
             );
             placer.ownerId = id;
             placer.followedNode = body.transformNode;
