@@ -11,9 +11,8 @@ import IPlacer from "./IPlacer";
 export default class PickerPlacer extends Item {
     ownedObjects: Object[] = [];
     maxOwnedObjects: number = 1;
-    overlayColor: Color3 = new Color3(0, 0, 1);
-    overlayAlpha = 0.4;
-    overlayPickedObjects: boolean = true;
+    paintOwnedObject: (object: Object) => void;
+    unpaintOwnedObject: (object: Object) => void;
 
     constructor(public picker: ISelector, public placer: IPlacer & ISelector) {
         super();
@@ -27,11 +26,8 @@ export default class PickerPlacer extends Item {
                     this.picker.deactivate();
                     this.placer.activate();
 
-                    if (this.overlayPickedObjects) {
-                        // Show overlay for the picked object.
-                        info.object.rootMesh().renderOverlay = true;
-                        info.object.rootMesh().overlayAlpha = this.overlayAlpha;
-                        info.object.rootMesh().overlayColor = this.overlayColor;
+                    if (this.paintOwnedObject !== undefined) {
+                        this.paintOwnedObject(info.object);
                     }
                     
                     if (!this.ownedObjects.includes(info.object)) {

@@ -118,10 +118,19 @@ export default function (
 
             const pickerPlacer = new PickerPlacer(picker, placer);
             pickerPlacer.ownerId = id;
-            const overlayColor = id.includes("player-1") ? 
-                new Color3(1, 0.6, 0) : 
-                new Color3(0.3, 0.7, 1);
-            pickerPlacer.overlayColor = overlayColor;
+            pickerPlacer.paintOwnedObject = (object) => {
+                const overlayColor = id.includes("player-1") ? 
+                    new Color3(1, 0.6, 0) : 
+                    new Color3(0.3, 0.7, 1);
+                const overlayAlpha = 0.4;
+                // Show overlay for the picked object.
+                object.rootMesh().renderOverlay = true;
+                object.rootMesh().overlayAlpha = overlayAlpha;
+                object.rootMesh().overlayColor = overlayColor;
+            };
+            pickerPlacer.unpaintOwnedObject = (object) => {
+                object.rootMesh().renderOverlay = false;
+            };
 
             body.items["pickerPlacer"] = pickerPlacer;
             body.selectItem("pickerPlacer");
