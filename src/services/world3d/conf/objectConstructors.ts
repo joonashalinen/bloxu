@@ -1,5 +1,5 @@
 import { AbstractMesh, Color3, GlowLayer, Mesh, MeshBuilder, Scene, StandardMaterial, Vector2, Vector3 } from "@babylonjs/core";
-import Object from "../../../components/objects3d/pub/Object";
+import Object3 from "../../../components/objects3d/pub/Object";
 import { AnimatedMesh } from "./meshConstructors";
 import PlayerBody from "./custom_object_types/PlayerBody";
 import RotationAnimation from "../../../components/graphics3d/pub/RotationAnimation";
@@ -14,8 +14,9 @@ import ObjectGrid from "../../../components/objects3d/pub/ObjectGrid";
 import MeshGrid from "../../../components/graphics3d/pub/MeshGrid";
 import Portal from "../../../components/objects3d/pub/Portal";
 import ProjectileWeapon from "../../../components/objects3d/pub/items/ProjectileWeapon";
+import JumpState from "../../../components/objects3d/pub/creatures/JumpState";
 
-export type TObjectConstructor = (id: string,  ...args: unknown[]) => Object;
+export type TObjectConstructor = (id: string,  ...args: unknown[]) => Object3;
 
 export default function (
     scene: Scene,
@@ -58,6 +59,26 @@ export default function (
 
             const body = new PlayerBody(physical, character.animations);
             body.runSpeed = 2.5;
+
+            // Jump state needs some extra configuring to make jumping look better.
+            const jumpState = (body.actionStateMachine.states["jump"] as JumpState);
+            let endCleanupTimeout: NodeJS.Timeout;
+            jumpState.playAnimation = (animation) => {
+                clearTimeout(endCleanupTimeout);
+                (Object.values(character.animations)).forEach((animation) => {
+                    animation.blendingSpeed = 0.1;
+                });
+                character.animations.jump.blendingSpeed = 0.05;
+                animation.play();
+                animation.goToFrame(44);
+            };
+            jumpState.endCleanup = () => {
+                endCleanupTimeout = setTimeout(() => {
+                    (Object.values(character.animations)).forEach((animation) => {
+                        animation.blendingSpeed = 0.2;
+                    });
+                }, 500);
+            };
 
             const createProjectile = (id: string = "") => {
                 const ball = MeshBuilder.CreateSphere(
@@ -156,7 +177,7 @@ export default function (
         "Object": (id: string, size: number, mesh: Mesh, mass: number) => {
             const physical = new Physical(mesh, mass, {
                 width: size, height: size, depth: size});
-            return new Object(physical);
+            return new Object3(physical);
         },
         "Interactables::portal": (id: string, mesh: AbstractMesh) => new Portal(mesh)
     }; 

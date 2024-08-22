@@ -10,7 +10,7 @@ import CreatureBodyState from "./CreatureBodyState";
  */
 export default class JumpState extends CreatureBodyState implements ICreatureBodyState {
     timeAtJumpStart: number = 0;
-    jumpFactor: number = 6.5;
+    jumpFactor: number = 5.5;
     private _creatureHasLanded = false;
     private _restoreRotationAnimation: boolean;
     private _restoreDirectionalAnimation: boolean;
@@ -36,11 +36,6 @@ export default class JumpState extends CreatureBodyState implements ICreatureBod
         this._creatureHasLanded = false;
         this.timeAtJumpStart = 0;
 
-        // Play the jumping animation.
-        this.jumpAnimation.speedRatio = 0.4;
-        this.jumpAnimation.play();
-        this.jumpAnimation.goToFrame(50);
-
         this._restoreRotationAnimation = this.creatureBody.horizontalRotationAnimation.enabled();
         this.creatureBody.horizontalRotationAnimation.disable();
 
@@ -50,13 +45,14 @@ export default class JumpState extends CreatureBodyState implements ICreatureBod
         this._restoreDirectionalAnimation = this.creatureBody.directionalAnimation.enabled();
         this.creatureBody.directionalAnimation.disable();
 
+        this.playAnimation(this.jumpAnimation);
+
         const bodyMass = this.creatureBody.physicsBody()
             .getMassProperties().mass;
         this.creatureBody.physicsBody().applyImpulse(
             new Vector3(0, bodyMass * this.jumpFactor, 0), 
             this.creatureBody.transformNode.absolutePosition
         );
-        console.log("started jump state");
     }
 
     end(): void {

@@ -1,4 +1,4 @@
-import { Vector3 } from "@babylonjs/core";
+import { AnimationGroup, Vector3 } from "@babylonjs/core";
 import ICreatureBodyState from "../../../computation/pub/ICreatureBodyState";
 import IState from "../../../computation/pub/IState";
 import State from "../../../computation/pub/State";
@@ -9,6 +9,7 @@ import Device from "../Device";
  * Base class for ICreatureBodyState implementations.
  */
 export default class CreatureBodyState  extends State implements ICreatureBodyState {
+    playAnimation = (animation: AnimationGroup) => {animation.play()};
     protected _jumped: boolean = false;
     protected _moved: boolean = false;
     protected _originalPerpetualMotionSpeed: number;
@@ -36,6 +37,7 @@ export default class CreatureBodyState  extends State implements ICreatureBodySt
 
     setPerpetualMotionDirection(direction: Vector3): void {
         if (!this.isActive) return;
+
         if (!this.creatureBody.perpetualMotionDirection.equals(direction)) {
             Device.prototype.setPerpetualMotionDirection.apply(
                 this.creatureBody, [direction]);

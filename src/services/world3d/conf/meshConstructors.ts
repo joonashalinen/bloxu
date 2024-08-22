@@ -113,11 +113,11 @@ export default async function(babylonjs: typeof BABYLON, scene: BABYLON.Scene) {
                 "turnRight": animationGroupsClone[17],
                 "turnLeft": animationGroupsClone[15],
                 "shoot": animationGroupsClone[13],
-                "jump": animationGroupsClone[6],
+                "jump": animationGroupsClone[5],
                 "hover": animationGroupsClone[0]
             } as ICharacterAnimations;
 
-            // Normalize animation speeds.
+            // Set unique animation speeds for each animation.
             animationGroups.moveForward.speedRatio = 1.35;
             animationGroups.moveBackward.speedRatio = 1.5;
             animationGroups.moveRight.speedRatio = 0.75;
@@ -129,6 +129,7 @@ export default async function(babylonjs: typeof BABYLON, scene: BABYLON.Scene) {
             animationGroups.turnLeft.speedRatio = 2.5;
             animationGroups.turnRight.speedRatio = 2.5;
             animationGroups.shoot.speedRatio = 2;
+            animationGroups.jump.speedRatio = 0.4;
 
             return {
                 mesh: rootMesh,

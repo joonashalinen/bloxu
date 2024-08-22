@@ -6,6 +6,7 @@ import IState from "./IState";
  */
 export default class State implements IState {
     isActive: boolean = false;
+    endCleanup = () => {};
     emitter: EventEmitter = new EventEmitter();
 
     constructor() {
@@ -20,6 +21,7 @@ export default class State implements IState {
     end(): void {
         if (!this.isActive) return;
         this.isActive = false;
+        this.endCleanup();
     }
 
     onEnd(callback: (nextStateId: string, ...args: unknown[]) => void): IState | void {
