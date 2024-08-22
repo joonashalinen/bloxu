@@ -10,7 +10,7 @@ import IPlacer from "./IPlacer";
  */
 export default class PickerPlacer extends Item {
     ownedObjects: Object[] = [];
-    maxAffectedObjects: number = 1;
+    maxOwnedObjects: number = 1;
     overlayColor: Color3 = new Color3(0, 0, 1);
     overlayAlpha = 0.4;
     overlayPickedObjects: boolean = true;
@@ -96,7 +96,7 @@ export default class PickerPlacer extends Item {
      * Whether we can pick the selected object.
      */
     canPickObject(object: Object) {
-        return (this.ownedObjects.length < this.maxAffectedObjects || 
+        return (this.ownedObjects.length < this.maxOwnedObjects || 
             this.ownedObjects.includes(object))
     }
 
