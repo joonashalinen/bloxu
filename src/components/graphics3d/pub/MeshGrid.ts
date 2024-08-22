@@ -55,15 +55,16 @@ export default class MeshGrid {
     }
 
     /**
-     * Creates a sphere wrapped in a cube, which 
+     * Creates a sphere wrapped in a box, which 
      * is useful as a prototype mesh for Grid.
      */
     static createSpherePrototype(cellSize: number, sphereSizeRatio: number) {
-        const wrapper = MeshBuilder.CreateBox("MeshGrid:Wrapper", {size: cellSize});
-        const sphere = MeshBuilder.CreateSphere("MeshGrid:Prototype", {diameter: cellSize * sphereSizeRatio});
+        const sphereSize = cellSize * sphereSizeRatio;
+        const wrapper = MeshBuilder.CreateBox("MeshGrid:Wrapper",
+            {width: cellSize, height: sphereSize, depth: cellSize});
+        const sphere = MeshBuilder.CreateSphere("MeshGrid:Prototype", {diameter: sphereSize});
         wrapper.addChild(sphere);
         wrapper.visibility = 0;
-        sphere.position.y += cellSize / 2;
         return wrapper;
     }
 
