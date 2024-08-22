@@ -56,7 +56,8 @@ export default async function level(
             mesh.rotate(Vector3.Up(), (Math.PI / 2) * rotations, Space.WORLD);
 
             mesh.setParent(null);
-            objects.createObject(mesh.id, "Object", [blockSize, mesh, 0]);
+            const block = objects.createObject(mesh.id, "Object", [blockSize, mesh, 0]);
+            block.triggerChangeStateEvents = true;
 
         } else if (meshName.includes("Interactables::portal")) {
             objects.createObject(mesh.id, "Interactables::portal", [mesh]);

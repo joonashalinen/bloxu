@@ -10,7 +10,7 @@ import IPlacer from "./IPlacer";
  */
 export default class PickerPlacer extends Item {
     heldObjects: Object[] = [];
-    affectedObjects: Object[] = [];
+    ownedObjects: Object[] = [];
     maxHeldObjects: number = 1;
     maxAffectedObjects: number = 1;
     overlayColor: Color3 = new Color3(0, 0, 1);
@@ -23,6 +23,7 @@ export default class PickerPlacer extends Item {
         this.picker.onSelect((info) => {
             if (info.object !== undefined) {
                 if (this.canPick() && this.canPickObject(info.object)) {
+
                     info.object.teleportToVoid();
                     this.heldObjects.push(info.object);
                     this.picker.deactivate();
@@ -34,9 +35,20 @@ export default class PickerPlacer extends Item {
                         info.object.rootMesh().overlayAlpha = this.overlayAlpha;
                         info.object.rootMesh().overlayColor = this.overlayColor;
                     }
-
-                    if (!this.affectedObjects.includes(info.object)) {
-                        this.affectedObjects.push(info.object);
+                    
+                    if (!this.ownedObjects.includes(info.object)) {
+                        // Take ownership of the object.
+                        this.ownedObjects.push(info.object);
+                        info.object.changeOwnership(this.ownerId);
+                        // Listen to when someone might steal ownership away, in 
+                        // which case we release ownership of the object.
+                        const ownershipChangeListener = (methodName: string) => {
+                            if (methodName === "changeOwnership") {
+                                info.object.offChangeState(ownershipChangeListener);
+                                this.ownedObjects.splice(this.ownedObjects.indexOf(info.object), 1);
+                            }
+                        };
+                        info.object.onChangeState(ownershipChangeListener);
                     }
 
                     // Set preview mesh.
@@ -97,8 +109,8 @@ export default class PickerPlacer extends Item {
      * Whether we can pick the selected object.
      */
     canPickObject(object: Object) {
-        return (this.affectedObjects.length < this.maxAffectedObjects || 
-            this.affectedObjects.includes(object))
+        return (this.ownedObjects.length < this.maxAffectedObjects || 
+            this.ownedObjects.includes(object))
     }
 
     /**

@@ -7,7 +7,7 @@ import IMenu from "../menus/IMenu";
  * Base class for IItem implementations.
  */
 export default class Item implements IItem {
-    private _transformNode: TransformNode;
+    ownerId: string;
     hasSecondaryAction: boolean = false;
     emitter: EventEmitter = new EventEmitter();
     useDelay: number = 0;
@@ -15,6 +15,7 @@ export default class Item implements IItem {
     protected _itemUsed = false;
     protected _animationEnded = false;
     protected _aimedDirection: Vector3 = new Vector3(1, 0, 0);
+    private _transformNode: TransformNode;
 
     constructor(public useAnimation: AnimationGroup = undefined) {
     }

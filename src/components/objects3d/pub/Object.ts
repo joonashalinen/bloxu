@@ -17,6 +17,8 @@ export type TSaveToHistoryPredicate = (method: string, args: unknown[], self: Ob
  * in babylonjs.
  */
 export default class Object {
+    id: string = "";
+    ownerId: string;
     transformNode: TransformNode;
     landingLedgeBuffer: number = 0.3;
     asPhysical: Physical;
@@ -33,8 +35,8 @@ export default class Object {
     horizontalRotationEnabled = true;
     history: History<Object> = new History();
     useHistory: boolean = false;
+    triggerChangeStateEvents: boolean = false;
     saveToHistoryPredicate: TSaveToHistoryPredicate = () => false;
-    id: string = "";
 
     constructor(wrappee: AbstractMesh | Physical) {
         if (wrappee instanceof TransformNode) {
@@ -224,6 +226,10 @@ export default class Object {
         } else {
             performer(this);
         }
+
+        if (this.triggerChangeStateEvents) {
+            this.emitter.trigger("changeState", [actionName, ...actionArgs]);
+        }
     }
 
     /**
@@ -252,6 +258,33 @@ export default class Object {
     }
 
     handleObjectCollision(object: Object) {
+    }
+
+    /**
+     * Listen to 'changeState' events, which are triggered when the 
+     * object has a state changing method is called (excluding .doOnTick and event handlers),
+     * assuming .triggerChangeStateEvents is set to true.
+     */
+    onChangeState(callback: (method: string, ...methodArgs: unknown[]) => void) {
+        this.emitter.on("changeState", callback);
+    }
+
+    offChangeState(callback: (method: string, ...methodArgs: unknown[]) => void) {
+        this.emitter.off("changeState", callback);
+    }
+
+    /**
+     * Changes ownership of the object to the given owner.
+     */
+    changeOwnership(newOwnerId: string) {
+        const oldOwnerId = this.ownerId;
+        if (oldOwnerId === newOwnerId) return;
+        this.changeState("changeOwnership", [newOwnerId],
+            () => {
+                this.ownerId = newOwnerId;
+            }, () => {
+                this.ownerId = oldOwnerId;
+        });
     }
 
     /**

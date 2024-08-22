@@ -58,6 +58,7 @@ export default function (
             });
 
             const body = new PlayerBody(physical, character.animations);
+            body.ownerId = id;
             body.runSpeed = 2.5;
 
             // Jump state needs some extra configuring to make jumping look better.
@@ -99,6 +100,7 @@ export default function (
 
             const picker = new ProjectileWeapon(pistolMesh,
                 createProjectile, character.animations.shoot);
+            picker.ownerId = id;
             picker.projectileSpeed = 5;
             picker.useDelay = 150;
             picker.objectRegistry = objectRegistry;
@@ -110,9 +112,11 @@ export default function (
                 ),
                 globals.objectGrid as ObjectGrid
             );
+            placer.ownerId = id;
             placer.followedNode = body.transformNode;
 
             const pickerPlacer = new PickerPlacer(picker, placer);
+            pickerPlacer.ownerId = id;
             const overlayColor = id.includes("player-1") ? 
                 new Color3(1, 0.6, 0) : 
                 new Color3(0.3, 0.7, 1);
