@@ -1,4 +1,4 @@
-import { AbstractMesh, IPhysicsCollisionEvent, Mesh, Observable, PhysicsAggregate, Quaternion, TransformNode, Vector2, Vector3 } from "@babylonjs/core";
+import { AbstractMesh, Animation, BezierCurveEase, IPhysicsCollisionEvent, Mesh, Observable, PhysicsAggregate, Quaternion, TransformNode, Vector2, Vector3 } from "@babylonjs/core";
 import Physical from "./Physical";
 import EventEmitter from "../../events/pub/EventEmitter";
 import History from "../../data_structures/pub/History";
@@ -37,6 +37,9 @@ export default class Object {
     useHistory: boolean = false;
     triggerChangeStateEvents: boolean = false;
     saveToHistoryPredicate: TSaveToHistoryPredicate = () => false;
+    createTeleportInAnimation: () => Animation = this._defaultTeleportInAnimation.bind(this);
+    createTeleportOutAnimation: () => Animation = this._defaultTeleportOutAnimation.bind(this);
+    teleportAnimationSpeed = 2;
 
     constructor(wrappee: AbstractMesh | Physical) {
         if (wrappee instanceof TransformNode) {
@@ -179,6 +182,7 @@ export default class Object {
 
         this.changeState("teleportToVoid", [],
             () => {
+                this._playTeleportAnimation(this.createTeleportOutAnimation);
                 this.isInVoid = true;
                 this.transformNode.setEnabled(false);
                 this.asPhysical.disable();
@@ -196,8 +200,12 @@ export default class Object {
         this.changeState("bringBackFromTheVoid", [],
             () => {
                 this.isInVoid = false;
-                this.transformNode.setEnabled(true);
                 this.asPhysical.enable();
+                this._playTeleportAnimation(this.createTeleportInAnimation).then(() => {
+                    // If the object hasn't been sent to the void while the animation was playing,
+                    // we can now make it visible.
+                    if (!this.isInVoid) this.transformNode.setEnabled(true);
+                });
             }, this.teleportToVoid);
     }
 
@@ -299,5 +307,63 @@ export default class Object {
             f(object);
             this.saveToHistoryPredicate = originalPredicate;
         };
+    }
+
+    /**
+     * Default animation for when the object is teleportedout , such as when
+     * .teleportToVoid is called.
+     */
+    private _defaultTeleportOutAnimation() {
+        const teleportOutAnimation = new Animation("Object:teleportOutAnimation", "scaling", 60,
+            Animation.ANIMATIONTYPE_VECTOR3, Animation.ANIMATIONLOOPMODE_CYCLE);
+        teleportOutAnimation.setEasingFunction(new BezierCurveEase(0.58, 0.01, 0.48, 1.04));
+        const currentScaling = this.rootMesh().scaling.clone();
+        teleportOutAnimation.setKeys(
+            [{frame: 0, value: currentScaling},
+            {frame: 60, value: currentScaling.scale(0.00001)}]
+        );
+        return teleportOutAnimation;
+    }
+
+    /**
+     * Default animation for when the object is teleported in, such as when
+     * .bringBackFromTheVoid is called.
+     */
+    private _defaultTeleportInAnimation() {
+        const teleportInAnimation = new Animation("Object:teleportInAnimation", "scaling", 60,
+            Animation.ANIMATIONTYPE_VECTOR3, Animation.ANIMATIONLOOPMODE_CYCLE);
+        teleportInAnimation.setEasingFunction(new BezierCurveEase(0.58, 0.01, 0.48, 1.04));
+        const currentScaling = this.rootMesh().scaling.clone();
+        teleportInAnimation.setKeys(
+            [{frame: 0, value: currentScaling.scale(0.00001)},
+            {frame: 60, value: currentScaling}]
+        );
+        return teleportInAnimation;
+    }
+
+    /**
+     * Creates a clone of the root mesh and plays the given 
+     * teleport animation for it. Returns a promise that resolves when 
+     * the animation has ended.
+     */
+    private _playTeleportAnimation(createTeleportAnimation: () => Animation) {
+        return new Promise<void>((resolve) => {
+            const animationMeshParent = new TransformNode(
+                "Object:animationMeshRoot", this.transformNode.getScene());
+            const animationMesh = this.rootMesh().clone(
+                "Object:animationMesh?" + this.rootMesh().name, animationMeshParent);
+            animationMesh.setAbsolutePosition(this.rootMesh().absolutePosition.clone());
+            animationMesh.rotationQuaternion = this.rootMesh().absoluteRotationQuaternion.clone();
+    
+            animationMesh.animations.push(createTeleportAnimation());
+            animationMesh.getScene().beginAnimation(animationMesh, 0, 60, false,
+                this.teleportAnimationSpeed, () => {
+                    setTimeout(() => {
+                        animationMesh.getScene().removeMesh(animationMesh as Mesh);
+                    }, 100);
+                    resolve();
+                }
+            );
+        });
     }
 }

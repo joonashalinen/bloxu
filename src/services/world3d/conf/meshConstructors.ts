@@ -211,7 +211,7 @@ export default async function(babylonjs: typeof BABYLON, scene: BABYLON.Scene) {
                 }
 
                 animate("Interactables::portalExpand" + startFrame, "scaling", 
-                    new BABYLON.Vector3(0.001, 0.001, 0.001), 
+                    new BABYLON.Vector3(0.001, 0.001, 0.001),
                     new BABYLON.Vector3(1, 1, 1), startFrame);
 
                 animate("Interactables::portalVisibility" + startFrame, "visibility", 1, 0.001, startFrame);
