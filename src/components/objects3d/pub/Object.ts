@@ -221,7 +221,7 @@ export default class Object {
         
         if (this.useHistory) {
             if (this.saveToHistoryPredicate(actionName, actionArgs, this)) {
-                this.history.performAction(new Action<Object>(this, performer, this._asUndo(undoer)));
+                this.history.perform(new Action<Object>(this, performer, this._asUndo(undoer)));
             }
         } else {
             performer(this);

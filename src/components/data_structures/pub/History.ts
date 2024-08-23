@@ -6,15 +6,19 @@ import EventEmitter from "../../events/pub/EventEmitter";
  */
 export default class History<T> {
     emitter: EventEmitter = new EventEmitter();
-    actions: Action<T>[] = [];
-    
+    undoableActions: Action<T>[] = [];
+    redoableActions: Action<T>[] = [];
+
     constructor() {
         
     }
 
-    performAction(action: Action<T>) {
+    perform(action: Action<T>) {
         action.perform();
-        this.actions.push(action);
+        this.undoableActions.push(action);
+        if (this.redoableActions.length > 0) {
+            this.redoableActions.splice(0, this.redoableActions.length);
+        }
         this.emitter.trigger("performAction", [action]);
     }
 
@@ -28,5 +32,27 @@ export default class History<T> {
 
     offPerformAction(callback: (action: Action<T>) => void) {
         this.emitter.off("performAction", callback);
+    }
+
+    /**
+     * Undoes the latest action.
+     */
+    undo() {
+        if (this.undoableActions.length > 0) {
+            const latestUndoable = this.undoableActions.pop();
+            latestUndoable.undo();
+            this.redoableActions.push(latestUndoable);
+        }
+    }
+
+    /**
+     * Redoes the latest undone action.
+     */
+    redo() {
+        if (this.redoableActions.length > 0) {
+            const latestRedoable = this.redoableActions.pop();
+            latestRedoable.perform();
+            this.undoableActions.push(latestRedoable);
+        }
     }
 }

@@ -23,6 +23,12 @@ export default class CreatureBodyController extends DeviceController {
     pressFeatureKey(key: string): void {
         if (key === " ") {
             this.creatureBody.jump();
+        } else if (key === "q") {
+            const selectedItem = this.creatureBody.selectedItem();
+            if (selectedItem !== undefined) selectedItem.undo();
+        } else if (key === "e") {
+            const selectedItem = this.creatureBody.selectedItem();
+            if (selectedItem !== undefined) selectedItem.redo();
         }
     }
 

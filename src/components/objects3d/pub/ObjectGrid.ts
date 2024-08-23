@@ -92,4 +92,12 @@ export default class ObjectGrid {
         delete this.objectsByCoordinates[coordinateString];
         return existingObject;
     }
+
+    /**
+     * Clears the cell containing the given absolute world position.
+     * The removed value is returned.
+     */
+    clearCellAtPosition(absolutePosition: Vector3) {
+        return this.clearCellAt(this.positionToCoordinates(absolutePosition));
+    }
 }

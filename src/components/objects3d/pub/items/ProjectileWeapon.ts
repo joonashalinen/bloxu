@@ -70,10 +70,11 @@ export default class ProjectileWeapon extends Selector implements IProjectileWea
         projectile.perpetualMotionSpeed = this.projectileSpeed;
         projectile.setPerpetualMotionDirection(normalizedDirection);
 
-        // Make the projectile trigger a 'selectObject' event when 
+        // Make the projectile trigger a 'select' event when 
         // it hits an object.
         projectile.physicsBody().setCollisionCallbackEnabled(true);
         projectile.physicsBody().getCollisionObservable().add((event) => {
+            console.log("projectile collided for " + this.ownerId);
             const otherMesh = event.collidedAgainst.transformNode;
             if (this.objectRegistry &&
                 this.objectRegistry.hasObjectWithMeshId(otherMesh.id)) {
@@ -92,7 +93,7 @@ export default class ProjectileWeapon extends Selector implements IProjectileWea
         // Set timeout for removing the projectile 
         // after it has existed for too long.
         setTimeout(() => {
-            
+            this.destroyProjectile(projectile);
         }, this.projectileTimeout);
     }
 

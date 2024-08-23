@@ -41,10 +41,12 @@ export default class CreatureBody extends Device implements ICreatureBodyActions
     }
 
     selectItem(itemName: string) {
-        if (this.items[itemName] === undefined) {
+        const itemToSelect = this.items[itemName];
+        if (itemToSelect === undefined) {
             throw new Error("No item '" + itemName + "' owned by CreatureBody");
         }
         this.selectedItemName = itemName;
+        itemToSelect.activate();
     }
 
     doItemMainAction(): void {

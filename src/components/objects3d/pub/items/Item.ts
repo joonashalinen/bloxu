@@ -2,15 +2,19 @@ import { AnimationGroup, TransformNode, Vector3 } from "@babylonjs/core";
 import EventEmitter from "../../../events/pub/EventEmitter";
 import IItem from "./IItem";
 import IMenu from "../menus/IMenu";
+import History from "../../../data_structures/pub/History";
+import Object from "../Object";
 
 /**
  * Base class for IItem implementations.
  */
 export default class Item implements IItem {
     ownerId: string;
+    isActive: boolean = false;
     hasSecondaryAction: boolean = false;
     emitter: EventEmitter = new EventEmitter();
     useDelay: number = 0;
+    history: History<Object> = new History();
     protected _menu: IMenu;
     protected _itemUsed = false;
     protected _animationEnded = false;
@@ -18,6 +22,22 @@ export default class Item implements IItem {
     private _transformNode: TransformNode;
 
     constructor(public useAnimation: AnimationGroup = undefined) {
+    }
+
+    activate(): void {
+        this.isActive = true;
+    }
+
+    deactivate(): void {
+        this.isActive = false;
+    }
+
+    undo(): void {
+        this.history.undo()
+    }
+
+    redo(): void {
+        this.history.redo()
     }
 
     public get transformNode() {

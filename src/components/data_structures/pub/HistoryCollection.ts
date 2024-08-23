@@ -31,11 +31,11 @@ export default class HistoryCollection<T> {
         return this.touchedHistories[historyId] !== undefined;
     }
 
-    performAction(action: Action<T>, historyId: string) {
+    perform(action: Action<T>, historyId: string) {
         if (this.histories[historyId] === undefined) {
             throw new Error(`No history with given id '${historyId}' exists.`);
         }
-        this.histories[historyId].performAction(action);
+        this.histories[historyId].perform(action);
         this.touchedHistories[historyId] = this.histories[historyId];
     }
 }

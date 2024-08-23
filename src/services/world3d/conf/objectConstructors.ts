@@ -16,6 +16,7 @@ import Portal from "../../../components/objects3d/pub/Portal";
 import ProjectileWeapon from "../../../components/objects3d/pub/items/ProjectileWeapon";
 import JumpState from "../../../components/objects3d/pub/creatures/JumpState";
 import Placer from "../../../components/objects3d/pub/items/Placer";
+import Picker from "../../../components/objects3d/pub/items/Picker";
 
 export type TObjectConstructor = (id: string,  ...args: unknown[]) => Object3;
 
@@ -99,22 +100,27 @@ export default function (
                 return ball
             };
 
-            const picker = new ProjectileWeapon(pistolMesh,
+            const projectileWeapon = new ProjectileWeapon(pistolMesh,
                 createProjectile, character.animations.shoot);
-            picker.ownerId = id;
-            picker.projectileSpeed = 5;
-            picker.useDelay = 150;
-            picker.objectRegistry = objectRegistry;
+            projectileWeapon.ownerId = id;
+            projectileWeapon.projectileSpeed = 5;
+            projectileWeapon.useDelay = 150;
+            projectileWeapon.objectRegistry = objectRegistry;
 
-            const placer = new GridMenu(
-                new Placer(globals.objectGrid as ObjectGrid),
-                new MeshGrid(
-                    MeshGrid.createSpherePrototype(blockSize, 0.2),
-                    blockSize, {x: 3, y: 1, z: 3}
-                )
+            const picker = new Picker(projectileWeapon);
+            picker.ownerId = id;
+
+            const placer = new Placer(
+                new GridMenu(
+                    new MeshGrid(
+                        MeshGrid.createSpherePrototype(blockSize, 0.2),
+                        blockSize, {x: 3, y: 1, z: 3}
+                    )
+                ),
+                globals.objectGrid as ObjectGrid
             );
             placer.ownerId = id;
-            placer.followedNode = body.transformNode;
+            (placer.selector as GridMenu).followedNode = body.transformNode;
 
             const pickerPlacer = new PickerPlacer(picker, placer);
             pickerPlacer.ownerId = id;
@@ -131,6 +137,8 @@ export default function (
             pickerPlacer.unpaintOwnedObject = (object) => {
                 object.rootMesh().renderOverlay = false;
             };
+            pickerPlacer.linkWith(globals.pickerPlacers as Set<PickerPlacer>);
+            (globals.pickerPlacers as Set<PickerPlacer>).add(pickerPlacer);
 
             body.items["pickerPlacer"] = pickerPlacer;
             body.selectItem("pickerPlacer");
