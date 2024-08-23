@@ -74,7 +74,6 @@ export default class ProjectileWeapon extends Selector implements IProjectileWea
         // it hits an object.
         projectile.physicsBody().setCollisionCallbackEnabled(true);
         projectile.physicsBody().getCollisionObservable().add((event) => {
-            console.log("projectile collided for " + this.ownerId);
             const otherMesh = event.collidedAgainst.transformNode;
             if (this.objectRegistry &&
                 this.objectRegistry.hasObjectWithMeshId(otherMesh.id)) {

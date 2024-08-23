@@ -125,7 +125,6 @@ export default class Object {
                 }
                 this.isInAir = false;
                 this.lastLandingTime = timeNow;
-                console.log("land");
                 this.emitter.trigger("land", [event]);
             } else {
                 this.lastBumpTime = timeNow;
