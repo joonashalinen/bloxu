@@ -19,6 +19,8 @@ import maps from "../conf/maps/maps";
 import IController from "../../../components/objects3d/pub/IController";
 import ObjectManager from "../../../components/objects3d/pub/ObjectManager";
 import createGlobals from "../conf/globals";
+import createBackgrounds, { IBackgrounds } from "../conf/backgrounds";
+import ILiveEnvironment from "../../../components/graphics3d/pub/ILiveEnvironment";
 
 type Types = {[type: string]: Function};
 type Instances = {[name: string]: Object};
@@ -32,6 +34,8 @@ type MapGenerator = (scene: Scene,
  */
 export default class World3D implements IService {
     objects: ObjectManager;
+    backgrounds: IBackgrounds;
+    currentBackground: ILiveEnvironment;
     effects: Instances;
     effectTypes: Types;
     skybox: Mesh;
@@ -216,6 +220,15 @@ export default class World3D implements IService {
      */
     async selectMap(id: string) {
         if (maps[id]) {
+            // Switch background.
+            if (this.currentBackground !== undefined) {
+                this.currentBackground.destroy();
+            }
+            this.currentBackground = this.backgrounds[id] !== undefined ?
+                this.backgrounds[id]() : this.backgrounds.Default();
+            this.currentBackground.generate();
+            
+            // Generate map.
             const mapGenerator: MapGenerator = maps[id];
             await mapGenerator(this.scene, this.meshConstructors, this.objects);
             return true;
@@ -270,6 +283,7 @@ export default class World3D implements IService {
         this.objects.objectConstructors = objectConstructors(
             this.scene, this.meshConstructors, this.objects, this.glowLayer, this.globals);
 
+        this.backgrounds = createBackgrounds(this.meshConstructors);
         // Setup skybox.
         /* this.skybox = this.meshConstructors["SkyBox"]();
         this.skybox.position = this.camera.position; */
@@ -327,6 +341,9 @@ export default class World3D implements IService {
             const timePassed = timeNow - lastTime;
 
             this.objects.doOnTick(timePassed, absoluteTime);
+            if (this.currentBackground !== undefined) {
+                this.currentBackground.doOnTick(timePassed, absoluteTime);
+            }
             this.scene.render();
             lastTime = timeNow;
         });

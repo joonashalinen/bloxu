@@ -32,7 +32,8 @@ export default async function(babylonjs: typeof BABYLON, scene: BABYLON.Scene) {
     assetLoader.modelPaths = {
         "Blocks::dirt": "blocks/dirt.glb",
         "Blocks::grassyDirt": "blocks/grassy_dirt.glb",
-        "Blocks::stone": "blocks/stone.glb"
+        "Blocks::stone": "blocks/stone.glb",
+        "Background::cloudPrototype": "cloud_prototype.glb"
     };
 
     const directionArrowMesh = (await assetLoader.loadModelFromFile("direction_arrow.glb")).meshes[0];
@@ -42,6 +43,7 @@ export default async function(babylonjs: typeof BABYLON, scene: BABYLON.Scene) {
     assetLoader.loadModel("Blocks::dirt");
     assetLoader.loadModel("Blocks::grassyDirt");
     assetLoader.loadModel("Blocks::stone");
+    assetLoader.loadModel("Background::cloudPrototype");
 
     function plainConstructor(type: string, id?: string) {
         const modelImport = assetLoader.getModel(type);
@@ -249,6 +251,17 @@ export default async function(babylonjs: typeof BABYLON, scene: BABYLON.Scene) {
             frame.parent = parent;
 
             return parent;
-        }
+        },
+        "Background::cloudPrototype": (id: string) => {
+            const cloud = plainConstructor("Background::cloudPrototype",
+                "Background::cloudPrototype?" + id);
+            const material = new BABYLON.StandardMaterial(cloud.name + ":material", scene);
+            const color = new BABYLON.Color3(1, 1, 1);
+            material.diffuseColor = color;
+            material.specularColor = color;
+            material.ambientColor = color;
+            cloud.material = material;
+            return cloud;
+        },
     };
 }
