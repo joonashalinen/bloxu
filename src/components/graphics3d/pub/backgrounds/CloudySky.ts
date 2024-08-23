@@ -71,7 +71,15 @@ export default class CloudySky implements ILiveEnvironment {
 
     doOnTick(passedTime: number, absoluteTime: number): void {
         this.clusters.forEach((cluster) => {
-            cluster.position.x -= (passedTime / 1000) * this.options.windVelocity
+            const currentAbsolutePosition = cluster.absolutePosition;
+            // Make cloud clusters wrap around to the maximum of the 
+            // bounded area once they have reached the minimum bounds.
+            if (currentAbsolutePosition.x >= this.options.minBounds.x) {
+                currentAbsolutePosition.x -= (passedTime / 1000) * this.options.windVelocity
+            } else {
+                currentAbsolutePosition.x = this.options.maxBounds.x;                
+            }
+            cluster.setAbsolutePosition(currentAbsolutePosition);
         });
     }
 }
