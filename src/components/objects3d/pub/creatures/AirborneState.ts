@@ -9,14 +9,11 @@ import Device from "../Device";
  * in air.
  */
 export default class AirborneState extends CreatureBodyState implements ICreatureBodyState {
-    private _creatureHasLanded: boolean = false;
+    name = "airborne";
 
     constructor(creatureBody: CreatureBody,
         public hoverAnimation: AnimationGroup) {
         super(creatureBody);
-        this.creatureBody.onLanding(() => {
-            this._creatureHasLanded = true;
-        });
     }
 
     doItemMainAction(): void {
@@ -30,17 +27,16 @@ export default class AirborneState extends CreatureBodyState implements ICreatur
     start() {
         if (this.isActive) return;
         super.start();
-
-        this._creatureHasLanded = false;
+        this.creatureBody.ownsRotationAnimations = false;
+        this.creatureBody.horizontalRotationAnimation.disable();
         this.creatureBody.directionalAnimation.disable();
-        this.hoverAnimation.play();
+        this.playAnimation(this.hoverAnimation);
     }
 
     end() {
         if (!this.isActive) return;
-        super.end();
         this.hoverAnimation.stop();
-        this.creatureBody.directionalAnimation.enable(false);
+        super.end();
     }
 
     /**
@@ -48,7 +44,9 @@ export default class AirborneState extends CreatureBodyState implements ICreatur
      */
     doOnTick(passedTime: number, absoluteTime: number) {
         if (!this.isActive) return;
-        if (this._creatureHasLanded) {
+        super.doOnTick(passedTime, absoluteTime);
+        if (!this.isActive) return;
+        if (this._landed) {
             if (!this.creatureBody.isInPerpetualMotion()) {
                 this.endWithEvent("idle");
             } else {

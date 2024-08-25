@@ -9,17 +9,13 @@ import CreatureBodyState from "./CreatureBodyState";
  * by running.
  */
 export default class JumpState extends CreatureBodyState implements ICreatureBodyState {
+    name = "jump";
     timeAtJumpStart: number = 0;
     jumpFactor: number = 5.5;
-    private _creatureHasLanded = false;
-    private _restoreRotationAnimation: boolean;
-    private _restoreDirectionalAnimation: boolean;
-    private _creatureOwnsRotationAnimations: boolean;
     
     constructor(creatureBody: CreatureBody,
         public jumpAnimation: AnimationGroup) {
         super(creatureBody);
-        this.creatureBody.onLanding(this._handleLandingEvent.bind(this));
     }
 
     doItemMainAction(): void {
@@ -33,17 +29,10 @@ export default class JumpState extends CreatureBodyState implements ICreatureBod
     start(...args: unknown[]): void {
         if (this.isActive) return;
         super.start();
-        this._creatureHasLanded = false;
         this.timeAtJumpStart = 0;
-
-        this._restoreRotationAnimation = this.creatureBody.horizontalRotationAnimation.enabled();
-        this.creatureBody.horizontalRotationAnimation.disable();
-
-        this._creatureOwnsRotationAnimations = this.creatureBody.ownsRotationAnimations;
         this.creatureBody.ownsRotationAnimations = false;
-
-        this._restoreDirectionalAnimation = this.creatureBody.directionalAnimation.enabled();
         this.creatureBody.directionalAnimation.disable();
+        this.creatureBody.horizontalRotationAnimation.disable();
 
         this.playAnimation(this.jumpAnimation);
 
@@ -57,15 +46,8 @@ export default class JumpState extends CreatureBodyState implements ICreatureBod
 
     end(): void {
         if (!this.isActive) return;
-        super.end();
         this.jumpAnimation.stop();
-        this.creatureBody.ownsRotationAnimations = this._creatureOwnsRotationAnimations;
-        if (this._restoreRotationAnimation) {
-            this.creatureBody.horizontalRotationAnimation.enable();
-        }
-        if (this._restoreDirectionalAnimation) {
-            this.creatureBody.directionalAnimation.enable();
-        }
+        super.end();
     }
 
     /**
@@ -76,22 +58,14 @@ export default class JumpState extends CreatureBodyState implements ICreatureBod
         if (this.timeAtJumpStart === 0) {
             this.timeAtJumpStart = absoluteTime;
         }
-        if (this.creatureBody.asPhysical.isInTerminalFreefall()) {
-            this.endWithEvent("airborne");
-        } else if (this._creatureHasLanded) {
+        super.doOnTick(passedTime, absoluteTime);
+        if (!this.isActive) return;
+        if (this._landed) {
             if (!this.creatureBody.isInPerpetualMotion()) {
                 this.endWithEvent("idle");
             } else {
                 this.endWithEvent("move");
             }
         }
-    }
-
-    /**
-     * When the Creature has landed on ground.
-     */
-    private _handleLandingEvent(event: IPhysicsCollisionEvent) {
-        if (!this.isActive) return;
-        this._creatureHasLanded = true;
     }
 }

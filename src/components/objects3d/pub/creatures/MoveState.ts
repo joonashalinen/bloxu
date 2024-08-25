@@ -9,6 +9,7 @@ import Device from "../Device";
  * is currently in perpetual motion.
  */
 export default class MoveState extends CreatureBodyState implements ICreatureBodyState {
+    name = "move";
 
     constructor(creatureBody: CreatureBody) {
         super(creatureBody);
@@ -17,7 +18,8 @@ export default class MoveState extends CreatureBodyState implements ICreatureBod
     start(...args: unknown[]): void {
         if (this.isActive) return;
         super.start();
-        this._jumped = false;
+        this.creatureBody.ownsRotationAnimations = false;
+        this.creatureBody.horizontalRotationAnimation.disable();
         this.creatureBody.directionalAnimation.enable();
     }
 
@@ -28,6 +30,8 @@ export default class MoveState extends CreatureBodyState implements ICreatureBod
     }
 
     doOnTick(passedTime: number, absoluteTime: number): void {
+        if (!this.isActive) return;
+        super.doOnTick(passedTime, absoluteTime);
         if (!this.isActive) return;
         if (this._jumped) {
             this.endWithEvent("jump");

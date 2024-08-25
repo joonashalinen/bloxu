@@ -173,7 +173,7 @@ export default class Object {
      * Whether the object is in air and is moving down vertically.
      */
     isFalling() {
-        return this.inAirDirection < 0;
+        return this.isInAir && this.inAirDirection < 0;
     }
 
     /**

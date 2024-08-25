@@ -19,6 +19,7 @@ import Placer from "../../../components/objects3d/pub/items/Placer";
 import Picker from "../../../components/objects3d/pub/items/Picker";
 import AnimationFactory from "../../../components/graphics3d/pub/animations/AnimationFactory";
 import Animation from "../../../components/graphics3d/pub/animations/Animation";
+import AirborneState from "../../../components/objects3d/pub/creatures/AirborneState";
 
 export type TObjectConstructor = (id: string,  ...args: unknown[]) => Object3;
 
@@ -65,25 +66,40 @@ export default function (
             body.ownerId = id;
             body.runSpeed = 2.5;
 
-            // Jump state needs some extra configuring to make jumping look better.
-            const jumpState = (body.actionStateMachine.states["jump"] as JumpState);
+            // Jump state and airborne state need some extra
+            //  configuring to make the animations look better.
+
             let endCleanupTimeout: NodeJS.Timeout;
-            jumpState.playAnimation = (animation) => {
-                clearTimeout(endCleanupTimeout);
-                (Object.values(character.animations)).forEach((animation) => {
-                    animation.blendingSpeed = 0.1;
-                });
-                character.animations.jump.blendingSpeed = 0.05;
-                animation.play();
-                animation.goToFrame(44);
-            };
-            jumpState.endCleanup = () => {
+            const restoreBlendingSpeeds = () => {
                 endCleanupTimeout = setTimeout(() => {
                     (Object.values(character.animations)).forEach((animation) => {
                         animation.blendingSpeed = 0.2;
                     });
                 }, 500);
             };
+            const slowdownBlendingSpeeds = (to: number) => {
+                clearTimeout(endCleanupTimeout);
+                (Object.values(character.animations)).forEach((animation) => {
+                    animation.blendingSpeed = to;
+                });
+            };
+            
+            const jumpState = (body.actionStateMachine.states["jump"] as JumpState);
+            jumpState.playAnimation = (animation) => {
+                slowdownBlendingSpeeds(0.1);
+                character.animations.jump.blendingSpeed = 0.05;
+                animation.play();
+                animation.goToFrame(44);
+            };
+            jumpState.endCleanup = restoreBlendingSpeeds;
+
+            const airborneState = (body.actionStateMachine.states["airborne"] as AirborneState);
+            airborneState.playAnimation = (animation) => {
+                slowdownBlendingSpeeds(0.1);
+                character.animations.hover.blendingSpeed = 0.05;
+                animation.play(true);
+            };
+            airborneState.endCleanup = restoreBlendingSpeeds;
 
             const createProjectile = (id: string = "") => {
                 const ball = MeshBuilder.CreateSphere(

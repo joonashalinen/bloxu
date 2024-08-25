@@ -1,4 +1,4 @@
-import { AnimationGroup, Vector3 } from "@babylonjs/core";
+import { AnimationGroup, IPhysicsCollisionEvent, Vector3 } from "@babylonjs/core";
 import ICreatureBodyState from "../../../computation/pub/ICreatureBodyState";
 import IState from "../../../computation/pub/IState";
 import State from "../../../computation/pub/State";
@@ -13,9 +13,15 @@ export default class CreatureBodyState  extends State implements ICreatureBodySt
     protected _jumped: boolean = false;
     protected _moved: boolean = false;
     protected _originalPerpetualMotionSpeed: number;
+    protected _landed = false;
+    protected _restoreRotationAnimation: boolean;
+    protected _restoreDirectionalAnimation: boolean;
+    protected _creatureOwnsRotationAnimations: boolean;
+    protected _horizontalRotationEnabled: boolean;
 
     constructor(public creatureBody: CreatureBody) {
         super();
+        this.creatureBody.onLanding(this._handleLandingEvent.bind(this));
     }
 
     start(...args: unknown[]) {
@@ -23,16 +29,36 @@ export default class CreatureBodyState  extends State implements ICreatureBodySt
         super.start();
         this._moved = false;
         this._jumped = false;
-        this._originalPerpetualMotionSpeed = this.creatureBody
-            .perpetualMotionSpeed;
+        this._landed = false;
+
+        this._restoreRotationAnimation = (
+            this.creatureBody.horizontalRotationAnimation !== undefined && 
+            this.creatureBody.horizontalRotationAnimation.enabled()
+        );
+        this._restoreDirectionalAnimation = (
+            this.creatureBody.directionalAnimation !== undefined && 
+            this.creatureBody.directionalAnimation.enabled()
+        );
+        this._creatureOwnsRotationAnimations = this.creatureBody.ownsRotationAnimations;
+        this._horizontalRotationEnabled = this.creatureBody.horizontalRotationEnabled;
+
+        this._originalPerpetualMotionSpeed = this.creatureBody.perpetualMotionSpeed;
         this.creatureBody.perpetualMotionSpeed = this.creatureBody.runSpeed;
     }
 
     end() {
         if (!this.isActive) return;
         super.end();
-        this.creatureBody.perpetualMotionSpeed = 
-            this._originalPerpetualMotionSpeed;
+        this.creatureBody.perpetualMotionSpeed = this._originalPerpetualMotionSpeed;
+
+        this.creatureBody.ownsRotationAnimations = this._creatureOwnsRotationAnimations;
+        if (this._restoreRotationAnimation) {
+            this.creatureBody.horizontalRotationAnimation.enable();
+        }
+        if (this._restoreDirectionalAnimation) {
+            this.creatureBody.directionalAnimation.enable();
+        }
+        this.creatureBody.horizontalRotationEnabled = this._horizontalRotationEnabled;
     }
 
     setPerpetualMotionDirection(direction: Vector3): void {
@@ -69,5 +95,16 @@ export default class CreatureBodyState  extends State implements ICreatureBodySt
     }
 
     doOnTick(passedTime: number, absoluteTime: number): void {
+        if (this.creatureBody.isFalling() && this.name !== "airborne") {
+            this.endWithEvent("airborne");
+        }
+    }
+
+    /**
+     * When the Creature has landed on ground.
+     */
+    private _handleLandingEvent(event: IPhysicsCollisionEvent) {
+        if (!this.isActive) return;
+        this._landed = true;
     }
 }

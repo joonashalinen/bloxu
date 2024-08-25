@@ -8,6 +8,8 @@ import CreatureBodyState from "./CreatureBodyState";
  * idle, not doing anything.
  */
 export default class IdleState extends CreatureBodyState implements ICreatureBodyState {
+    name = "idle";
+
     constructor(creatureBody: CreatureBody,
         public idleAnimation: AnimationGroup) {
         super(creatureBody);
@@ -16,6 +18,9 @@ export default class IdleState extends CreatureBodyState implements ICreatureBod
     start() {
         if (this.isActive) return;
         super.start();
+        if (this.creatureBody.directionalAnimation !== undefined) {
+            this.creatureBody.directionalAnimation.disable();
+        }
         this.idleAnimation.start(true);
     }
 
@@ -26,6 +31,8 @@ export default class IdleState extends CreatureBodyState implements ICreatureBod
     }
     
     doOnTick(passedTime: number, absoluteTime: number): void {
+        if (!this.isActive) return;
+        super.doOnTick(passedTime, absoluteTime);
         if (!this.isActive) return;
         if (this._jumped) {
             this.endWithEvent("jump");

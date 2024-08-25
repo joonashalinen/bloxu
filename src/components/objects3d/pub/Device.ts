@@ -31,8 +31,7 @@ export default class Device extends Object {
      */
     updateDirectionalAnimation(direction: Vector3) {
         // Update directional movement animation.
-        if (this.directionalAnimation !== undefined && 
-            this.isInPerpetualMotion()) {
+        if (this.directionalAnimation !== undefined) {
             // The direction of the movement animation is 
             // relative to the faced direction.
             const relativeMotionDirection = Vector3.TransformNormal(

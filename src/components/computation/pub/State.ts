@@ -5,6 +5,7 @@ import IState from "./IState";
  * Base implementation of a state of a StateMachine.
  */
 export default class State implements IState {
+    name: string;
     isActive: boolean = false;
     endCleanup = () => {};
     emitter: EventEmitter = new EventEmitter();
