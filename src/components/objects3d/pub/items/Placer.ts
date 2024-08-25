@@ -95,7 +95,6 @@ export default class Placer extends Item implements IPlacer {
             f(object);
             if (objectWasInVoid) object.teleportToVoid();
             if (objectWasHeld) this.heldObjects.push(object);
-            console.log("setting object absolute position to " + objectOriginalPosition);
             object.setAbsolutePosition(objectOriginalPosition);
         };
         if (this.objectGrid !== undefined) {
