@@ -1,7 +1,7 @@
 import { AnimationGroup } from "@babylonjs/core";
-import TimeAdjustedDifference from "../../statistics/pub/TimeAdjustedDifference";
-import MovingAverage from "../../statistics/pub/MovingAverage";
-import Animation from "./Animation";
+import TimeAdjustedDifference from "../../../statistics/pub/TimeAdjustedDifference";
+import MovingAverage from "../../../statistics/pub/MovingAverage";
+import InteractiveAnimation from "../InteractiveAnimation";
 
 /**
  * An animation that either plays a left turning animation 
@@ -9,7 +9,7 @@ import Animation from "./Animation";
  * The animation's speed is adjusted based on how quickly 
  * the angle changes between updates.
  */
-export default class RotationAnimation extends Animation {
+export default class RotationAnimation extends InteractiveAnimation {
     angle: number = 0;
     originalAnimationSpeed: number;
     currentAnimationSpeed: number;

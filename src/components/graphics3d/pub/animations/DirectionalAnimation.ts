@@ -1,12 +1,12 @@
 import { AnimationGroup, Vector2, Vector3 } from "@babylonjs/core";
-import DiscreteVector from "./DiscreteVector";
-import Animation from "./Animation";
+import InteractiveAnimation from "../InteractiveAnimation";
+import DiscreteVector from "../DiscreteVector";
 
 /**
  * An animation that plays an animation from a list of 
  * animations based on a current known direction vector.
  */
-export default class DirectionalAnimation extends Animation {
+export default class DirectionalAnimation extends InteractiveAnimation {
     rotationOffset: number = 0;
 
     constructor(

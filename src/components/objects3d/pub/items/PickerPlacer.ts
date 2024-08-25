@@ -14,11 +14,15 @@ export default class PickerPlacer extends Item {
     linkedPickerPlacers: Set<PickerPlacer> = new Set();
     ownedObjects: Set<Object> = new Set();
     maxOwnedObjects: number = 1;
-    paintOwnedObject: (object: Object) => void;
-    unpaintOwnedObject: (object: Object) => void;
+    unpaintOwnedObject: (object: Object) => void = (object) => {};
     private _selectedItem: "picker" | "placer" = "picker";
     private _redoing = false;
     private _ownershipChangeListeners: {[objectId: string]: (method: string) => void} = {};
+
+    public get paintOwnedObject() { return this.picker.paintPickedObject; }
+    public set paintOwnedObject(paint: (object: Object) => void) {
+        this.picker.paintPickedObject = paint;
+    }
 
     constructor(public picker: IPicker, public placer: IPlacer) {
         super();
@@ -122,17 +126,18 @@ export default class PickerPlacer extends Item {
 
         const lastUndoable = this.placer.history.undoableActions
             [this.placer.history.undoableActions.length - 1];
-        
-        if (lastUndoable !== undefined) {
-            this.placer.undo();
-            this.picker.undo();
 
-            // If the object is no longer in the undoable history at all
-            // we should release ownership of it.
-            if (this.placer.history.undoableActions
-                .find((action) => action.target === lastUndoable.target) === undefined) {
-                this._releaseOwnership(lastUndoable.target);
-            }
+        if (lastUndoable === undefined) return;
+        if (lastUndoable.target.bringingBackFromTheVoid) return;
+
+        this.placer.undo();
+        this.picker.undo();
+
+        // If the object is no longer in the undoable history at all
+        // we should release ownership of it.
+        if (this.placer.history.undoableActions
+            .find((action) => action.target === lastUndoable.target) === undefined) {
+            this._releaseOwnership(lastUndoable.target);
         }
     }
 
@@ -142,24 +147,30 @@ export default class PickerPlacer extends Item {
     redo() {
         if (this._selectedItem !== "picker") return;
 
-        this._redoing = true;
         const lastRedoable = this.placer.history.redoableActions
-            [this.placer.history.redoableActions.length - 1];
+        [this.placer.history.redoableActions.length - 1];
+        
+        if (lastRedoable === undefined) return;
+        if (lastRedoable.target.bringingBackFromTheVoid) return;
+        
+        this._redoing = true;
 
-        if (lastRedoable !== undefined) {
-            const affectedObjectWasInUndoHistory = this.placer.history.undoableActions
-                .find((action) => action.target === lastRedoable.target) !== undefined;
+        const affectedObjectWasInUndoHistory = this.placer.history.undoableActions
+        .find((action) => action.target === lastRedoable.target) !== undefined;
 
-            this.picker.redo();
-            this.picker.heldObjects.pop();
-            this.placer.redo();
+        // If the object affected by the redo was previously not in the
+        // undoable history but now is again then we should repaint it.
+        // if (!affectedObjectWasInUndoHistory) this.paintOwnedObject(lastRedoable.target);
 
-            // If the object affected by the redo was previously not in the
-            // undoable history but now is again then we should reclaim ownership of it.
-            if (!affectedObjectWasInUndoHistory) {
-                this._takeOwnership(lastRedoable.target);
-            }
-        }
+        this.picker.redo();
+        this.picker.heldObjects.pop();
+        this.placer.redo();
+
+        // If the object affected by the redo was previously not in the
+        // undoable history but now is again then we should repaint it and
+        // reclaim ownership of it.
+        if (!affectedObjectWasInUndoHistory) this._takeOwnership(lastRedoable.target);
+        
         this._redoing = false;
     }
 
@@ -190,10 +201,6 @@ export default class PickerPlacer extends Item {
      * Take ownership of an object we don't own.
      */
     private _takeOwnership(object: Object) {
-        if (this.paintOwnedObject !== undefined) {
-            this.paintOwnedObject(object);
-        }
-
         // If any of the linked PickerPlacers own the object, we want to copy their 
         // undo/redo history for the object.
         this.linkedPickerPlacers.forEach((other) => {
@@ -238,9 +245,7 @@ export default class PickerPlacer extends Item {
      * Release ownership of an object that we own.
      */
     private _releaseOwnership(object: Object) {
-        if (this.unpaintOwnedObject !== undefined) {
-            this.unpaintOwnedObject(object);
-        }
+        this.unpaintOwnedObject(object);
         this.ownedObjects.delete(object);
         object.offChangeState(this._ownershipChangeListeners[object.id]);
         delete this._ownershipChangeListeners[object.id];

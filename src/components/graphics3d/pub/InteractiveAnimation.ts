@@ -1,10 +1,11 @@
 import { AnimationGroup } from "@babylonjs/core";
 
 /**
- * Abstraction for a BabylonJS animation 
- * or a group of animations.
+ * An animation that can change itself on-the-fly based 
+ * on input given to it. This class is meant to be a base class for 
+ * classes that implement said input behaviors.
  */
-export default class Animation {
+export default class InteractiveAnimation {
     currentAnimation: AnimationGroup | undefined;
     private _enabled: boolean = true;
 

@@ -84,7 +84,7 @@ export default class Placer extends Item implements IPlacer {
         // Perform block placement in such a way that we support undo/redo.
         const objectWasInVoid = object.isInVoid;
         const objectWasHeld = this.heldObjects[this.heldObjects.length - 1] === object;
-        const objectOriginalPosition = object.transformNode.absolutePosition.clone();
+        const objectOriginalPosition = object.transformNode.getAbsolutePosition().clone();
         const selectionPosition = this.selector.selectionPosition.clone();
         const doWith = (f: (object: Object) => void) => {
             f(object);
@@ -95,7 +95,8 @@ export default class Placer extends Item implements IPlacer {
             f(object);
             if (objectWasInVoid) object.teleportToVoid();
             if (objectWasHeld) this.heldObjects.push(object);
-            object.transformNode.setAbsolutePosition(objectOriginalPosition);
+            console.log("setting object absolute position to " + objectOriginalPosition);
+            object.setAbsolutePosition(objectOriginalPosition);
         };
         if (this.objectGrid !== undefined) {
             this.history.perform(new Action(object,
@@ -140,6 +141,9 @@ export default class Placer extends Item implements IPlacer {
      * Unplaces the last placed object.
      */
     undo() {
+        const lastUndoable = this.history.undoableActions[this.history.undoableActions.length - 1];
+        if (lastUndoable === undefined) return;
+        if (lastUndoable.target.bringingBackFromTheVoid) return;
         this.history.undo();
     }
 
@@ -147,6 +151,9 @@ export default class Placer extends Item implements IPlacer {
      * Replaces the last unplaced object.
      */
     redo() {
+        const lastRedoable = this.history.redoableActions[this.history.redoableActions.length - 1];
+        if (lastRedoable === undefined) return;
+        if (lastRedoable.target.bringingBackFromTheVoid) return;
         this.history.redo();
     }
 

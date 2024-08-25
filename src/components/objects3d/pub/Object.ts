@@ -24,6 +24,7 @@ export default class Object {
     asPhysical: Physical;
     emitter: EventEmitter = new EventEmitter();
     isInVoid: boolean = false;
+    bringingBackFromTheVoid: boolean = false;
     isInAir: boolean = false;
     inAirDirection: 1 | -1;
     lastUpdatedPosition: Vector3;
@@ -40,6 +41,9 @@ export default class Object {
     createTeleportInAnimation: () => Animation = this._defaultTeleportInAnimation.bind(this);
     createTeleportOutAnimation: () => Animation = this._defaultTeleportOutAnimation.bind(this);
     teleportAnimationSpeed = 2;
+    private _isHidden: boolean = false;
+    private _runningId: number = 0;
+    private _meshVisibilities: Map<AbstractMesh, number> = new Map();
 
     constructor(wrappee: AbstractMesh | Physical) {
         if (wrappee instanceof TransformNode) {
@@ -182,10 +186,11 @@ export default class Object {
 
         this.changeState("teleportToVoid", [],
             () => {
-                this._playTeleportAnimation(this.createTeleportOutAnimation);
+                if (this.bringingBackFromTheVoid) return;
                 this.isInVoid = true;
-                this.transformNode.setEnabled(false);
+                this._playTeleportAnimation(this.createTeleportOutAnimation);
                 this.asPhysical.disable();
+                this.hide();
             }, this.bringBackFromTheVoid);
     }
 
@@ -199,12 +204,18 @@ export default class Object {
 
         this.changeState("bringBackFromTheVoid", [],
             () => {
+                if (this.bringingBackFromTheVoid) return;
+                this.bringingBackFromTheVoid = true;
                 this.isInVoid = false;
                 this.asPhysical.enable();
                 this._playTeleportAnimation(this.createTeleportInAnimation).then(() => {
                     // If the object hasn't been sent to the void while the animation was playing,
-                    // we can now make it visible.
-                    if (!this.isInVoid) this.transformNode.setEnabled(true);
+                    // we can now make it visible. If we made the object visible before 
+                    // waiting for the animation to end, it would most likely interfere with the
+                    // teleport-in animation. For example, the default teleport-in animation
+                    // enlarges the object from zero to its full size.
+                    if (!this.isInVoid) this.show();
+                    this.bringingBackFromTheVoid = false;
                 });
             }, this.teleportToVoid);
     }
@@ -244,7 +255,7 @@ export default class Object {
      * to the given position, also moving the mesh.
      */
     setAbsolutePosition(position: Vector3) {
-        const originalPosition = this.transformNode.absolutePosition.clone();
+        const originalPosition = this.transformNode.getAbsolutePosition().clone();
         this.changeState("setAbsolutePosition", [position],
             () => {
                 this.transformNode.setAbsolutePosition(position);
@@ -295,6 +306,36 @@ export default class Object {
     }
 
     /**
+     * Makes the object visible again if it was previously made invisible.
+     */
+    show() {
+        if (!this._isHidden) return;
+
+        this.transformNode.getChildMeshes().forEach((mesh) => {
+            if (this._meshVisibilities.has(mesh)) {
+                mesh.visibility = this._meshVisibilities.get(mesh);
+            }
+        });
+        this._isHidden = false;
+    }
+
+    /**
+     * Makes the object's meshes invisible. The object will still have physics
+     * and collisions.
+     */
+    hide() {
+        if (this._isHidden) return;
+
+        this.transformNode.getChildMeshes().forEach((mesh) => {
+            // Save the current visibility of the mesh so we can restore it later.
+            this._meshVisibilities.set(mesh, mesh.visibility);
+            // Hide the mesh.
+            mesh.visibility = 0;
+        });
+        this._isHidden = true;
+    }
+
+    /**
      * Returns the given lambda as a function that can be called 
      * to undo a state-changing operation done on the Object.
      * This is needed because otherwise we might add to the Object's 
@@ -314,8 +355,10 @@ export default class Object {
      * .teleportToVoid is called.
      */
     private _defaultTeleportOutAnimation() {
-        const teleportOutAnimation = new Animation("Object:teleportOutAnimation", "scaling", 60,
-            Animation.ANIMATIONTYPE_VECTOR3, Animation.ANIMATIONLOOPMODE_CYCLE);
+        const teleportOutAnimation = new Animation(
+            "Object:teleportOutAnimation" + (this._runningId++), "scaling", 60,
+            Animation.ANIMATIONTYPE_VECTOR3, Animation.ANIMATIONLOOPMODE_CYCLE
+        );
         teleportOutAnimation.setEasingFunction(new BezierCurveEase(0.58, 0.01, 0.48, 1.04));
         const currentScaling = this.rootMesh().scaling.clone();
         teleportOutAnimation.setKeys(
@@ -330,8 +373,10 @@ export default class Object {
      * .bringBackFromTheVoid is called.
      */
     private _defaultTeleportInAnimation() {
-        const teleportInAnimation = new Animation("Object:teleportInAnimation", "scaling", 60,
-            Animation.ANIMATIONTYPE_VECTOR3, Animation.ANIMATIONLOOPMODE_CYCLE);
+        const teleportInAnimation = new Animation(
+            "Object:teleportInAnimation" + (this._runningId++), "scaling", 60,
+            Animation.ANIMATIONTYPE_VECTOR3, Animation.ANIMATIONLOOPMODE_CYCLE
+        );
         teleportInAnimation.setEasingFunction(new BezierCurveEase(0.58, 0.01, 0.48, 1.04));
         const currentScaling = this.rootMesh().scaling.clone();
         teleportInAnimation.setKeys(
@@ -349,18 +394,35 @@ export default class Object {
     private _playTeleportAnimation(createTeleportAnimation: () => Animation) {
         return new Promise<void>((resolve) => {
             const animationMeshParent = new TransformNode(
-                "Object:animationMeshRoot", this.transformNode.getScene());
+                "Object:animationMeshRoot?" + (this._runningId++), this.transformNode.getScene());
+            
             const animationMesh = this.rootMesh().clone(
-                "Object:animationMesh?" + this.rootMesh().name, animationMeshParent);
-            animationMesh.setAbsolutePosition(this.rootMesh().absolutePosition.clone());
+                "Object:animationMesh?" + this.rootMesh().name + (this._runningId++), animationMeshParent);
+            animationMesh.setAbsolutePosition(this.transformNode.getAbsolutePosition().clone());
             animationMesh.rotationQuaternion = this.rootMesh().absoluteRotationQuaternion.clone();
-    
+            
+            // If the object is hidden then all the cloned meshes are also hidden,
+            // which means we should make them visible.
+            if (this._isHidden) {
+                // Make the cloned mesh itself visible.
+                if (this._meshVisibilities.has(this.rootMesh())) {
+                    animationMesh.visibility = this._meshVisibilities.get(this.rootMesh());
+                }
+                // Make the children of the cloned mesh visible.
+                const rootChildMeshes = this.rootMesh().getChildMeshes();
+                animationMesh.getChildMeshes().forEach((mesh, index) => {
+                    if (this._meshVisibilities.has(rootChildMeshes.at(index))) {
+                        mesh.visibility = rootChildMeshes.at(index).visibility;
+                    }
+                });
+            }
+
             animationMesh.animations.push(createTeleportAnimation());
             animationMesh.getScene().beginAnimation(animationMesh, 0, 60, false,
                 this.teleportAnimationSpeed, () => {
                     setTimeout(() => {
                         animationMesh.getScene().removeMesh(animationMesh as Mesh);
-                    }, 100);
+                    }, 100)
                     resolve();
                 }
             );

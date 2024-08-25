@@ -7,6 +7,7 @@ export default interface IPicker extends IItem {
     maxHeldObjects: number;
     canPick: () => boolean;
     canPickObject: (object: Object) => boolean;
+    paintPickedObject: (object: Object) => void;
     onPick(callback: (info: DSelectInfo) => void): void;
     offPick(callback: (info: DSelectInfo) => void): void;
 }

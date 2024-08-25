@@ -1,8 +1,8 @@
 import { AbstractMesh, Vector3 } from "@babylonjs/core";
 import Object from "./Object";
 import Physical from "./Physical";
-import DirectionalAnimation from "../../graphics3d/pub/DirectionalAnimation";
-import RotationAnimation from "../../graphics3d/pub/RotationAnimation";
+import DirectionalAnimation from "../../graphics3d/pub/animations/DirectionalAnimation";
+import RotationAnimation from "../../graphics3d/pub/animations/RotationAnimation";
 
 /**
  * A Device is an Object that supports animated actions 

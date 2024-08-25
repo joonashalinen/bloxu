@@ -13,6 +13,7 @@ export default class Picker extends Item implements IPicker {
     maxHeldObjects: number = 1;
     canPick: () => boolean = () => { return this.heldObjects.length < this.maxHeldObjects; };
     canPickObject: (object: Object) => boolean = (object) => true;
+    paintPickedObject: (object: Object) => void = (object) => {};
 
     public get transformNode() {return this.selector.transformNode};
     public get menu() {return this.selector.menu};
@@ -28,6 +29,7 @@ export default class Picker extends Item implements IPicker {
                 if (this.canPick() && this.canPickObject(info.object)) {
                     this.history.perform(new Action(info.object,
                         (object) => {
+                            this.paintPickedObject(info.object);
                             object.teleportToVoid();
                             this.heldObjects.push(info.object);
                         },
@@ -86,6 +88,9 @@ export default class Picker extends Item implements IPicker {
      * Unpicks the last picked object.
      */
     undo() {
+        const lastUndoable = this.history.undoableActions[this.history.undoableActions.length - 1];
+        if (lastUndoable === undefined) return;
+        if (lastUndoable.target.bringingBackFromTheVoid) return;
         this.history.undo();
     }
 
@@ -93,6 +98,9 @@ export default class Picker extends Item implements IPicker {
      * Repicks the last unpicked object.
      */
     redo() {
+        const lastRedoable = this.history.redoableActions[this.history.redoableActions.length - 1];
+        if (lastRedoable === undefined) return;
+        if (lastRedoable.target.bringingBackFromTheVoid) return;
         this.history.redo();
     }
 }

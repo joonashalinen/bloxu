@@ -2,8 +2,8 @@ import { AbstractMesh, Color3, GlowLayer, Mesh, MeshBuilder, Scene, StandardMate
 import Object3 from "../../../components/objects3d/pub/Object";
 import { AnimatedMesh } from "./meshConstructors";
 import PlayerBody from "./custom_object_types/PlayerBody";
-import RotationAnimation from "../../../components/graphics3d/pub/RotationAnimation";
-import DirectionalAnimation from "../../../components/graphics3d/pub/DirectionalAnimation";
+import RotationAnimation from "../../../components/graphics3d/pub/animations/RotationAnimation";
+import DirectionalAnimation from "../../../components/graphics3d/pub/animations/DirectionalAnimation";
 import DVector3 from "../../../components/graphics3d/pub/DVector3";
 import Physical from "../../../components/objects3d/pub/Physical";
 import Glow from "../../../components/graphics3d/pub/effects/Glow";
@@ -17,6 +17,8 @@ import ProjectileWeapon from "../../../components/objects3d/pub/items/Projectile
 import JumpState from "../../../components/objects3d/pub/creatures/JumpState";
 import Placer from "../../../components/objects3d/pub/items/Placer";
 import Picker from "../../../components/objects3d/pub/items/Picker";
+import AnimationFactory from "../../../components/graphics3d/pub/animations/AnimationFactory";
+import Animation from "../../../components/graphics3d/pub/animations/Animation";
 
 export type TObjectConstructor = (id: string,  ...args: unknown[]) => Object3;
 
@@ -128,11 +130,11 @@ export default function (
                 const overlayColor = id.includes("player-1") ? 
                     new Color3(1, 0.6, 0) : 
                     new Color3(0.3, 0.7, 1);
-                const overlayAlpha = 0.4;
                 // Show overlay for the picked object.
-                object.rootMesh().renderOverlay = true;
+                const overlayAlpha = 0.4;
                 object.rootMesh().overlayAlpha = overlayAlpha;
                 object.rootMesh().overlayColor = overlayColor;
+                object.rootMesh().renderOverlay = true;
             };
             pickerPlacer.unpaintOwnedObject = (object) => {
                 object.rootMesh().renderOverlay = false;
