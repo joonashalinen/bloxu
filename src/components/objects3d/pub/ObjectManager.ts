@@ -41,8 +41,8 @@ export default class ObjectManager {
             const otherMesh = event.collidedAgainst.transformNode;
             if (this.hasObjectWithMeshId(otherMesh.id)) {
                 const otherObject = this.getObjectWithMeshId(otherMesh.id);
-                object.handleObjectCollision(otherObject);
-                otherObject.handleObjectCollision(object);
+                object.handleObjectCollision(otherObject, event);
+                otherObject.handleObjectCollision(object, event);
             }
         });
     }

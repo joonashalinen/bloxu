@@ -20,19 +20,15 @@ export default class Object {
     id: string = "";
     ownerId: string;
     transformNode: TransformNode;
-    landingLedgeBuffer: number = 0.3;
     asPhysical: Physical;
     emitter: EventEmitter = new EventEmitter();
     isInVoid: boolean = false;
     bringingBackFromTheVoid: boolean = false;
     isInAir: boolean = false;
     inAirDirection: 1 | -1;
+    inAirDetectionThreshold: number = 0.01;
     lastUpdatedPosition: Vector3;
     preventBounceOnLanding: boolean = true;
-    lastBumpPosition: Vector3 = new Vector3(0, 0, 0);
-    lastBumpTime: number = 0;
-    lastLandingTime: number = 0;
-    eventTimeWindow: number = 50;
     horizontalRotationEnabled = true;
     history: History<Object> = new History();
     useHistory: boolean = false;
@@ -41,6 +37,8 @@ export default class Object {
     createTeleportInAnimation: () => Animation = this._defaultTeleportInAnimation.bind(this);
     createTeleportOutAnimation: () => Animation = this._defaultTeleportOutAnimation.bind(this);
     teleportAnimationSpeed = 2;
+    landingTimeoutDuration: number = 100;
+    private _lastPositionUpdateTime: number = 0;
     private _isHidden: boolean = false;
     private _runningId: number = 0;
     private _meshVisibilities: Map<AbstractMesh, number> = new Map();
@@ -119,32 +117,15 @@ export default class Object {
     }
 
     /**
-     * When the physics body of the Object has 
-     * collided with another physics body.
+     * Causes the object to perform state changes event triggers
+     * associated with landing, if the object is in air.
      */
-    protected _handleCollisionEvent(event: IPhysicsCollisionEvent) {
-        const timeNow = Date.now();
-
-        if (this.isInAir) {
-            if (event.normal.y < 0 && this.isFalling()) {
-                if (this.preventBounceOnLanding) {
-                    this.asPhysical.setVerticalVelocity(0);
-                }
-                this.isInAir = false;
-                this.lastLandingTime = timeNow;
-                this.emitter.trigger("land", [event]);
-            } else {
-                this.lastBumpTime = timeNow;
-                if (this.isFalling()) {
-                    this.transformNode.setAbsolutePosition(
-                        this.transformNode.absolutePosition.subtract(event.normal.scale(0.05))
-                    );
-                }
-                this.emitter.trigger("bump", [event]);
-            }
+    land() {
+        if (this.preventBounceOnLanding) {
+            this.asPhysical.setVerticalVelocity(0);
         }
-
-        this.emitter.trigger("collision", [event]);
+        this.isInAir = false;
+        this.emitter.trigger("land", [event]);
     }
 
     /**
@@ -160,12 +141,24 @@ export default class Object {
      */
     doOnTick(passedTime: number, absoluteTime: number) {
         if (this.isInVoid) return;
-        if (Math.abs(this.transformNode.position.y - this.lastUpdatedPosition.y) > 0.05) {
+        const timeNow = Date.now();
+        if (Math.abs(this.transformNode.getAbsolutePosition().y - this.lastUpdatedPosition.y) >
+            this.inAirDetectionThreshold) {
+                
             this.isInAir = true;
             this.inAirDirection = Math.sign(
                 this.transformNode.position.y - this.lastUpdatedPosition.y) as 1 | -1;
-            this.lastUpdatedPosition = this.transformNode.position.clone();
+            this.lastUpdatedPosition = this.transformNode.getAbsolutePosition().clone();
+            this._lastPositionUpdateTime = timeNow;
             this.emitter.trigger("airborne");
+
+        } else if (this.isInAir &&
+            (timeNow - this._lastPositionUpdateTime > this.landingTimeoutDuration)) {
+            // As a final fallback, if the object is in air but has not had a position update (i.e. no 
+            // vertical movement has been detected) for the set timeout duration, we conclude
+            // the object has landed. In some cases the object is able to land without a collision event 
+            // being triggered by babylonjs for some reason. This fallback fixes these edge cases.
+            this.land();
         }
     }
 
@@ -275,7 +268,16 @@ export default class Object {
         this.emitter.off("collision", callback);
     }
 
-    handleObjectCollision(object: Object) {
+    handleObjectCollision(object: Object, event: IPhysicsCollisionEvent) {
+        if (event.collider !== this.asPhysical.physicsAggregate.body) {
+            // Sometimes babylonjs will give the collision event to the other physics body
+            // if the other body is in motion as well. So we have to check whether we have 
+            // landed on such a body because we will not get the collision event 
+            // through our own physics body's collision observable.
+            if (this.isInAir && event.normal.y > 0) {
+                this.land();
+            }
+        }
     }
 
     /**
@@ -333,6 +335,29 @@ export default class Object {
             mesh.visibility = 0;
         });
         this._isHidden = true;
+    }
+
+    /**
+     * When the physics body of the Object has 
+     * collided with another physics body.
+     */
+    protected _handleCollisionEvent(event: IPhysicsCollisionEvent) {
+        if (this.isInAir) {
+            if (event.normal.y < 0) {
+                this.land();
+            } else {
+                if (this.isFalling()) {
+                    // Push the object back from the surface it is dragging along 
+                    // while falling. This is to prevent movable objects such as 
+                    // player characters from being able to wall jump.
+                    this.transformNode.setAbsolutePosition(
+                        this.transformNode.absolutePosition.subtract(event.normal.scale(0.05))
+                    );
+                }
+                this.emitter.trigger("bump", [event]);
+            }
+        }
+        this.emitter.trigger("collision", [event]);
     }
 
     /**
