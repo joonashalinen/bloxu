@@ -50,8 +50,8 @@ export default function (
             // Set character mesh color.
             const characterMaterial = new StandardMaterial("PlayerBody:mesh:material?" + id, scene);
             const color = id.includes("player-1") ? 
-                new Color3(0.94, 0.52, 0.34) : 
-                new Color3(0.49, 0.59, 0.75)
+                new Color3(1, 0.43, 0.3) : 
+                new Color3(0.43, 0.6, 0.9)
             characterMaterial.diffuseColor = color;
             characterMaterial.ambientColor = color;
             characterMaterial.specularColor = color;
@@ -141,7 +141,7 @@ export default function (
                 // Add glow effect to ball.
                 const ballGlow = new Glow(glowLayer, scene);
                 ballGlow.color = id.includes("player-1") ? 
-                    new Color3(1, 0.6, 0) : 
+                    new Color3(1, 0.6, 0.5) : 
                     ballGlow.color;
                 ballGlow.apply(ball);
                 
@@ -174,7 +174,7 @@ export default function (
             pickerPlacer.ownerId = id;
             pickerPlacer.paintOwnedObject = (object) => {
                 const overlayColor = id.includes("player-1") ? 
-                    new Color3(1, 0.6, 0) : 
+                    new Color3(1, 0.5, 0.35) : 
                     new Color3(0.3, 0.7, 1);
                 // Show overlay for the picked object.
                 const overlayAlpha = 0.4;

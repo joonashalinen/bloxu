@@ -1,4 +1,4 @@
-import { Vector2, GroundMesh, MeshBuilder, Quaternion } from "@babylonjs/core";
+import { Vector2, GroundMesh, MeshBuilder, Quaternion, ArcRotateCamera } from "@babylonjs/core";
 import MeshLeash3D from "../../graphics3d/pub/MeshLeash3D";
 import Object from "./Object";
 import IController from "./IController";
@@ -10,6 +10,9 @@ import DVector2 from "../../graphics3d/pub/DVector2";
  */
 export default class ObjectController implements IController {
     leash: MeshLeash3D;
+    useDiscreteCameraRotation: boolean = true;
+    discreteCameraRotation: number = Math.PI / 2;
+    cameraRotationKey: string = "f";
 
     constructor(public object: Object) {
         if (this.object.transformNode.getScene() === null) {
@@ -19,7 +22,7 @@ export default class ObjectController implements IController {
         // Create plane we use for projecting mouse coordinates to 
         // 3D world coordinates.
         const leashPlane = MeshBuilder.CreateGround(
-            `HorizontalObjectController:pickPlane?${this.object.transformNode.id}`, 
+            `ObjectController:pickPlane?${this.object.transformNode.id}`, 
             {
                 width: 10000,
                 height: 10000
@@ -63,5 +66,12 @@ export default class ObjectController implements IController {
     }
 
     releaseFeatureKey(key: string): void {
+        if (this.useDiscreteCameraRotation && 
+            key.toLowerCase() === this.cameraRotationKey) {
+            const camera = this.object.transformNode.getScene().activeCamera;
+            if (camera instanceof ArcRotateCamera) {
+                camera.alpha += this.discreteCameraRotation;
+            }
+        }
     }
 }

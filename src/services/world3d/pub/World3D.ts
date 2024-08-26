@@ -252,9 +252,13 @@ export default class World3D implements IService {
         this.camera.fov = 1.2;
 
         // Setup lighting.
-        var light: HemisphericLight = new HemisphericLight("light", new Vector3(-30, 30, -30), this.scene);
-        light.intensity = light.intensity * 1.3;
-        light.specular.scaleInPlace(0);
+        [new Vector3(1, 1, 1), new Vector3(-1, 1, -1)].forEach((direction, index) => {
+            let light = new HemisphericLight("light" + index, direction, this.scene);
+            light.intensity = light.intensity * (0.7 + (index * 0.3));
+            light.specular.scaleInPlace(0);
+        });
+        
+        //light.groundColor = new babylonjs.Color3(0.15, 0.3, 0.6);
         this.scene.ambientColor = new babylonjs.Color3(0.15, 0.3, 0.6);
         //this.scene.clearColor = new Color4(0.75, 0.97, 1, 1);
         this._setupVerticalGradientBackground(

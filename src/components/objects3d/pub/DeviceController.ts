@@ -1,6 +1,6 @@
 import ObjectController from "./ObjectController";
 import Device from "./Device";
-import { Vector3 } from "@babylonjs/core";
+import { Axis, Quaternion, Vector2, Vector3 } from "@babylonjs/core";
 import DVector2 from "../../graphics3d/pub/DVector2";
 
 /**
@@ -15,6 +15,30 @@ export default class DeviceController extends ObjectController {
 
     move(direction: DVector2): void {
         const direction3D = new Vector3(direction.x, 0, direction.y);
-        this.device.setPerpetualMotionDirection(direction3D);
+
+        // Vector between camera and target.
+        const betweenCameraAndTarget = this.device.transformNode.getAbsolutePosition()
+            .subtract(this.device.transformNode.getScene().activeCamera.position);
+
+        // Project to x-z-plane.
+        const betweenCameraAndTarget2D = new Vector2(
+            betweenCameraAndTarget.x,
+            betweenCameraAndTarget.z
+        );
+
+        // We want to rotate by 90 degrees left so that the angle is 
+        // in relation to the z-axis and not the x-axis. 
+        // We also want to reverse the sign to make the angle clockwise 
+        // rather than anticlockwise.
+        // We do these modifications because these are the conventions 
+        // for rotation coordinates in babylonjs.
+        const cameraAngle = (-1) * (Math.atan2(
+            betweenCameraAndTarget2D.y, betweenCameraAndTarget2D.x) - Math.PI/2);
+
+        const relativeDirection = direction3D.rotateByQuaternionToRef(
+            Quaternion.RotationAxis(Axis.Y, cameraAngle),
+            new Vector3()
+        );
+        this.device.setPerpetualMotionDirection(relativeDirection);
     }
 }
