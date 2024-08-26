@@ -78,7 +78,8 @@ export default class Placer extends Item<Object, Placer> implements IPlacer {
         // into. Note: the coordinates of .grid are local to the possible object followed by
         // GridMenu, whereas the coordinates of .objectGrid are absolute.
         if ((this.objectGrid !== undefined &&
-            this.objectGrid.cellIsOccupiedAtPosition(this.selector.selectionPosition))) {
+            this.objectGrid.cellIsOccupiedAtPosition(this.selector.selectionPosition)) && 
+            this.objectGrid.objectAtPosition(this.selector.selectionPosition) !== object) {
             this.emitter.trigger("useEnd");
             return false;
         }

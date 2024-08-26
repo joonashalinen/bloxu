@@ -118,6 +118,15 @@ export default class ObjectGrid {
     }
 
     /**
+     * Returns the object present at the cell containing the given
+     * absolute position.
+     */
+    objectAtPosition(absolutePosition: Vector3) {
+        return this.objectsByCoordinates[
+            this.positionToCoordinates(absolutePosition).toString()];
+    }
+
+    /**
      * Returns the coordinates of the cell containing the given object,
      * and undefined if the object is not in the grid.
      */
