@@ -24,6 +24,7 @@ export default class MeshGrid {
             prototypeMesh.getScene()
         );
         this.transformNode.setAbsolutePosition(new Vector3(0, 0, 0));
+        this.transformNode.setEnabled(false);
 
         // Create Meshes.
         this.meshes = [];
