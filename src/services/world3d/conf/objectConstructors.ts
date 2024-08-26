@@ -1,4 +1,4 @@
-import { AbstractMesh, Color3, GlowLayer, Mesh, MeshBuilder, Scene, StandardMaterial, Vector2, Vector3 } from "@babylonjs/core";
+import { AbstractMesh, Color3, GlowLayer, IPhysicsCollisionEvent, Mesh, MeshBuilder, Scene, StandardMaterial, Vector2, Vector3 } from "@babylonjs/core";
 import Object3 from "../../../components/objects3d/pub/Object";
 import { AnimatedMesh } from "./meshConstructors";
 import PlayerBody from "./custom_object_types/PlayerBody";
@@ -26,7 +26,7 @@ export type TObjectConstructor = (id: string,  ...args: unknown[]) => Object3;
 export default function (
     scene: Scene,
     meshConstructors: {[name: string]: Function},
-    objectRegistry: ObjectManager,
+    objectManager: ObjectManager,
     glowLayer: GlowLayer,
     globals: {[name: string]: unknown}) {
     return {
@@ -65,6 +65,35 @@ export default function (
             const body = new PlayerBody(physical, character.animations);
             body.ownerId = id;
             body.runSpeed = 2.5;
+            body.canLand = (event: IPhysicsCollisionEvent) => {
+                const objectLandedOn = objectManager
+                    .getObjectWithMeshId(event.collidedAgainst.transformNode.id);
+                if (objectLandedOn !== undefined) {
+                    const cell = (globals.objectGrid as ObjectGrid).objectCoordinates(objectLandedOn);
+                    if (cell !== undefined) {
+                        cell.y = parseInt((cell.y + 1).toFixed(0));
+                        return !((globals.objectGrid as ObjectGrid).cellIsOccupied(cell));
+                    } else {
+                        return true;
+                    }
+                } else {
+                    return true;
+                }
+            };
+            body.rectifyFalseLanding = () => {
+                // Push the object back from the surface it is dragging along.
+                // This is to prevent the player body from getting stuck on a non-existent or 
+                // very tiny ledge. For some reason Havok or babylonjs sometimes makes 
+                // the object land on a ledge that is past the wall the player is bumping against.
+                // This makes it possible for the player to wall jump because they can sometimes
+                // land on blocks even if they are bumping against a block that is above it.
+                const bodyMotion = body.perpetualMotionDirection;
+                const pushBackVector = (new Vector3(bodyMotion.x, 0, bodyMotion.z))
+                    .normalize().negateInPlace();
+                pushBackVector.scaleInPlace(0.1);
+                body.transformNode.setAbsolutePosition(
+                    body.transformNode.absolutePosition.add(pushBackVector));
+            };
 
             // Jump state and airborne state need some extra
             //  configuring to make the animations look better.
@@ -123,7 +152,7 @@ export default function (
             projectileWeapon.ownerId = id;
             projectileWeapon.projectileSpeed = 5;
             projectileWeapon.useDelay = 150;
-            projectileWeapon.objectRegistry = objectRegistry;
+            projectileWeapon.objectRegistry = objectManager;
 
             const picker = new Picker(projectileWeapon);
             picker.ownerId = id;

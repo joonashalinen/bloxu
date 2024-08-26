@@ -38,6 +38,9 @@ export default class Object {
     createTeleportOutAnimation: () => Animation = this._defaultTeleportOutAnimation.bind(this);
     teleportAnimationSpeed = 2;
     landingTimeoutDuration: number = 100;
+    useTimeoutLandingDetection: boolean = false;
+    canLand: (event: IPhysicsCollisionEvent) => boolean = () => true;
+    rectifyFalseLanding: (event: IPhysicsCollisionEvent) => void = () => {};
     private _lastPositionUpdateTime: number = 0;
     private _isHidden: boolean = false;
     private _runningId: number = 0;
@@ -141,7 +144,6 @@ export default class Object {
      */
     doOnTick(passedTime: number, absoluteTime: number) {
         if (this.isInVoid) return;
-        const timeNow = Date.now();
         if (Math.abs(this.transformNode.getAbsolutePosition().y - this.lastUpdatedPosition.y) >
             this.inAirDetectionThreshold) {
                 
@@ -149,11 +151,11 @@ export default class Object {
             this.inAirDirection = Math.sign(
                 this.transformNode.position.y - this.lastUpdatedPosition.y) as 1 | -1;
             this.lastUpdatedPosition = this.transformNode.getAbsolutePosition().clone();
-            this._lastPositionUpdateTime = timeNow;
+            if (this.useTimeoutLandingDetection) this._lastPositionUpdateTime = Date.now();
             this.emitter.trigger("airborne");
 
-        } else if (this.isInAir &&
-            (timeNow - this._lastPositionUpdateTime > this.landingTimeoutDuration)) {
+        } else if (this.useTimeoutLandingDetection && this.isInAir &&
+            (Date.now() - this._lastPositionUpdateTime > this.landingTimeoutDuration)) {
             // As a final fallback, if the object is in air but has not had a position update (i.e. no 
             // vertical movement has been detected) for the set timeout duration, we conclude
             // the object has landed. In some cases the object is able to land without a collision event 
@@ -274,7 +276,7 @@ export default class Object {
             // if the other body is in motion as well. So we have to check whether we have 
             // landed on such a body because we will not get the collision event 
             // through our own physics body's collision observable.
-            if (this.isInAir && event.normal.y > 0) {
+            if (this.isInAir && event.normal.y > 0 && this.canLand(event)) {
                 this.land();
             }
         }
@@ -343,16 +345,39 @@ export default class Object {
      */
     protected _handleCollisionEvent(event: IPhysicsCollisionEvent) {
         if (this.isInAir) {
+            const otherBounds = event.collidedAgainst.transformNode.getHierarchyBoundingVectors();
+            const ownBounds = this.transformNode.getHierarchyBoundingVectors();
+            // How much our own maximum point has crossed in each direction
+            // to the other side of the minimum point of the other body.
+            //const maxCross = ownBounds.max.subtract(otherBounds.min);
+            // How much our own minimum point has crossed in each direction
+            // to the other side of the maximum point of the other body.
+            //const minCross = otherBounds.max.subtract(ownBounds.min);
+            // If both our maximum and minimum point have completely crossed horizontally
+            // then we have horizontal overlap with the other body.
+            /* const overlapsHorizontally = (maxCross.x > 0 && maxCross.z > 0 &&
+                minCross.x > 0 && minCross.z > 0); */
+            // We check for the overlap because babylonjs sometimes triggers 
+            // collisions that seem like landings based on the normal vector but 
+            // really there is no horizontal overlap. This happens when moving 
+            // against a wall of physics bodies that are perfectly aligned horizontally and 
+            // so should not trigger these types of collisions if the body moving against 
+            // the wall is larger than the gaps between these bodies.
             if (event.normal.y < 0) {
-                this.land();
+                if (this.canLand(event)) {
+                    this.land();
+                } else {
+                    this.rectifyFalseLanding(event);
+                }
             } else {
+                /* console.log(event.point);
+                console.log(otherBounds.min.clone());
+                console.log(otherBounds.max.clone());
+                console.log(ownBounds.min.clone());
+                console.log(ownBounds.max.clone());
+                console.log(""); */
                 if (this.isFalling()) {
-                    // Push the object back from the surface it is dragging along 
-                    // while falling. This is to prevent movable objects such as 
-                    // player characters from being able to wall jump.
-                    this.transformNode.setAbsolutePosition(
-                        this.transformNode.absolutePosition.subtract(event.normal.scale(0.05))
-                    );
+                    
                 }
                 this.emitter.trigger("bump", [event]);
             }

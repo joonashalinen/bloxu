@@ -104,7 +104,7 @@ export default class MeshGrid {
      */
     calculateMeshPosition(cellIndex: Vector3): Vector3 {
         // To make the grid be centered at the center position of .transformNode, 
-        // we must shift the local mesh coordinates to the left by the size of the grid.
+        // we must shift the local mesh coordinates by half the size of the grid.
         const centeringOffset = new Vector3(-this.width()/2,-this.height()/2,-this.depth()/2);
         // We also need to adjust for the fact that the mesh's local coordinate space begins 
         // at the center of the mesh.

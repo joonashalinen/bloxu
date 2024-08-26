@@ -26,7 +26,7 @@ export default class GridMenu extends Menu {
         
         this.transformNode = grid.transformNode;
         this.createFollowVector = () => (new GridVector(
-            this.followedNode.absolutePosition, this.grid.cellSize)).round();
+            this.followedNode.getAbsolutePosition(), this.grid.cellSize)).round();
         grid.map(this.unpreview.bind(this));
     }
 

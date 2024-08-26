@@ -19,9 +19,17 @@ export default class ObjectGrid {
      * given absolute position.
      */
     positionToCoordinates(absolutePosition: Vector3) {
-        const gridSnappedPosition = (new GridVector(absolutePosition, this.cellSize)
+        // First we snap the position to the grid.
+        const coordinates = (new GridVector(absolutePosition, this.cellSize)
             )[this.positionRoundingPolicy]();
-        return gridSnappedPosition.scaleInPlace(1 / this.cellSize);
+        // Dividing by the cell size gives us the cell coordinates with
+        // some floating point number errors.
+        coordinates.scaleInPlace(1 / this.cellSize);
+        // We round the coordinates to integers to get rid of floating point number errors.
+        coordinates.x = parseInt(coordinates.x.toPrecision(1));
+        coordinates.y = parseInt(coordinates.y.toPrecision(1));
+        coordinates.z = parseInt(coordinates.z.toPrecision(1));
+        return coordinates;
     }
 
     /**
@@ -99,5 +107,22 @@ export default class ObjectGrid {
      */
     clearCellAtPosition(absolutePosition: Vector3) {
         return this.clearCellAt(this.positionToCoordinates(absolutePosition));
+    }
+
+    /**
+     * Returns the object present at the given cell coordinates,
+     * and undefined if no object is present at the cell coordinates.
+     */
+    objectAtCoordinates(coordinates: Vector3) {
+        return this.objectsByCoordinates[coordinates.toString()];
+    }
+
+    /**
+     * Returns the coordinates of the cell containing the given object,
+     * and undefined if the object is not in the grid.
+     */
+    objectCoordinates(object: Object) {
+        const coordinates = this.coordinatesByObjectIds[object.id];
+        return coordinates?.clone();
     }
 }

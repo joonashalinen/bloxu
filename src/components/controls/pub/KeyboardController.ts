@@ -45,18 +45,19 @@ export default class KeyboardController implements IDirectionController, IKeyCon
      */
     handleKeyDown(event: KeyboardEvent): void {
         const key = event.key.toLowerCase();
+        if (!this.pressedKeys.has(key)) {
+            // Add the pressed key to the set
+            this.pressedKeys.add(key);
 
-        // Add the pressed key to the set
-        this.pressedKeys.add(key);
+            // Calculate the direction based on the pressed keys
+            const direction = this.calculateDirection();
 
-        // Calculate the direction based on the pressed keys
-        const direction = this.calculateDirection();
-
-        // Trigger an event with the direction information
-        if (this.directionKeys.has(key)) {
-            this.emitter.trigger("directionChange", [direction]);
+            // Trigger an event with the direction information
+            if (this.directionKeys.has(key)) {
+                this.emitter.trigger("directionChange", [direction]);
+            }
+            this.emitter.trigger("keyDown", [key]);
         }
-        this.emitter.trigger("keyDown", [key]);
     }
 
     /**

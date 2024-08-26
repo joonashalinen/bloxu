@@ -1,8 +1,8 @@
-import { Mesh, PhysicsAggregate, PhysicsShapeType, Quaternion, Scene, SceneLoader, Space, Vector3 } from "@babylonjs/core";
+import { Mesh, Scene, SceneLoader, Space, Vector3 } from "@babylonjs/core";
 import MeshSize from "../../../../../components/graphics3d/pub/MeshSize";
-import Physical from "../../../../../components/objects3d/pub/Physical";
 import ObjectManager from "../../../../../components/objects3d/pub/ObjectManager";
 import GridVector from "../../../../../components/graphics3d/pub/GridVector";
+import ObjectGrid from "../../../../../components/objects3d/pub/ObjectGrid";
 
 type MeshConstructors = {[name: string]: Function};
 
@@ -10,7 +10,8 @@ export default async function level(
     levelName: string, 
     scene: Scene, 
     meshConstructors: MeshConstructors,
-    objects: ObjectManager) {
+    objects: ObjectManager,
+    globals: {[name: string]: unknown}) {
     const blockSize = 1.4;
 
     const levelMapImport = (await SceneLoader.LoadAssetContainerAsync(
@@ -58,6 +59,8 @@ export default async function level(
             mesh.setParent(null);
             const block = objects.createObject(mesh.id, "Object", [blockSize, mesh, 0]);
             block.triggerChangeStateEvents = true;
+            (globals.objectGrid as ObjectGrid).placeAtPosition(
+                block.transformNode.getAbsolutePosition().clone(), block);
 
         } else if (meshName.includes("Interactables::portal")) {
             objects.createObject(mesh.id, "Interactables::portal", [mesh]);

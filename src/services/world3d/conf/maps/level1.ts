@@ -7,7 +7,8 @@ type MeshConstructors = {[name: string]: Function};
 export default async function level1(
     scene: Scene, 
     meshConstructors: MeshConstructors,
-    objects: ObjectManager) {
-    const rootMesh = await level("level1-map", scene, meshConstructors, objects);
+    objects: ObjectManager,
+    globals: {[name: string]: unknown}) {
+    const rootMesh = await level("level1-map", scene, meshConstructors, objects, globals);
     return rootMesh;
 }

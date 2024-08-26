@@ -9,10 +9,16 @@ import IPointerController from "./IPointerController";
 export default class MouseController implements IPointerController {
     emitter: EventEmitter = new EventEmitter();
     buttonMap = new Map<number, number>([[0, 0], [1, 2], [2, 1], [3, 3], [4, 4]]);
+    lastMoveTriggerTime: number = 0;
+    maxMovesPerSecond: number = 60;
 
     constructor(element: HTMLElement) {
         element.addEventListener("mousemove", (event) => {
-            this.emitter.trigger("point", [{x: event.clientX, y: event.clientY}]);
+            const timeNow = Date.now();
+            if (timeNow - this.lastMoveTriggerTime > 1000 / this.maxMovesPerSecond) {
+                this.emitter.trigger("point", [{x: event.clientX, y: event.clientY}]);
+                this.lastMoveTriggerTime = timeNow;
+            }
         });
 
         element.addEventListener("click", (event) => {

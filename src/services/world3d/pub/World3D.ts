@@ -26,8 +26,8 @@ type Types = {[type: string]: Function};
 type Instances = {[name: string]: Object};
 type MeshConstructors = {[name: string]: Function};
 type ControllerConstructors = {[id: string]: (...args: unknown[]) => IController};
-type MapGenerator = (scene: Scene,
-    meshConstructors: MeshConstructors, objects: ObjectManager) => Promise<Mesh>;
+type MapGenerator = (scene: Scene, meshConstructors: MeshConstructors,
+    objects: ObjectManager, globals: {[name: string]: unknown}) => Promise<Mesh>;
 
 /**
  * Class containing the state and operations of the world3d service.
@@ -84,7 +84,10 @@ export default class World3D implements IService {
         canvasWrapper.style.height = "100%";
         document.body.appendChild(canvasWrapper);
 
-        this.engine = new Engine(this.canvas, true);
+        this.engine = new Engine(this.canvas, true, {
+            deterministicLockstep: true,
+            lockstepMaxSteps: 4,
+        });
         this.scene = new Scene(this.engine);
         this.glowLayer = new babylonjs.GlowLayer("mainGlowLayer", this.scene);
 
@@ -230,7 +233,7 @@ export default class World3D implements IService {
             
             // Generate map.
             const mapGenerator: MapGenerator = maps[id];
-            await mapGenerator(this.scene, this.meshConstructors, this.objects);
+            await mapGenerator(this.scene, this.meshConstructors, this.objects, this.globals);
             return true;
         } else {
             return false;
@@ -270,12 +273,10 @@ export default class World3D implements IService {
         });
 
         // Enable physics.
-        const havokInstance = await HavokPhysics();
         this.gravity = new Vector3(0, -9.81, 0);
-        this.scene.enablePhysics(
-            this.gravity,
-            new HavokPlugin(true, havokInstance)
-        );
+        const havokInstance = await HavokPhysics();
+        this.scene.enablePhysics(this.gravity, new HavokPlugin(false, havokInstance));
+        this.scene.getPhysicsEngine().setTimeStep(1 / 60);
 
         // Load meshes configured by the project where World3D is being used.
         this.meshConstructors = await meshConstructors(this.babylonjs, this.scene);
@@ -344,8 +345,8 @@ export default class World3D implements IService {
             if (this.currentBackground !== undefined) {
                 this.currentBackground.doOnTick(timePassed, absoluteTime);
             }
-            this.scene.render();
             lastTime = timeNow;
+            this.scene.render();
         });
     }
 
