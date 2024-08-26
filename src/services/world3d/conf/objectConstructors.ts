@@ -161,7 +161,7 @@ export default function (
                 new GridMenu(
                     new MeshGrid(
                         MeshGrid.createSpherePrototype(blockSize, 0.2),
-                        blockSize, {x: 3, y: 1, z: 3}
+                        blockSize, {x: 3, y: 1, z: 3}, id
                     )
                 ),
                 globals.objectGrid as ObjectGrid

@@ -15,11 +15,12 @@ export default class MeshGrid {
     constructor(
         prototypeMesh: AbstractMesh,
         public cellSize: number,
-        public gridSize: {x: number, y: number, z: number}
+        public gridSize: {x: number, y: number, z: number},
+        public baseId: string = "0"
     ) {
         this._prototypeMesh = prototypeMesh;
         this.transformNode = new TransformNode(
-            `MeshGrid:transformNode?${prototypeMesh.name}`,
+            `MeshGrid:transformNode?${this.baseId}`,
             prototypeMesh.getScene()
         );
         this.transformNode.setAbsolutePosition(new Vector3(0, 0, 0));
@@ -34,7 +35,7 @@ export default class MeshGrid {
                 
                 for (let z = 0; z < gridSize.z; z++) {
                     const mesh = prototypeMesh.clone(
-                        `MeshGrid:meshes:${x}:${y}:${z}?${prototypeMesh.name}`, 
+                        `MeshGrid:mesh?${this.baseId}-${x}-${y}-${z}`, 
                         this.transformNode
                     )!;
                     mesh.setEnabled(true);
@@ -65,6 +66,7 @@ export default class MeshGrid {
         const sphere = MeshBuilder.CreateSphere("MeshGrid:Prototype", {diameter: sphereSize});
         wrapper.addChild(sphere);
         wrapper.visibility = 0;
+        sphere.visibility = 0.5;
         return wrapper;
     }
 
@@ -118,22 +120,16 @@ export default class MeshGrid {
      * Whether the given mesh is part of the grid.
      */
     meshIsInGrid(mesh: AbstractMesh) {
-        return (
-            mesh.name.includes("MeshGrid:meshes") && 
-            mesh.name.includes(this.prototypeMesh.name)
-        );
+        return mesh.id.includes("MeshGrid:mesh") && mesh.id.includes(this.baseId);
     }
 
     /**
      * Grid coordinates of the cell containing the given mesh.
      */
     meshCellCoordinates(mesh: AbstractMesh): Vector3 {
-        const coordinates = mesh.name
-            .split("MeshGrid:meshes")[1]
-            .split(this.prototypeMesh.name)[0]
-            .split("?")[0]
-            .slice(1)
-            .split(":")
+        const coordinates = mesh.id
+            .split("MeshGrid:mesh?" + this.baseId + "-")[1]
+            .split("-")
             .map((coordinateString) => parseInt(coordinateString));
         return new Vector3(coordinates[0], coordinates[1], coordinates[2]);
     }

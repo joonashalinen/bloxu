@@ -79,31 +79,16 @@ export default class GridMenu extends Menu {
 
     private _defaultPreview(mesh: AbstractMesh) {
         if (this.previewMesh !== undefined) {
-            if (mesh.name.includes("MeshGrid:Prototype")) {
-                this.previewMesh.setAbsolutePosition((mesh.parent as AbstractMesh).absolutePosition.clone());
-            } else {
-                this.previewMesh.setAbsolutePosition(mesh.absolutePosition.clone());
-            }
+            this.previewMesh.setAbsolutePosition(mesh.absolutePosition.clone());
             if (!this.previewMesh.isEnabled()) this.previewMesh.setEnabled(true);
-        } else {
-            if (mesh.name.includes("?MeshGrid:Wrapper") && !mesh.name.includes("MeshGrid:Prototype")) {
-                mesh.getChildMeshes().at(0).visibility = 1;
-            } else {
-                mesh.visibility = 1;
-            }
         }
         return mesh;
     }
 
     private _defaultUnpreview(mesh: AbstractMesh) {
         if (this.previewMesh !== undefined) {
+            this.previewMesh.setAbsolutePosition(mesh.absolutePosition.clone());
             if (this.previewMesh.isEnabled()) this.previewMesh.setEnabled(false);
-        } else {
-            if (mesh.name.includes("?MeshGrid:Wrapper") && !mesh.name.includes("MeshGrid:Prototype")) {
-                mesh.getChildMeshes().at(0).visibility = 0.5;
-            } else {
-                mesh.visibility = 0.5;
-            }
         }
         return mesh;
     }
