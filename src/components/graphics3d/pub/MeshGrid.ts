@@ -68,6 +68,7 @@ export default class MeshGrid {
         wrapper.addChild(sphere);
         wrapper.visibility = 0;
         sphere.visibility = 0.5;
+        wrapper.setEnabled(false);
         return wrapper;
     }
 

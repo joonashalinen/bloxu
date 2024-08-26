@@ -54,7 +54,7 @@ export default async function(babylonjs: typeof BABYLON, scene: BABYLON.Scene) {
         root.rotation = new BABYLON.Vector3(0, 0, 0);
         mesh.scaling = new BABYLON.Vector3(1, 1, 1);
         mesh.rotation = new BABYLON.Vector3(0, 0, 0);
-        root.setEnabled(true);
+        root.setEnabled(false);
         if (typeof id === "string") {
             mesh.id = id;
         }
@@ -79,7 +79,7 @@ export default async function(babylonjs: typeof BABYLON, scene: BABYLON.Scene) {
 
             rootMesh!.position = new BABYLON.Vector3(0, 0, 0);
             rootMesh!.scaling = rootMesh!.scaling.scale(0.3);
-            rootMesh!.setEnabled(true);
+            rootMesh!.setEnabled(false);
             characterMesh.id = id;
             rootMesh.id = "Root:" + id;
 

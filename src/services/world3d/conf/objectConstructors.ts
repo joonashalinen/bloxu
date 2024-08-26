@@ -42,6 +42,7 @@ export default function (
             const character = meshConstructors["Player"](characterMeshId,
                 pistolMesh) as AnimatedMesh;
 
+            character.mesh.setEnabled(true);
             character.mesh.renderOutline = true;
             character.mesh.outlineColor = new Color3(0, 0, 0);
             character.mesh.outlineWidth = 2;
@@ -244,10 +245,14 @@ export default function (
             return body;
         },
         "Object": (id: string, size: number, mesh: Mesh, mass: number) => {
+            mesh.setEnabled(true);
             const physical = new Physical(mesh, mass, {
                 width: size, height: size, depth: size});
             return new Object3(physical);
         },
-        "Interactables::portal": (id: string, mesh: AbstractMesh) => new Portal(mesh)
+        "Interactables::portal": (id: string, mesh: AbstractMesh) => {
+            mesh.setEnabled(true);
+            return new Portal(mesh);
+        }
     }; 
 }
