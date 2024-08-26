@@ -5,7 +5,7 @@ import ISelector, { DSelectInfo, TMeshMapper } from "./ISelector";
 /**
  * Base class for ISelector implementations.
  */
-export default class Selector extends Item implements ISelector {
+export default class Selector extends Item<Object, Selector> implements ISelector {
     previewMesh: AbstractMesh;
     selectionPosition: Vector3;
     preview: TMeshMapper =  (mesh) => {mesh.visibility = 1; return mesh;};

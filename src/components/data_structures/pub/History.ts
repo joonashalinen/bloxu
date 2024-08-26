@@ -4,16 +4,16 @@ import EventEmitter from "../../events/pub/EventEmitter";
 /**
  * A history of actions performed.
  */
-export default class History<T> {
+export default class History<Target, Context> {
     emitter: EventEmitter = new EventEmitter();
-    undoableActions: Action<T>[] = [];
-    redoableActions: Action<T>[] = [];
+    undoableActions: Action<Target, Context>[] = [];
+    redoableActions: Action<Target, Context>[] = [];
 
     constructor() {
         
     }
 
-    perform(action: Action<T>) {
+    perform(action: Action<Target, Context>) {
         action.perform();
         this.undoableActions.push(action);
         if (this.redoableActions.length > 0) {
@@ -26,11 +26,11 @@ export default class History<T> {
      * Sets event listener for the 'performAction' event, which is triggered with 
      * the performed action as an argument whenever actions are performed.
      */
-    onPerformAction(callback: (action: Action<T>) => void) {
+    onPerformAction(callback: (action: Action<Target, Context>) => void) {
         this.emitter.on("performAction", callback);
     }
 
-    offPerformAction(callback: (action: Action<T>) => void) {
+    offPerformAction(callback: (action: Action<Target, Context>) => void) {
         this.emitter.off("performAction", callback);
     }
 

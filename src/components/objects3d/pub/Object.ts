@@ -30,7 +30,7 @@ export default class Object {
     lastUpdatedPosition: Vector3;
     preventBounceOnLanding: boolean = true;
     horizontalRotationEnabled = true;
-    history: History<Object> = new History();
+    history: History<Object, Object> = new History();
     useHistory: boolean = false;
     triggerChangeStateEvents: boolean = false;
     saveToHistoryPredicate: TSaveToHistoryPredicate = () => false;
@@ -234,7 +234,7 @@ export default class Object {
         
         if (this.useHistory) {
             if (this.saveToHistoryPredicate(actionName, actionArgs, this)) {
-                this.history.perform(new Action<Object>(this, performer, this._asUndo(undoer)));
+                this.history.perform(new Action(this, this, performer, this._asUndo(undoer)));
             }
         } else {
             performer(this);

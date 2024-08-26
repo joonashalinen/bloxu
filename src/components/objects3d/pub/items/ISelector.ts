@@ -11,7 +11,7 @@ export interface DSelectInfo {
     absolutePosition: Vector3,
 }
 
-export default interface ISelector extends IItem {
+export default interface ISelector {
     emitter: EventEmitter;
     previewMesh: AbstractMesh;
     selectionPosition: Vector3;

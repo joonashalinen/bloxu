@@ -5,9 +5,9 @@ import History from "./History";
  * A collection of uniquely identified History objects 
  * with useful operations for them.
  */
-export default class HistoryCollection<T> {
-    readonly histories: {[id: string]: History<T>} = {};
-    readonly touchedHistories: {[id: string]: History<T>} = {};
+export default class HistoryCollection<Target, Context> {
+    readonly histories: {[id: string]: History<Target, Context>} = {};
+    readonly touchedHistories: {[id: string]: History<Target, Context>} = {};
 
     constructor() {
         
@@ -16,7 +16,7 @@ export default class HistoryCollection<T> {
     /**
      * Sets the history at the given id to the given value.
      */
-    setHistory(id: string, history: History<T>) {
+    setHistory(id: string, history: History<Target, Context>) {
         this.histories[id] = history;
         history.onPerformAction(() => {
             this.touchedHistories[id] = history;
@@ -31,7 +31,7 @@ export default class HistoryCollection<T> {
         return this.touchedHistories[historyId] !== undefined;
     }
 
-    perform(action: Action<T>, historyId: string) {
+    perform(action: Action<Target, Context>, historyId: string) {
         if (this.histories[historyId] === undefined) {
             throw new Error(`No history with given id '${historyId}' exists.`);
         }

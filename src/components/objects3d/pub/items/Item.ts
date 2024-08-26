@@ -8,13 +8,13 @@ import Object from "../Object";
 /**
  * Base class for IItem implementations.
  */
-export default class Item implements IItem {
+export default class Item<Target, Context> implements IItem<Target, Context> {
     ownerId: string;
     isActive: boolean = false;
     hasSecondaryAction: boolean = false;
     emitter: EventEmitter = new EventEmitter();
     useDelay: number = 0;
-    history: History<Object> = new History();
+    history: History<Target, Context> = new History();
     protected _menu: IMenu;
     protected _itemUsed = false;
     protected _animationEnded = false;

@@ -9,7 +9,7 @@ import Object from "./Object";
  */
 export default class ObjectManager {
     objectConstructors: {[typeName: string]: TObjectConstructor} = {};
-    history: HistoryCollection<Object> = new HistoryCollection();
+    history: HistoryCollection<Object, Object> = new HistoryCollection();
     private _objectsById: {[name: string]: Object} = {};
     private _objectsByMeshId: {[name: string]: Object} = {};
 

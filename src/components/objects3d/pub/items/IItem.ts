@@ -4,11 +4,11 @@ import IMenu from "../menus/IMenu";
 import Object from "../Object";
 import History from "../../../data_structures/pub/History";
 
-export default interface IItem {
+export default interface IItem<Target, Context> {
     ownerId: string
     isActive: boolean;
     emitter: EventEmitter;
-    history: History<Object>;
+    history: History<Target, Context>;
     hasSecondaryAction: boolean;
     aimedDirection: Vector3;
     useAnimation: AnimationGroup | undefined;

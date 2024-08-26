@@ -6,11 +6,13 @@ import ObjectGrid from "../ObjectGrid";
 import EventEmitter from "../../../events/pub/EventEmitter";
 import Item from "./Item";
 import Action from "../../../computation/pub/Action";
+import IItem from "./IItem";
+import Selector from "./Selector";
 
 /**
  * An item that can place objects.
  */
-export default class Placer extends Item implements IPlacer {
+export default class Placer extends Item<Object, Placer> implements IPlacer {
     emitter: EventEmitter = new EventEmitter();
     heldObjects: Object[] = [];
     maxHeldObjects: number = 1;
@@ -18,7 +20,7 @@ export default class Placer extends Item implements IPlacer {
     public get transformNode() {return this.selector.transformNode};
     public get menu() {return this.selector.menu};
 
-    constructor(public selector: ISelector, public objectGrid: ObjectGrid = undefined) {
+    constructor(public selector: Selector, public objectGrid: ObjectGrid = undefined) {
         super();
     }
 
@@ -86,26 +88,26 @@ export default class Placer extends Item implements IPlacer {
         const objectWasHeld = this.heldObjects[this.heldObjects.length - 1] === object;
         const objectOriginalPosition = object.transformNode.getAbsolutePosition().clone();
         const selectionPosition = this.selector.selectionPosition.clone();
-        const doWith = (f: (object: Object) => void) => {
-            f(object);
+        const doWith = (f: (object: Object, context: Placer) => void) => (object: Object, context: Placer) => {
+            f(object, context);
             if (objectWasInVoid) object.bringBackFromTheVoid();
-            if (objectWasHeld) this.heldObjects.pop();
+            if (objectWasHeld) context.heldObjects.pop();
         };
-        const undoWith = (f: (object: Object) => void) => {
-            f(object);
+        const undoWith = (f: (object: Object, context: Placer) => void) => (object: Object, context: Placer) => {
+            f(object, context);
             if (objectWasInVoid) object.teleportToVoid();
-            if (objectWasHeld) this.heldObjects.push(object);
+            if (objectWasHeld) context.heldObjects.push(object);
             object.setAbsolutePosition(objectOriginalPosition);
         };
         if (this.objectGrid !== undefined) {
-            this.history.perform(new Action(object,
-                (object) => { doWith((object) => { this.objectGrid.placeAtPosition(selectionPosition, object); }) },
-                (object) => { undoWith((object) => { this.objectGrid.clearCellAtPosition(selectionPosition); }) }
+            this.history.perform(new Action(object, this,
+                doWith((object, context) => { context.objectGrid.placeAtPosition(selectionPosition, object); }),
+                undoWith((object, context) => { context.objectGrid.clearCellAtPosition(selectionPosition); })
             ));
         } else {
-            this.history.perform(new Action(object,
-                (object) => { doWith((object) => { object.transformNode.setAbsolutePosition(selectionPosition); }) },
-                (object) => { undoWith((object) => {  }) }
+            this.history.perform(new Action(object, this,
+                doWith((object, context) => { object.transformNode.setAbsolutePosition(selectionPosition); }),
+                undoWith((object, context) => {  })
             ));
         }
 

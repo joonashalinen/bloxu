@@ -2,7 +2,7 @@ import { Vector3 } from "@babylonjs/core";
 import Device from "../Device";
 import IItem from "./IItem";
 
-export default interface IProjectileWeapon extends IItem {
+export default interface IProjectileWeapon {
     projectiles: Device[];
     projectileSpeed: number;
     aimedDirection: Vector3;

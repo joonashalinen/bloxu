@@ -3,14 +3,16 @@ import "@babylonjs/core/Rendering/outlineRenderer";
 import Item from "../items/Item";
 import ISelector, { DSelectInfo } from "./ISelector";
 import Object from "../Object";
-import IPlacer from "./IPlacer";
-import IPicker from "./IPicker";
 import Action from "../../../computation/pub/Action";
+import History from "../../../data_structures/pub/History";
+import IItem from "./IItem";
+import Placer from "./Placer";
+import Picker from "./Picker";
 
 /**
  * An item that can pick objects and then place them.
  */
-export default class PickerPlacer extends Item {
+export default class PickerPlacer extends Item<Object, Picker | Placer> {
     linkedPickerPlacers: Set<PickerPlacer> = new Set();
     ownedObjects: Set<Object> = new Set();
     maxOwnedObjects: number = 1;
@@ -24,7 +26,7 @@ export default class PickerPlacer extends Item {
         this.picker.paintPickedObject = paint;
     }
 
-    constructor(public picker: IPicker, public placer: IPlacer) {
+    constructor(public picker: Picker, public placer: Placer) {
         super();
         this.picker.canPickObject = (object) => (
             this.ownedObjects.size < this.maxOwnedObjects || 
@@ -156,11 +158,11 @@ export default class PickerPlacer extends Item {
         this._redoing = true;
 
         const affectedObjectWasInUndoHistory = this.placer.history.undoableActions
-        .find((action) => action.target === lastRedoable.target) !== undefined;
+            .find((action) => action.target === lastRedoable.target) !== undefined;
 
         // If the object affected by the redo was previously not in the
         // undoable history but now is again then we should repaint it.
-        // if (!affectedObjectWasInUndoHistory) this.paintOwnedObject(lastRedoable.target);
+        //if (!affectedObjectWasInUndoHistory) this.paintOwnedObject(lastRedoable.target);
 
         this.picker.redo();
         this.picker.heldObjects.pop();
@@ -205,11 +207,23 @@ export default class PickerPlacer extends Item {
         // undo/redo history for the object.
         this.linkedPickerPlacers.forEach((other) => {
             if (other.ownedObjects.has(object)) {
-                const p = (action: Action<Object>) => action.target === object;
-                this.picker.history.redoableActions.push(...(other.picker.history.redoableActions.filter(p)));
-                this.picker.history.undoableActions.push(...(other.picker.history.undoableActions.filter(p)));
-                this.placer.history.redoableActions.push(...(other.placer.history.redoableActions.filter(p)));
-                this.placer.history.undoableActions.push(...(other.placer.history.undoableActions.filter(p)));
+                const p = (action: Action<Object, Picker | Placer>) => action.target === object;
+
+                ["picker", "placer"].forEach((item) => 
+                    ["undoableActions", "redoableActions"].forEach((actions) => {
+                        const copiedHistory = (
+                            (other[item].history as History<Object, Picker | Placer>)
+                            [actions] as Action<Object, Picker | Placer>[]
+                        ).filter(p);
+                        // We need to reassign the context because it is different now that
+                        // we own the action.
+                        copiedHistory.forEach((action) => {action.context = this[item];});
+
+                        ((this[item].history as History<Object, Picker | Placer>)
+                            [actions] as Action<Object, Picker | Placer>[])
+                            .push(...copiedHistory);
+                    })
+                );
             }
         });
 
@@ -223,7 +237,7 @@ export default class PickerPlacer extends Item {
                 this.ownedObjects.delete(object);
                 delete this._ownershipChangeListeners[object.id];
                 // We also remove all undo/redo history of the released object.
-                const f = (action: Action<Object>) => action.target !== object;
+                const f = (action: Action<Object, Picker | Placer>) => action.target !== object;
                 this.picker.history.redoableActions = this.picker.history.redoableActions.filter(f);
                 this.picker.history.undoableActions = this.picker.history.undoableActions.filter(f);
                 this.placer.history.redoableActions = this.placer.history.redoableActions.filter(f);

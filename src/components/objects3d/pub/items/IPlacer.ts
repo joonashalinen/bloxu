@@ -4,7 +4,7 @@ import ObjectGrid from "../ObjectGrid";
 import IItem from "./IItem";
 import { DSelectInfo } from "./ISelector";
 
-export default interface IPlacer extends IItem {
+export default interface IPlacer {
     heldObjects: Object[];
     maxHeldObjects: number;
     objectGrid: ObjectGrid;

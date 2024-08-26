@@ -1,9 +1,8 @@
-import { AnimationGroup, Vector3 } from "@babylonjs/core";
+import { Vector3 } from "@babylonjs/core";
 import ICreatureBodyState from "../../../computation/pub/ICreatureBodyState";
 import CreatureBody from "./CreatureBody";
 import IItem from "../items/IItem";
 import CreatureBodyState from "./CreatureBodyState";
-import Device from "../Device";
 
 /**
  * A state of a Creature where the Creature 
@@ -13,7 +12,7 @@ export default class UseItemState extends CreatureBodyState implements ICreature
     name = "useItem";
     itemName: string;
     private _itemUseEnded: boolean = false;
-    private _item: IItem;
+    private _item: IItem<unknown, unknown>;
 
     constructor(creatureBody: CreatureBody) {
         super(creatureBody);

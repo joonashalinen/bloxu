@@ -1,14 +1,16 @@
 import Action from "../../../computation/pub/Action";
 import Object from "../Object";
+import IItem from "./IItem";
 import IPicker from "./IPicker";
 import ISelector, { DSelectInfo } from "./ISelector";
 import Item from "./Item";
+import Selector from "./Selector";
 
 /**
  * An item that can pick up objects, which removes them from the world,
  * enabling for example replacing them somewhere else.
  */
-export default class Picker extends Item implements IPicker {
+export default class Picker extends Item<Object, Picker> implements IPicker {
     heldObjects: Object[] = [];
     maxHeldObjects: number = 1;
     canPick: () => boolean = () => { return this.heldObjects.length < this.maxHeldObjects; };
@@ -21,21 +23,21 @@ export default class Picker extends Item implements IPicker {
     public get aimedDirection() {return this.selector.aimedDirection};
     public set aimedDirection(aimedDirection) {this.selector.aimedDirection = aimedDirection;};
 
-    constructor(public selector: ISelector) {
+    constructor(public selector: Selector) {
         super();
         this.selector.onSelect((info) => {
             if (!this.isActive) return;
             if (info.object !== undefined) {
                 if (this.canPick() && this.canPickObject(info.object)) {
-                    this.history.perform(new Action(info.object,
-                        (object) => {
-                            this.paintPickedObject(info.object);
+                    this.history.perform(new Action(info.object, this,
+                        (object, context) => {
+                            context.paintPickedObject(object);
                             object.teleportToVoid();
-                            this.heldObjects.push(info.object);
+                            context.heldObjects.push(object);
                         },
-                        (object) => {
+                        (object, context) => {
                             object.bringBackFromTheVoid();
-                            this.heldObjects.pop();
+                            context.heldObjects.pop();
                         }
                     ));
                     this.emitter.trigger("pick", [info]);

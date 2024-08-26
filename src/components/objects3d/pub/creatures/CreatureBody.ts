@@ -25,7 +25,7 @@ export interface TCreatureAnimations {
 export default class CreatureBody extends Device implements ICreatureBodyActions {
     runSpeed: number = 10;
     actionStateMachine: StateMachine<ICreatureBodyState>;
-    items: {[name: string]: IItem} = {};
+    items: {[name: string]: IItem<unknown, unknown>} = {};
     selectedItemName: string;
 
     constructor(wrappee: AbstractMesh | Physical, 
