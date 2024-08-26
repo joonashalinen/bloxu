@@ -252,13 +252,13 @@ export default class Player implements IPlayer, IService {
                             // objects.
                             /* playerBody.enableAutoUpdate(); */
                             // Get notifications of when the player character gets hit with a projectile.
-                            playerBody.emitter.on("projectileHit", () => {
+                            /* playerBody.emitter.on("projectileHit", () => {
                                 sendMsg("World3D:Player:<event>projectileHit", playerBody.state());
-                            });
+                            }); */
                             // Get notifications of when the player character reaches a death altitude (i.e. dies by falling).
-                            playerBody.emitter.on("hitDeathAltitude", () => {
+                            /* playerBody.emitter.on("hitDeathAltitude", () => {
                                 sendMsg("World3D:Player:<event>hitDeathAltitude", playerBody.state());
-                            });
+                            }); */
                             // Listen to block placement events.
                             /* const buildState = (playerBody.actionModeStateMachine.states["build"] as BuildModeState);
                             const placementGrid = buildState.placeMeshState.eventablePlacementGrid;

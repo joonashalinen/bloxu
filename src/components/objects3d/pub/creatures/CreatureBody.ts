@@ -24,6 +24,10 @@ export interface TCreatureAnimations {
  */
 export default class CreatureBody extends Device implements ICreatureBodyActions {
     runSpeed: number = 10;
+    deathAltitude: number = -40;
+    isDead: boolean = false;
+    respawnPoint: Vector3 = new Vector3(0, 0, 0);
+    respawnOnDeath: boolean = false;
     actionStateMachine: StateMachine<ICreatureBodyState>;
     items: {[name: string]: IItem<unknown, unknown>} = {};
     selectedItemName: string;
@@ -79,11 +83,18 @@ export default class CreatureBody extends Device implements ICreatureBodyActions
 
     doOnTick(passedTime: number, absoluteTime: number) {
         if (this.isInVoid) return;
-        this.actionStateMachine.firstActiveState().doOnTick(
-            passedTime, absoluteTime);
-        const selectedItem = this.selectedItem();
-        if (selectedItem !== undefined) {
-            selectedItem.doOnTick(passedTime, absoluteTime);
+        const currentAltitude = this.transformNode.absolutePosition.y;
+        if (currentAltitude < this.deathAltitude) {
+            this.isDead = true;
+            if (this.respawnOnDeath) this.respawn();
+            this.emitter.trigger("hitDeathAltitude");
+        } else {
+            this.actionStateMachine.firstActiveState().doOnTick(
+                passedTime, absoluteTime);
+            const selectedItem = this.selectedItem();
+            if (selectedItem !== undefined) {
+                selectedItem.doOnTick(passedTime, absoluteTime);
+            }
         }
         super.doOnTick(passedTime, absoluteTime);
     }
@@ -114,5 +125,26 @@ export default class CreatureBody extends Device implements ICreatureBodyActions
             selectedItem.transformNode.setEnabled(true);
         }
         super.bringBackFromTheVoid();
+    }
+
+    /**
+     * Listen to the 'hitDeathAltitude' event, which is 
+     * triggered when the creature body falls below .deathAltitude.
+     */
+    onHitDeathAltitude(callback: () => void) {
+        this.emitter.on("hitDeathAltitude", callback);
+    }
+
+    offHitDeathAltitude(callback: () => void) {
+        this.emitter.off("hitDeathAltitude", callback);
+    }
+
+    /**
+     * Make the creature body go back to its spawn point
+     * and become alive again, if it was dead.
+     */
+    respawn() {
+        this.isDead = true;
+        this.transformNode.setAbsolutePosition(this.respawnPoint);
     }
 }

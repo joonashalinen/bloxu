@@ -66,6 +66,8 @@ export default function (
             const body = new PlayerBody(physical, character.animations);
             body.ownerId = id;
             body.runSpeed = 2.5;
+            body.respawnPoint = new Vector3(startPosition.x, startPosition.y, startPosition.z);
+            body.respawnOnDeath = true;
             body.canLand = (event: IPhysicsCollisionEvent) => {
                 const objectLandedOn = objectManager
                     .getObjectWithMeshId(event.collidedAgainst.transformNode.id);
