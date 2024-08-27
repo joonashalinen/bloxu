@@ -1,8 +1,9 @@
-import { Vector2, GroundMesh, MeshBuilder, Quaternion, ArcRotateCamera } from "@babylonjs/core";
-import MeshLeash3D from "../../graphics3d/pub/MeshLeash3D";
-import Object from "./Object";
+import { Vector2, MeshBuilder, ArcRotateCamera } from "@babylonjs/core";
+import MeshLeash3D from "../../../graphics3d/pub/MeshLeash3D";
+import Object from "../Object";
 import IController from "./IController";
-import DVector2 from "../../graphics3d/pub/DVector2";
+import DVector2 from "../../../graphics3d/pub/DVector2";
+import ObjectState from "./ObjectState";
 
 /**
  * An input controller for an Object that is meant to 
@@ -13,8 +14,10 @@ export default class ObjectController implements IController {
     useDiscreteCameraRotation: boolean = true;
     discreteCameraRotation: number = Math.PI / 2;
     cameraRotationKey: string = "f";
+    objectState: ObjectState;
 
     constructor(public object: Object) {
+        this.objectState = new ObjectState(object);
         if (this.object.transformNode.getScene() === null) {
             throw new Error(`Mesh is not connected to a scene.`);
         }
@@ -34,16 +37,20 @@ export default class ObjectController implements IController {
         this.leash = new MeshLeash3D(this.object.transformNode, leashPlane);
     }
 
-    move(direction: DVector2): void {
+    move(direction: DVector2) {
+        return {before: {}, after: {}};
     }
 
-    triggerPointer(triggerIndex: number): void {
+    triggerPointer(triggerIndex: number) {
+        return {before: {}, after: {}};
     }
 
     /**
      * Makes the controlled object look in the direction of the pointer.
      */
     point(pointerPosition: DVector2) {
+        const stateBefore = this.objectState.extract(["horizontalAngle"]);
+
         const pointerPositionVector = new Vector2(
             pointerPosition.x, pointerPosition.y);
         this.leash.update(pointerPositionVector);
@@ -60,12 +67,19 @@ export default class ObjectController implements IController {
         const directionAngle = baseDirectionAngle >= 0 ? baseDirectionAngle : 
             2*Math.PI + baseDirectionAngle;
         this.object.setHorizontalAngle(directionAngle);
+
+        const stateAfter = this.objectState.extract(["horizontalAngle"]);
+        return {
+            before: stateBefore,
+            after: stateAfter
+        };
     }
 
-    pressFeatureKey(key: string): void {
+    pressFeatureKey(key: string) {
+        return {before: {}, after: {}};
     }
 
-    releaseFeatureKey(key: string): void {
+    releaseFeatureKey(key: string) {
         if (this.useDiscreteCameraRotation && 
             key.toLowerCase() === this.cameraRotationKey) {
             const camera = this.object.transformNode.getScene().activeCamera;
@@ -73,5 +87,6 @@ export default class ObjectController implements IController {
                 camera.alpha += this.discreteCameraRotation;
             }
         }
+        return {before: {}, after: {}};
     }
 }

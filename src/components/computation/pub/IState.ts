@@ -3,6 +3,7 @@
  * A state in a finite state machine.
  */
 export default interface IState {
+    name?: string;
     isActive: boolean;
 
     /**

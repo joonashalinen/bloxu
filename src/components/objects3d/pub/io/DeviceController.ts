@@ -1,19 +1,25 @@
 import ObjectController from "./ObjectController";
-import Device from "./Device";
+import Device from "../Device";
 import { Axis, Quaternion, Vector2, Vector3 } from "@babylonjs/core";
-import DVector2 from "../../graphics3d/pub/DVector2";
+import DVector2 from "../../../graphics3d/pub/DVector2";
+import DeviceState from "./DeviceState";
 
 /**
  * An input controller for a Device that is meant to 
  * provide different modes of controlling the Device.
  */
 export default class DeviceController extends ObjectController {
-
+    deviceState: DeviceState;
+    
     constructor(public device: Device) {
         super(device);
+        this.deviceState = new DeviceState(device);
     }
 
-    move(direction: DVector2): void {
+    move(direction: DVector2) {
+        const stateBefore = this.deviceState.extract(
+            ["perpetualMotionDirection", "absolutePosition"]);
+
         const direction3D = new Vector3(direction.x, 0, direction.y);
 
         // Vector between camera and target.
@@ -40,5 +46,9 @@ export default class DeviceController extends ObjectController {
             new Vector3()
         );
         this.device.setPerpetualMotionDirection(relativeDirection);
+
+        const stateAfter = this.deviceState.extract(
+            ["perpetualMotionDirection", "absolutePosition"]);
+        return {before: stateBefore, after: stateAfter};
     }
 }

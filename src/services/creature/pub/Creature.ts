@@ -7,6 +7,8 @@ import SyncMessenger from "../../../components/messaging/pub/SyncMessenger";
 import DVector2 from "../../../components/graphics3d/pub/DVector2";
 import IService from "../../../components/services/pub/IService";
 import CreatureBody from "../../../components/objects3d/pub/creatures/CreatureBody";
+import DCreatureBodyState from "../../../components/objects3d/pub/io/DCreatureBodyState";
+import DUpdate from "../../../components/objects3d/pub/io/DUpdate";
 
 /**
  * Class that contains the operations and state 
@@ -54,19 +56,8 @@ export default class Creature implements IService {
     async onControllerPoint(position: DVector2, controllerIndex: number) {
         if (!this.spawned) {return}
         if (this.controlsDisabled) {return}
-
-        const angle = (await this._modifyWorld(
-            [this.bodyId(), position], 
-            function(this: World3D, bodyId: string, position: DVector2) {
-                const controller = this.getController(bodyId);
-                const body = this.getObject(bodyId) as CreatureBody;
-                controller.point(position);
-                return body.horizontalAngle();
-        }))[0] as number;
-        
-        this.proxyMessenger.postMessage(
-            this.messageFactory.createEvent("*", "Creature:<event>rotate", [angle])
-        );
+        const stateUpdate = await this._redirectInput("point", [position]);
+        this._postEvent("*", "Creature:<event>controllerPoint", [stateUpdate]);
     }
 
     /**
@@ -76,15 +67,8 @@ export default class Creature implements IService {
         if (controllerIndex !== 0) {return}
         if (!this.spawned) {return}
         if (this.controlsDisabled) {return}
-
-        await this.syncMessenger.postSyncMessage(
-            this.messageFactory.createRequest("world3d", "control", [
-                this.bodyId(), "pressFeatureKey", [key]])
-        );
-
-        this.proxyMessenger.postMessage(
-            this.messageFactory.createEvent("*", "Creature:<event>pressFeatureKey")
-        );
+        const stateUpdate = await this._redirectInput("pressFeatureKey", [key]);
+        this._postEvent("*", "Creature:<event>controllerPressFeatureKey", [stateUpdate]);
     }
 
     /**
@@ -94,11 +78,8 @@ export default class Creature implements IService {
         if (controllerIndex !== 0) {return}
         if (!this.spawned) {return}
         if (this.controlsDisabled) {return}
-
-        this.proxyMessenger.postMessage(
-            this.messageFactory.createRequest("world3d", "control", [
-                this.bodyId(), "releaseFeatureKey", [key]])
-        );
+        const stateUpdate = await this._redirectInput("releaseFeatureKey", [key]);
+        this._postEvent("*", "Creature:<event>controllerReleaseFeatureKey", [stateUpdate]);
     }
     
     /**
@@ -108,8 +89,9 @@ export default class Creature implements IService {
         if (controllerIndex !== 0) {return}
         if (!this.spawned) {return}
         if (this.controlsDisabled) {return}
-        
-        const state = (await this._modifyWorld(
+        const stateUpdate = await this._redirectInput("triggerPointer", [buttonIndex]);
+        this._postEvent("*", "Creature:<event>controllerTriggerPointer", [stateUpdate]);
+        /* const state = (await this._modifyWorld(
             [this.bodyId(), position, buttonIndex], 
             function(this: World3D, bodyId: string, position: DVector2, 
                 buttonIndex: number) {
@@ -117,7 +99,7 @@ export default class Creature implements IService {
                 const controller = this.getController(bodyId);
                 controller.point(position);
                 controller.triggerPointer(buttonIndex);
-        }))[0];
+        }))[0]; */
     }
 
     /**
@@ -125,28 +107,11 @@ export default class Creature implements IService {
      * direction control has changed (for example, the thumb joystick or WASD keys).
      */
     async onControllerDirectionChange(direction: DVector2, controllerIndex: number) {
-        if (this.controlsDisabled) {return}
         if (controllerIndex !== 0) {return}
-        
-        if (this.initialized && this.spawned) {
-            // Move the player's body in the controller's direction.
-            (await this.syncMessenger.postSyncMessage({
-                sender: this.id,
-                recipient: "world3d",
-                type: "request",
-                message: {
-                    type: "modify",
-                    args: [{
-                        boundArgs: [this.bodyId(), direction],
-                        f: function(this: World3D, bodyId: string, direction: DVector2) {
-                            const controller = this.getController(bodyId);
-                            controller.move(direction);
-                        }
-                    }]
-                }
-            }))[0];
-        }
-        return this;
+        if (!this.spawned) {return}
+        if (this.controlsDisabled) {return}
+        const stateUpdate = await this._redirectInput("move", [direction]);
+        this._postEvent("*", "Creature:<event>controllerMove", [stateUpdate]);
     }
 
     /**
@@ -225,6 +190,25 @@ export default class Creature implements IService {
                     f: f
                 }
             ])
+        );
+    }
+
+    /**
+     * Call the IController of the Creature in World3D.
+     */
+    private async _redirectInput(method: string, args: unknown[]) {
+        return (await this.syncMessenger.postSyncMessage(
+            this.messageFactory.createRequest("world3d", "control", [
+                this.bodyId(), method, args])
+        ))[0] as DUpdate<DCreatureBodyState>;
+    }
+
+    /**
+     * Send an event message to everyone.
+     */
+    private _postEvent(to: string, name: string, args: unknown[]) {
+        this.proxyMessenger.postMessage(
+            this.messageFactory.createEvent(to, name, args)
         );
     }
 }

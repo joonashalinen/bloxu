@@ -4,7 +4,7 @@ import "@babylonjs/inspector";
 import "@babylonjs/loaders";
 import { HavokPlugin } from "@babylonjs/core/Physics";
 import HavokPhysics from "@babylonjs/havok";
-import { Engine, Scene, Vector3, HemisphericLight, Mesh, Color4 } from "@babylonjs/core";
+import { Engine, Scene, Vector3, HemisphericLight, Mesh } from "@babylonjs/core";
 import ProxyMessenger from "../../../components/messaging/pub/ProxyMessenger";
 import { DMessage } from "../../../components/messaging/pub/DMessage";
 import IService from "../../../components/services/pub/IService";
@@ -16,11 +16,12 @@ import objectConstructors from "../conf/objectConstructors";
 import controllerConstructors from "../conf/controllerConstructors";
 import Glow from "../../../components/graphics3d/pub/effects/Glow";
 import maps from "../conf/maps/maps";
-import IController from "../../../components/objects3d/pub/IController";
+import IController from "../../../components/objects3d/pub/io/IController";
 import ObjectManager from "../../../components/objects3d/pub/ObjectManager";
 import createGlobals from "../conf/globals";
 import createBackgrounds, { IBackgrounds } from "../conf/backgrounds";
 import ILiveEnvironment from "../../../components/graphics3d/pub/ILiveEnvironment";
+import DUpdate from "../../../components/objects3d/pub/io/DUpdate";
 
 type Types = {[type: string]: Function};
 type Instances = {[name: string]: Object};
@@ -174,8 +175,8 @@ export default class World3D implements IService {
             typeof controller[controllerMethod]  !== "function") {
             return false;
         }
-        controller[controllerMethod](...args);
-        return true;
+        const stateUpdate: DUpdate<unknown> = controller[controllerMethod](...args);
+        return stateUpdate;
     }
 
     /**
