@@ -22,14 +22,15 @@ class App {
     /**
      * Call 'initialize' on the given service.
      */
-    async initializeService(messenger: IMessenger<DMessage, DMessage>, id: string) {
+    async initializeService(messenger: IMessenger<DMessage, DMessage>,
+        id: string, args: unknown[] = []) {
         await (new SyncMessenger(messenger)).postSyncMessage({
             sender: "-",
             recipient: id,
             type: "request",
             message: {
                 type: "initialize",
-                args: []
+                args: args
             }
         });
         return this;
@@ -65,16 +66,16 @@ class App {
         var ui = new UI(document);
 
         // Create Player 1's service.
-        var player1NativeWorker = new Worker(new URL('../services/player/pub/index.ts', import.meta.url), {name: "player-1"})
+        var player1NativeWorker = new Worker(new URL('../services/creature/pub/index.ts', import.meta.url), {name: "player-1"})
         var player1Worker = new WebWorker(player1NativeWorker);
 
         // Create Player 2's service.
-        var player2NativeWorker = new Worker(new URL('../services/player/pub/index.ts', import.meta.url), {name: "player-2"})
+        var player2NativeWorker = new Worker(new URL('../services/creature/pub/index.ts', import.meta.url), {name: "player-2"})
         var player2Worker = new WebWorker(player2NativeWorker);
 
         // Create PlayerCoordinator service.
         var playerCoordinatorNativeWorker = new Worker(
-            new URL('../services/player_coordinator/pub/index.ts', import.meta.url), 
+            new URL('../services/creature_coordinator/pub/index.ts', import.meta.url), 
             {name: "playerCoordinator"}
         )
         var playerCoordinatorWorker = new WebWorker(playerCoordinatorNativeWorker);
@@ -100,7 +101,6 @@ class App {
         await world3d.initialize();
         await ioService.initialize();
         await this.initializeService(gameMasterWorker, "gameMaster");
-        await this.initializeService(playerCoordinatorWorker, "playerCoordinator");
         await this.initializeService(onlineSynchronizerWorker, "onlineSynchronizer");
         console.log("all services initialized");
         // We can now make the UI visible.

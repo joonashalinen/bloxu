@@ -3,7 +3,6 @@ import MessageFactory from "../../../../components/messaging/pub/MessageFactory"
 import ProxyMessenger from "../../../../components/messaging/pub/ProxyMessenger";
 import SyncMessenger from "../../../../components/messaging/pub/SyncMessenger";
 import WebSocketMessenger from "../../../../components/network/pub/browser/WebSocketMessenger";
-import { DirectionEvent } from "../../../player/pub/local/Player";
 
 /**
  * Contains the operations and state of the 

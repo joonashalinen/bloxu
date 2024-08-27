@@ -3,7 +3,6 @@ import ProxyMessenger from "../../../components/messaging/pub/ProxyMessenger";
 import SyncMessenger from "../../../components/messaging/pub/SyncMessenger";
 import MessageFactory from "../../../components/messaging/pub/MessageFactory";
 import World3D from "../../world3d/pub/World3D";
-import PlayerBody from "../../world3d/conf/custom_object_types/PlayerBody";
 
 interface Vector3D {
     x: number;
@@ -39,7 +38,7 @@ export default class GameMaster {
      * Spawn everything needed for the game 
      * and make the 3D world run.
      */
-    private async _startGame(otherPlayerIsAI: boolean = false) {
+    private async _startGame(isSinglePlayer: boolean = false) {
 
         // vvv Setup environment. vvv
 
@@ -52,10 +51,12 @@ export default class GameMaster {
 
         // Tell the player services who is the main player and who is the remote / AI player.
         this.proxyMessenger.postMessage(
-            this.messageFactory.createRequest(this.localPlayerId, "beMainPlayer")
+            this.messageFactory.createRequest(this.localPlayerId,
+                "beCreature", ["PlayerBody", true])
         );
         this.proxyMessenger.postMessage(
-            this.messageFactory.createRequest(this.remotePlayerId(), !otherPlayerIsAI ? "beRemotePlayer" : "beAIPlayer")
+            this.messageFactory.createRequest(this.remotePlayerId(),
+                !isSinglePlayer ? "beRemoteCreature" : "beCreature", ["PlayerBody"])
         );
 
         // Initialize players.
@@ -64,6 +65,12 @@ export default class GameMaster {
         );
         await this.syncMessenger.postSyncMessage(
             this.messageFactory.createRequest(this.remotePlayerId(), "initialize")
+        );
+        // Initialize coordinator service for the players.
+        await this.syncMessenger.postSyncMessage(
+            this.messageFactory.createRequest(
+                "playerCoordinator", "initialize",
+                [["player-1", "player-2"], this.localPlayerId === "player-1" ? 0 : 1])
         );
 
         // Spawn players.
