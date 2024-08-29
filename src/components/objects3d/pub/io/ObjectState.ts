@@ -1,7 +1,7 @@
+import IState from "../../../controls/pub/IState";
 import Vector3Utils from "../../../graphics3d/pub/Vector3Utils";
 import Object from "../Object";
 import DObjectState from "./DObjectState";
-import IState from "./IState";
 
 /**
  * Represents the state data of an objects3d Object.

@@ -1,4 +1,4 @@
-import DVector2 from "../../../graphics3d/pub/DVector2";
+import DVector2 from "../../graphics3d/pub/DVector2";
 import IController, { DStateUpdate, TProperties } from "./IController";
 import IState from "./IState";
 
@@ -13,24 +13,24 @@ export default class Controller implements IController {
         
     }
 
-    point(pointerPosition: DVector2): DStateUpdate<unknown> {
+    point(pointerPosition: DVector2, pointerIndex: number): DStateUpdate<unknown> {
         return this._doWithStateExtractions("point", () => {});
     }
 
-    move(direction: DVector2): DStateUpdate<unknown> {
-        return this._doWithStateExtractions("move", () => {});
-    }
-
-    triggerPointer(buttonIndex: number): DStateUpdate<unknown> {
+    triggerPointer(buttonIndex: number, pointerIndex: number): DStateUpdate<unknown> {
         return this._doWithStateExtractions("triggerPointer", () => {});
     }
 
-    pressFeatureKey(key: string): DStateUpdate<unknown> {
-        return this._doWithStateExtractions("pressFeatureKey", () => {});
+    changeDirection(direction: DVector2, directionControllerIndex: number): DStateUpdate<unknown> {
+        return this._doWithStateExtractions("changeDirection", () => {});
     }
 
-    releaseFeatureKey(key: string): DStateUpdate<unknown> {
-        return this._doWithStateExtractions("releaseFeatureKey", () => {});
+    pressKey(key: string, keyControllerIndex: number): DStateUpdate<unknown> {
+        return this._doWithStateExtractions("pressKey", () => {});
+    }
+
+    releaseKey(key: string, keyControllerIndex: number): DStateUpdate<unknown> {
+        return this._doWithStateExtractions("releaseKey", () => {});
     }
 
     /**

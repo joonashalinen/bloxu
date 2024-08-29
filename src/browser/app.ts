@@ -13,7 +13,7 @@ import UI from "../services/ui/pub/UI";
 import SyncMessenger from "../components/messaging/pub/SyncMessenger";
 import Mixin from "../components/classes/pub/Mixin";
 import OpenService from "../components/services/pub/OpenService";
-import MouseEmitter from "../components/controls/pub/MouseEmitter";
+import createInputEmitters from "../services/io/conf/createInputEmitters";
 
 class App {
 
@@ -55,12 +55,7 @@ class App {
         ) as (World3D & OpenService);
         
         // Create IOService.
-        const keyboardController = new KeyboardEmitter(document);
-        var ioService = new IOService(
-            [keyboardController],
-            [new MouseEmitter(world3d.canvas)],
-            [keyboardController]
-        );
+        var ioService = new IOService(createInputEmitters(document, world3d.canvas));
 
         // Create UI service.
         var ui = new UI(document);

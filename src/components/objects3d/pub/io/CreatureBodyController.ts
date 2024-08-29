@@ -15,46 +15,37 @@ export default class CreatureBodyController extends DeviceController {
         this.targetState = new CreatureBodyState(creatureBody);
     }
 
-    triggerPointer(buttonIndex: number) {
-        const properties = ["absolutePosition", "horizontalAngle",
-            "activeStateName", "selectedItemName"];
-        const stateBefore = this.targetState.extract(properties);
-
-        if (buttonIndex === 0) {
-            this.creatureBody.doItemMainAction();
-        } else {
-            this.creatureBody.doItemSecondaryAction();
-        }
-
-        const stateAfter = this.targetState.extract(properties);
-        return {before: stateBefore, after: stateAfter};
+    override point(position: DVector2, pointerIndex: number) {
+        return this._doWithStateExtractions("point", () => {
+            super.point(position, pointerIndex);
+            const heldItem = this.creatureBody.selectedItem();
+            if (heldItem !== undefined && heldItem.menu !== undefined) {
+                heldItem.menu.point(new Vector2(position.x, position.y));
+            }
+        });
     }
 
-    pressFeatureKey(key: string) {
-        const properties = ["absolutePosition", "horizontalAngle",
-            "activeStateName", "selectedItemName"];
-        const stateBefore = this.targetState.extract(properties);
-
-        if (key === " ") {
-            this.creatureBody.jump();
-        } else if (key === "q") {
-            const selectedItem = this.creatureBody.selectedItem();
-            if (selectedItem !== undefined) selectedItem.undo();
-        } else if (key === "e") {
-            const selectedItem = this.creatureBody.selectedItem();
-            if (selectedItem !== undefined) selectedItem.redo();
-        }
-
-        const stateAfter = this.targetState.extract(properties);
-        return {before: stateBefore, after: stateAfter};
+    override triggerPointer(buttonIndex: number, pointerIndex: number) {
+        return this._doWithStateExtractions("triggerPointer", () => {
+            if (buttonIndex === 0) {
+                this.creatureBody.doItemMainAction();
+            } else {
+                this.creatureBody.doItemSecondaryAction();
+            }
+        });
     }
 
-    point(position: DVector2) {
-        const stateUpdate = super.point(position);
-        const heldItem = this.creatureBody.selectedItem();
-        if (heldItem !== undefined && heldItem.menu !== undefined) {
-            heldItem.menu.point(new Vector2(position.x, position.y));
-        }
-        return stateUpdate;
+    override pressKey(key: string, keyControllerIndex: number) {
+        return this._doWithStateExtractions("pressKey", () => {
+            if (key === " ") {
+                this.creatureBody.jump();
+            } else if (key === "q") {
+                const selectedItem = this.creatureBody.selectedItem();
+                if (selectedItem !== undefined) selectedItem.undo();
+            } else if (key === "e") {
+                const selectedItem = this.creatureBody.selectedItem();
+                if (selectedItem !== undefined) selectedItem.redo();
+            }
+        });
     }
 }

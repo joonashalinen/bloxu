@@ -1,10 +1,9 @@
 import { Vector2, MeshBuilder, ArcRotateCamera } from "@babylonjs/core";
 import MeshLeash3D from "../../../graphics3d/pub/MeshLeash3D";
 import Object from "../Object";
-import IController from "./IController";
 import DVector2 from "../../../graphics3d/pub/DVector2";
 import ObjectState from "./ObjectState";
-import Controller from "./Controller";
+import Controller from "../../../controls/pub/Controller";
 
 /**
  * An input controller for an Object that is meant to 
@@ -41,7 +40,7 @@ export default class ObjectController extends Controller {
     /**
      * Makes the controlled object look in the direction of the pointer.
      */
-    point(pointerPosition: DVector2) {
+    override point(pointerPosition: DVector2, pointerIndex: number) {
         return this._doWithStateExtractions("point", () => {
             const pointerPositionVector = new Vector2(
                 pointerPosition.x, pointerPosition.y);
@@ -62,8 +61,8 @@ export default class ObjectController extends Controller {
         });
     }
 
-    releaseFeatureKey(key: string) {
-        return this._doWithStateExtractions("releaseFeatureKey", () => {
+    override releaseKey(key: string, keyControllerIndex: number) {
+        return this._doWithStateExtractions("releaseKey", () => {
             if (this.useDiscreteCameraRotation && 
                 key.toLowerCase() === this.cameraRotationKey) {
                 const camera = this.object.transformNode.getScene().activeCamera;

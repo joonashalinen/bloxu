@@ -1,10 +1,8 @@
-import IDirectionEmitter from "../../../components/controls/pub/IDirectionEmitter";
 import ProxyMessenger from "../../../components/messaging/pub/ProxyMessenger";
 import { DMessage } from "../../../components/messaging/pub/DMessage";
-import IPointerEmitter from "../../../components/controls/pub/IPointerEmitter";
 import MessageFactory from "../../../components/messaging/pub/MessageFactory";
 import DVector2 from "../../../components/graphics3d/pub/DVector2";
-import IKeyEmitter from "../../../components/controls/pub/IKeyEmitter";
+import IInputEmitter from "../../../components/controls/pub/IInputEmitter";
 
 /**
  * Class responsible for managing keyboard events and other input/output operations.
@@ -14,9 +12,7 @@ export default class IOService {
     messageFactory: MessageFactory = new MessageFactory("ioService");
 
     constructor(
-        public directionControllers: IDirectionEmitter[],
-        public pointerControllers: IPointerEmitter[],
-        public keyControllers: IKeyEmitter[]
+        public inputEmitters: IInputEmitter[]
     ) {
         this.proxyMessenger = new ProxyMessenger<DMessage, DMessage>();
     }
@@ -25,27 +21,34 @@ export default class IOService {
      * Initialize the IOService.
      */
     initialize(): void {
-        this.directionControllers.forEach((controller, index) => {
-            controller.onDirectionChange((direction: DVector2) => {
-                this._notifyAll("IOService:<event>directionChange", [direction, index]);
+        this.inputEmitters.forEach((inputEmitter, inputEmitterIndex) => {
+            inputEmitter.directionEmitters.forEach((emitter, directionEmitterIndex) => {
+                emitter.onChangeDirection((direction: DVector2) => {
+                    this._notifyAll("IOService:<event>changeDirection",
+                        [direction, directionEmitterIndex, inputEmitterIndex]);
+                });
             });
-        });
-
-        this.pointerControllers.forEach((controller, index) => {
-            controller.onPoint((position: DVector2) => {
-                this._notifyAll("IOService:<event>point", [position, index]);
+    
+            inputEmitter.pointerEmitters.forEach((emitter, pointerEmitterIndex) => {
+                emitter.onPoint((position: DVector2) => {
+                    this._notifyAll("IOService:<event>point",
+                        [position, pointerEmitterIndex, inputEmitterIndex]);
+                });
+                emitter.onTriggerPointer((button: number) => {
+                    this._notifyAll("IOService:<event>triggerPointer",
+                        [button, pointerEmitterIndex, inputEmitterIndex]);
+                });
             });
-            controller.onTrigger((position: DVector2, button: number) => {
-                this._notifyAll("IOService:<event>pointerTrigger", [position, button, index]);
-            });
-        });
-
-        this.keyControllers.forEach((controller, index) => {
-            controller.onKeyDown((key: string) => {
-                this._notifyAll("IOService:<event>keyDown", [key, index]);
-            });
-            controller.onKeyUp((key: string) => {
-                this._notifyAll("IOService:<event>keyUp", [key, index]);
+    
+            inputEmitter.keyEmitters.forEach((emitter, keyEmitterIndex) => {
+                emitter.onPressKey((key: string) => {
+                    this._notifyAll("IOService:<event>pressKey",
+                        [key, keyEmitterIndex, inputEmitterIndex]);
+                });
+                emitter.onReleaseKey((key: string) => {
+                    this._notifyAll("IOService:<event>releaseKey",
+                        [key, keyEmitterIndex, inputEmitterIndex]);
+                });
             });
         });
     }

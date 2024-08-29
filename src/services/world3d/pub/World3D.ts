@@ -16,11 +16,11 @@ import objectConstructors from "../conf/objectConstructors";
 import controllerConstructors from "../conf/controllerConstructors";
 import Glow from "../../../components/graphics3d/pub/effects/Glow";
 import maps from "../conf/maps/maps";
-import IController, { DStateUpdate } from "../../../components/objects3d/pub/io/IController";
 import ObjectManager from "../../../components/objects3d/pub/ObjectManager";
 import createGlobals from "../conf/globals";
 import createBackgrounds, { IBackgrounds } from "../conf/backgrounds";
 import ILiveEnvironment from "../../../components/graphics3d/pub/ILiveEnvironment";
+import IController, { DStateUpdate } from "../../../components/controls/pub/IController";
 
 type Types = {[type: string]: Function};
 type Instances = {[name: string]: Object};

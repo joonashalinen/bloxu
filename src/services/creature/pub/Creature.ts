@@ -8,7 +8,7 @@ import DVector2 from "../../../components/graphics3d/pub/DVector2";
 import IService from "../../../components/services/pub/IService";
 import CreatureBody from "../../../components/objects3d/pub/creatures/CreatureBody";
 import DCreatureBodyState from "../../../components/objects3d/pub/io/DCreatureBodyState";
-import { DStateUpdate } from "../../../components/objects3d/pub/io/IController";
+import { DStateUpdate } from "../../../components/controls/pub/IController";
 
 /**
  * Class that contains the operations and state 
@@ -27,11 +27,11 @@ export default class Creature implements IService {
 
     constructor(public id: string, public bodyType: string) {
         this.eventHandlers = {
-            "IOService:<event>directionChange": this.onControllerDirectionChange.bind(this),
-            "IOService:<event>pointerTrigger": this.onControllerPointerTrigger.bind(this),
-            "IOService:<event>point": this.onControllerPoint.bind(this),
-            "IOService:<event>keyDown": this.onControllerKeyDown.bind(this),
-            "IOService:<event>keyUp": this.onControllerKeyUp.bind(this)
+            "IOService:<event>changeDirection": this.onChangeDirectionInput.bind(this),
+            "IOService:<event>triggerPointer": this.onTriggerPointerInput.bind(this),
+            "IOService:<event>point": this.onPointInput.bind(this),
+            "IOService:<event>pressKey": this.onPressKeyInput.bind(this),
+            "IOService:<event>releaseKey": this.onReleaseKeyInput.bind(this)
         };
         this.initialized = false;
         this.spawned = false;
@@ -53,56 +53,55 @@ export default class Creature implements IService {
     /**
      * When the controller's pointer has changed position.
      */
-    async onControllerPoint(position: DVector2, controllerIndex: number) {
+    async onPointInput(position: DVector2, pointerIndex: number, controllerIndex: number) {
         if (!this.spawned) {return}
         if (this.controlsDisabled) {return}
-        const stateUpdate = await this._redirectInput("point", [position]);
-        this._postEvent("*", "Creature:<event>controllerPoint", [stateUpdate]);
+        const stateUpdate = await this._redirectInput("point", [position, pointerIndex]);
+        this._postEvent("*", "Creature:<event>controllerPoint",
+            [position, pointerIndex, stateUpdate]);
+    }
+
+    /**
+     * When a pointer control has been pressed down (e.g. a mouse button).
+     */
+    async onTriggerPointerInput(buttonIndex: number, pointerIndex: number, controllerIndex: number) {
+        if (!this.spawned) {return}
+        if (this.controlsDisabled) {return}
+        const stateUpdate = await this._redirectInput("triggerPointer",
+            [buttonIndex, pointerIndex]);
+        this._postEvent("*", "Creature:<event>controllerTriggerPointer",
+            [buttonIndex, pointerIndex, stateUpdate]);
     }
 
     /**
      * When a key has been pressed down on the controller.
      */
-    async onControllerKeyDown(key: string, controllerIndex: number) {
-        if (controllerIndex !== 0) {return}
+    async onPressKeyInput(key: string, keyControllerIndex: number, controllerIndex: number) {
         if (!this.spawned) {return}
         if (this.controlsDisabled) {return}
-        const stateUpdate = await this._redirectInput("pressFeatureKey", [key]);
-        this._postEvent("*", "Creature:<event>controllerPressFeatureKey", [stateUpdate]);
+        const stateUpdate = await this._redirectInput("pressKey", [key, keyControllerIndex]);
+        this._postEvent("*", "Creature:<event>controllerPressKey", [key, keyControllerIndex, stateUpdate]);
     }
 
     /**
      * When a pressed down key has been released on the controller.
      */
-    async onControllerKeyUp(key: string, controllerIndex: number) {
-        if (controllerIndex !== 0) {return}
+    async onReleaseKeyInput(key: string, keyControllerIndex: number, controllerIndex: number) {
         if (!this.spawned) {return}
         if (this.controlsDisabled) {return}
-        const stateUpdate = await this._redirectInput("releaseFeatureKey", [key]);
-        this._postEvent("*", "Creature:<event>controllerReleaseFeatureKey", [stateUpdate]);
-    }
-    
-    /**
-     * When a pointer control has been pressed down (e.g. a mouse button).
-     */
-    async onControllerPointerTrigger(position: DVector2, buttonIndex: number, controllerIndex: number) {
-        if (controllerIndex !== 0) {return}
-        if (!this.spawned) {return}
-        if (this.controlsDisabled) {return}
-        const stateUpdate = await this._redirectInput("triggerPointer", [buttonIndex]);
-        this._postEvent("*", "Creature:<event>controllerTriggerPointer", [stateUpdate]);
+        const stateUpdate = await this._redirectInput("releaseKey", [key, keyControllerIndex]);
+        this._postEvent("*", "Creature:<event>controllerReleaseKey", [key, keyControllerIndex, stateUpdate]);
     }
 
     /**
      * Does what Creature wants to do when the controller's main
      * direction control has changed (for example, the thumb joystick or WASD keys).
      */
-    async onControllerDirectionChange(direction: DVector2, controllerIndex: number) {
-        if (controllerIndex !== 0) {return}
+    async onChangeDirectionInput(direction: DVector2, directionControllerIndex: number, controllerIndex: number) {
         if (!this.spawned) {return}
         if (this.controlsDisabled) {return}
-        const stateUpdate = await this._redirectInput("move", [direction]);
-        this._postEvent("*", "Creature:<event>controllerMove", [stateUpdate]);
+        const stateUpdate = await this._redirectInput("changeDirection", [direction, directionControllerIndex]);
+        this._postEvent("*", "Creature:<event>controllerChangeDirection", [direction, directionControllerIndex, stateUpdate]);
     }
 
     /**
@@ -142,7 +141,7 @@ export default class Creature implements IService {
      */
     disableControls() {
         if (this.controlsDisabled) return;
-        this.onControllerDirectionChange({x: 0, y: 0}, 0);
+        this.onChangeDirectionInput({x: 0, y: 0}, 0, 0);
         this.controlsDisabled = true;
     }
 

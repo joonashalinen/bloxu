@@ -24,7 +24,7 @@ export default class CreatureCoordinator {
         this.messageFactory = new MessageFactory(id);
         this.syncMessenger = new SyncMessenger(this.proxyMessenger);
         this.eventHandlers = {
-            "IOService:<event>keyUp": this.onControllerKeyUp.bind(this)
+            "IOService:<event>releaseKey": this.onReleaseKeyInput.bind(this)
         };
         this.initialized = false;
     }
@@ -50,8 +50,7 @@ export default class CreatureCoordinator {
     /**
      * When a pressed down key has been released on the controller.
      */
-    async onControllerKeyUp(key: string, controllerIndex: number) {
-        if (controllerIndex !== 0) {return}
+    async onReleaseKeyInput(key: string, keyControllerIndex: number, controllerIndex: number) {
         const timeNow = Date.now();
 
         if (key === this.changeSelectedCreatureKey && 

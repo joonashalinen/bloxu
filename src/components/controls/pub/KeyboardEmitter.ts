@@ -7,7 +7,7 @@ import DVector2 from "../../graphics3d/pub/DVector2";
 /**
  * Class responsible for managing keyboard events and implementing IDirectionEmitter.
  */
-export default class KeyboardController implements IDirectionEmitter, IKeyEmitter {
+export default class KeyboardEmitter implements IDirectionEmitter, IKeyEmitter {
     emitter: EventEmitter;
     document: Document;
     pressedKeys: Set<string>;
@@ -23,12 +23,12 @@ export default class KeyboardController implements IDirectionEmitter, IKeyEmitte
         this.document.addEventListener("keyup", this.handleKeyUp.bind(this));
     }
 
-    onKeyDown(callback: (key: string) => void): void {
-        this.emitter.on("keyDown", callback);
+    onPressKey(callback: (key: string) => void): void {
+        this.emitter.on("pressKey", callback);
     }
 
-    onKeyUp(callback: (key: string) => void): void {
-        this.emitter.on("keyUp", callback);
+    onReleaseKey(callback: (key: string) => void): void {
+        this.emitter.on("releaseKey", callback);
     }
 
     /**
@@ -54,9 +54,9 @@ export default class KeyboardController implements IDirectionEmitter, IKeyEmitte
 
             // Trigger an event with the direction information
             if (this.directionKeys.has(key)) {
-                this.emitter.trigger("directionChange", [direction]);
+                this.emitter.trigger("changeDirection", [direction]);
             }
-            this.emitter.trigger("keyDown", [key]);
+            this.emitter.trigger("pressKey", [key]);
         }
     }
 
@@ -74,9 +74,9 @@ export default class KeyboardController implements IDirectionEmitter, IKeyEmitte
 
         // Trigger an event with the direction information
         if (this.directionKeys.has(key)) {
-            this.emitter.trigger("directionChange", [direction]);
+            this.emitter.trigger("changeDirection", [direction]);
         }
-        this.emitter.trigger("keyUp", [key]);
+        this.emitter.trigger("releaseKey", [key]);
     }
 
     /**
@@ -123,14 +123,12 @@ export default class KeyboardController implements IDirectionEmitter, IKeyEmitte
     }
 
     // Implement the onDirectionChange method from the IDirectionEmitter interface
-    onDirectionChange(callback: (direction: DVector2) => void): KeyboardController {
-        this.emitter.on("directionChange", callback);
-        return this;
+    onChangeDirection(callback: (direction: DVector2) => void) {
+        this.emitter.on("changeDirection", callback);
     }
 
     // Implement the offDirectionChange method from the IDirectionEmitter interface
-    offDirectionChange(callback: (direction: DVector2) => void): KeyboardController {
-        this.emitter.off("directionChange", callback);
-        return this;
+    offChangeDirection(callback: (direction: DVector2) => void) {
+        this.emitter.off("changeDirection", callback);
     }
 }

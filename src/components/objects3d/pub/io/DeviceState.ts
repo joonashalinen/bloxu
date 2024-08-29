@@ -1,7 +1,7 @@
+import IState from "../../../controls/pub/IState";
 import Vector3Utils from "../../../graphics3d/pub/Vector3Utils";
 import Device from "../Device";
 import DDeviceState from "./DDeviceState";
-import IState from "./IState";
 import ObjectState from "./ObjectState";
 
 /**

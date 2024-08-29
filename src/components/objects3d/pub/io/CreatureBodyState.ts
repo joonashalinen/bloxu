@@ -1,7 +1,7 @@
+import IState from "../../../controls/pub/IState";
 import CreatureBody from "../creatures/CreatureBody";
 import DCreatureBodyState from "./DCreatureBodyState";
 import DeviceState from "./DeviceState";
-import IState from "./IState";
 
 /**
  * Represents the state data of a CreatureBody.

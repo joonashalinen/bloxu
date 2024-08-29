@@ -1,7 +1,5 @@
 import DVector3 from "../../../components/graphics3d/pub/DVector3";
-import World3D from "../../world3d/pub/World3D";
 import Creature from "./Creature";
-import DPlayerBody from "../../world3d/conf/custom_object_types/DPlayerBody";
 import IService from "../../../components/services/pub/IService";
 import { DMessage } from "../../../components/messaging/pub/DMessage";
 import MessageFactory from "../../../components/messaging/pub/MessageFactory";
