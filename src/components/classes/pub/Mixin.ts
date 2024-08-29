@@ -16,7 +16,7 @@ export default class Mixin<T extends Object> {
      * @param source The object from which the methods and properties will be taken.
      */
     extend<U extends object, >(source: U): T & U {
-        // Copy properties from source to target.
+        // Copy public properties from source to target.
         const propNames = Object.getOwnPropertyNames(source);
         propNames.forEach((name) => {
             if (this.target[name] !== undefined) {
@@ -25,7 +25,7 @@ export default class Mixin<T extends Object> {
                 this.target[name] = source[name];
             }
         });
-        // Copy methods from source to target.
+        // Copy public methods from source to target.
         const methodNames = Object.getOwnPropertyNames(source.constructor.prototype);
         methodNames.forEach((name) => {
             if (name !== "constructor") {

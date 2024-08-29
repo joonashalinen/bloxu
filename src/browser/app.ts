@@ -46,7 +46,7 @@ class App {
         // ### Setup services. ###
 
         // Create World3D service.
-        var plainWorld3d = new World3D(document);
+        var plainWorld3d = new World3D("world3d", document);
         // Allow the World3D service to be freely modifiable by outsiders. 
         // For details, see the class OpenService. 
         // The Mixin class is used to add the .modify and .listen methods to the World3D class.

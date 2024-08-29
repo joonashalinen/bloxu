@@ -13,16 +13,12 @@ export default class RemoteCreature implements IService {
     creature: Creature;
     eventHandlers: {[name: string]: Function};
     proxyMessenger: ProxyMessenger<DMessage, DMessage>;
-    syncMessenger: SyncMessenger;
-    messageFactory: MessageFactory;
 
-    constructor(id: string, bodyId: string) {
+    constructor(public id: string, bodyId: string) {
         this.creature = new Creature(id, bodyId);
         this.creature.controlsDisabled = true;
         this.creature.disableEvents = true;
         this.proxyMessenger = this.creature.proxyMessenger;
-        this.syncMessenger = this.creature.syncMessenger;
-        this.messageFactory = this.creature.messageFactory;
 
         this.eventHandlers = {};
     }

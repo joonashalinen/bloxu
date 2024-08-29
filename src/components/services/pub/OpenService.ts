@@ -1,4 +1,5 @@
 import DataObject from "../../data_structures/pub/DataObject";
+import MessageFactory from "../../messaging/pub/MessageFactory";
 import FunctionWrapper from "./FunctionWrapper";
 import IService from "./IService";
 
@@ -7,6 +8,7 @@ import IService from "./IService";
  * modification by outsiders.
  */
 export default class OpenService {
+
     constructor(public service: IService) {
         
     }
@@ -29,8 +31,9 @@ export default class OpenService {
         listeningService: string, 
         listener: FunctionWrapper<(sendMsg: (eventName: string, event: DataObject) => void, ...args: unknown[]) => void>
     ) {
+        const messageFactory = new MessageFactory(this.service.id);
         const sendMsg = (eventName: string, event: DataObject) => this.service.proxyMessenger.postMessage(
-            this.service.messageFactory.createEvent(listeningService, eventName, [event])
+            messageFactory.createEvent(listeningService, eventName, [event])
         );
         listener.f.bind(this.service)(sendMsg.bind(this), ...listener.boundArgs);
     }

@@ -9,9 +9,8 @@ import SyncMessenger from "../../messaging/pub/SyncMessenger";
  * the operations and state of a service / actor / microservice.
  */
 export default interface IService {
+    id: string;
     proxyMessenger: ProxyMessenger<DMessage, DMessage>;
-    syncMessenger: SyncMessenger;
-    messageFactory: MessageFactory;
     
     /**
      * Initialize the service. After calling this it is ready for use.

@@ -54,7 +54,7 @@ export default class World3D implements IService {
     controllerConstructors: ControllerConstructors;
     globals: {[name: string]: unknown};
 
-    constructor(document: Document) {
+    constructor(public id: string, document: Document) {
         this.objects = new ObjectManager();
         this.controllers = {};
         this.controllerConstructors = controllerConstructors;
