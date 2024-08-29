@@ -1,13 +1,13 @@
-import { Vector2 } from "@babylonjs/core";
-import IDirectionController from "./IDirectionController";
+import IDirectionEmitter from "./IDirectionEmitter";
 import EventEmitter from "../../../components/events/pub/EventEmitter";
 import TCompassPoint from "../../geometry/pub/TCompassPoint";
-import IKeyController from "./IKeyController";
+import IKeyEmitter from "./IKeyEmitter";
+import DVector2 from "../../graphics3d/pub/DVector2";
 
 /**
- * Class responsible for managing keyboard events and implementing IDirectionController.
+ * Class responsible for managing keyboard events and implementing IDirectionEmitter.
  */
-export default class KeyboardController implements IDirectionController, IKeyController {
+export default class KeyboardController implements IDirectionEmitter, IKeyEmitter {
     emitter: EventEmitter;
     document: Document;
     pressedKeys: Set<string>;
@@ -82,7 +82,7 @@ export default class KeyboardController implements IDirectionController, IKeyCon
     /**
      * Calculate the direction based on the currently pressed keys.
      */
-    calculateDirection(): Vector2 {
+    calculateDirection(): DVector2 {
         let x = 0;
         let y = 0;
 
@@ -107,7 +107,7 @@ export default class KeyboardController implements IDirectionController, IKeyCon
             y /= length;
         }
 
-        return new Vector2(x, y);
+        return {x: x, y: y};
     }
 
     /**
@@ -122,14 +122,14 @@ export default class KeyboardController implements IDirectionController, IKeyCon
         )
     }
 
-    // Implement the onDirectionChange method from the IDirectionController interface
-    onDirectionChange(callback: (direction: Vector2) => void): KeyboardController {
+    // Implement the onDirectionChange method from the IDirectionEmitter interface
+    onDirectionChange(callback: (direction: DVector2) => void): KeyboardController {
         this.emitter.on("directionChange", callback);
         return this;
     }
 
-    // Implement the offDirectionChange method from the IDirectionController interface
-    offDirectionChange(callback: (direction: Vector2) => void): KeyboardController {
+    // Implement the offDirectionChange method from the IDirectionEmitter interface
+    offDirectionChange(callback: (direction: DVector2) => void): KeyboardController {
         this.emitter.off("directionChange", callback);
         return this;
     }

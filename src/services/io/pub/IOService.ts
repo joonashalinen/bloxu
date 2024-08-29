@@ -1,10 +1,10 @@
-import IDirectionController from "../../../components/controls/pub/IDirectionController";
+import IDirectionEmitter from "../../../components/controls/pub/IDirectionEmitter";
 import ProxyMessenger from "../../../components/messaging/pub/ProxyMessenger";
 import { DMessage } from "../../../components/messaging/pub/DMessage";
-import IPointerController from "../../../components/controls/pub/IPointerController";
+import IPointerEmitter from "../../../components/controls/pub/IPointerEmitter";
 import MessageFactory from "../../../components/messaging/pub/MessageFactory";
 import DVector2 from "../../../components/graphics3d/pub/DVector2";
-import IKeyController from "../../../components/controls/pub/IKeyController";
+import IKeyEmitter from "../../../components/controls/pub/IKeyEmitter";
 
 /**
  * Class responsible for managing keyboard events and other input/output operations.
@@ -14,9 +14,9 @@ export default class IOService {
     messageFactory: MessageFactory = new MessageFactory("ioService");
 
     constructor(
-        public directionControllers: IDirectionController[],
-        public pointerControllers: IPointerController[],
-        public keyControllers: IKeyController[]
+        public directionControllers: IDirectionEmitter[],
+        public pointerControllers: IPointerEmitter[],
+        public keyControllers: IKeyEmitter[]
     ) {
         this.proxyMessenger = new ProxyMessenger<DMessage, DMessage>();
     }

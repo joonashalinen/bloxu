@@ -1,12 +1,12 @@
 import EventEmitter from "../../events/pub/EventEmitter";
 import DVector2 from "../../graphics3d/pub/DVector2";
-import IPointerController from "./IPointerController";
+import IPointerEmitter from "./IPointerEmitter";
 
 /**
- * IPointerController implementation for a mouse as detected 
+ * IPointerEmitter implementation for a mouse as detected 
  * via an HTMLElement's events.
  */
-export default class MouseController implements IPointerController {
+export default class MouseController implements IPointerEmitter {
     emitter: EventEmitter = new EventEmitter();
     buttonMap = new Map<number, number>([[0, 0], [1, 2], [2, 1], [3, 3], [4, 4]]);
     lastMoveTriggerTime: number = 0;
@@ -29,12 +29,12 @@ export default class MouseController implements IPointerController {
         });
     }
 
-    onPoint(callback: (position: DVector2) => void): IPointerController {
+    onPoint(callback: (position: DVector2) => void): IPointerEmitter {
         this.emitter.on("point", callback);
         return this;
     }
 
-    onTrigger(callback: (position: DVector2, buttonIndex: number) => void): IPointerController {
+    onTrigger(callback: (position: DVector2, buttonIndex: number) => void): IPointerEmitter {
         this.emitter.on("trigger", callback);
         return this;
     }

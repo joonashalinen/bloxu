@@ -6,14 +6,14 @@ import Mediator from "../components/messaging/pub/Mediator";
 import World3D from "../services/world3d/pub/World3D";
 import WebWorker from "../components/browser/pub/WebWorker";
 import IOService from "../services/io/pub/IOService";
-import KeyboardController from "../components/controls/pub/KeyboardController";
+import KeyboardEmitter from "../components/controls/pub/KeyboardEmitter";
 import IMessenger from "../components/messaging/pub/IMessenger";
 import { DMessage } from "../components/messaging/pub/DMessage";
 import UI from "../services/ui/pub/UI";
 import SyncMessenger from "../components/messaging/pub/SyncMessenger";
 import Mixin from "../components/classes/pub/Mixin";
 import OpenService from "../components/services/pub/OpenService";
-import MouseController from "../components/controls/pub/MouseController";
+import MouseEmitter from "../components/controls/pub/MouseEmitter";
 
 class App {
 
@@ -55,10 +55,10 @@ class App {
         ) as (World3D & OpenService);
         
         // Create IOService.
-        const keyboardController = new KeyboardController(document);
+        const keyboardController = new KeyboardEmitter(document);
         var ioService = new IOService(
             [keyboardController],
-            [new MouseController(world3d.canvas)],
+            [new MouseEmitter(world3d.canvas)],
             [keyboardController]
         );
 
