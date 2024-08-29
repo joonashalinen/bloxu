@@ -8,7 +8,7 @@ import DVector2 from "../../../components/graphics3d/pub/DVector2";
 import IService from "../../../components/services/pub/IService";
 import CreatureBody from "../../../components/objects3d/pub/creatures/CreatureBody";
 import DCreatureBodyState from "../../../components/objects3d/pub/io/DCreatureBodyState";
-import DUpdate from "../../../components/objects3d/pub/io/DUpdate";
+import { DStateUpdate } from "../../../components/objects3d/pub/io/IController";
 
 /**
  * Class that contains the operations and state 
@@ -91,15 +91,6 @@ export default class Creature implements IService {
         if (this.controlsDisabled) {return}
         const stateUpdate = await this._redirectInput("triggerPointer", [buttonIndex]);
         this._postEvent("*", "Creature:<event>controllerTriggerPointer", [stateUpdate]);
-        /* const state = (await this._modifyWorld(
-            [this.bodyId(), position, buttonIndex], 
-            function(this: World3D, bodyId: string, position: DVector2, 
-                buttonIndex: number) {
-                
-                const controller = this.getController(bodyId);
-                controller.point(position);
-                controller.triggerPointer(buttonIndex);
-        }))[0]; */
     }
 
     /**
@@ -200,7 +191,7 @@ export default class Creature implements IService {
         return (await this.syncMessenger.postSyncMessage(
             this.messageFactory.createRequest("world3d", "control", [
                 this.bodyId(), method, args])
-        ))[0] as DUpdate<DCreatureBodyState>;
+        ))[0] as DStateUpdate<DCreatureBodyState>;
     }
 
     /**

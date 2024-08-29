@@ -16,12 +16,11 @@ import objectConstructors from "../conf/objectConstructors";
 import controllerConstructors from "../conf/controllerConstructors";
 import Glow from "../../../components/graphics3d/pub/effects/Glow";
 import maps from "../conf/maps/maps";
-import IController from "../../../components/objects3d/pub/io/IController";
+import IController, { DStateUpdate } from "../../../components/objects3d/pub/io/IController";
 import ObjectManager from "../../../components/objects3d/pub/ObjectManager";
 import createGlobals from "../conf/globals";
 import createBackgrounds, { IBackgrounds } from "../conf/backgrounds";
 import ILiveEnvironment from "../../../components/graphics3d/pub/ILiveEnvironment";
-import DUpdate from "../../../components/objects3d/pub/io/DUpdate";
 
 type Types = {[type: string]: Function};
 type Instances = {[name: string]: Object};
@@ -175,7 +174,7 @@ export default class World3D implements IService {
             typeof controller[controllerMethod]  !== "function") {
             return false;
         }
-        const stateUpdate: DUpdate<unknown> = controller[controllerMethod](...args);
+        const stateUpdate: DStateUpdate<unknown> = controller[controllerMethod](...args);
         return stateUpdate;
     }
 

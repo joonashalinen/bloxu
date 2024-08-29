@@ -5,8 +5,13 @@ import IState from "./IState";
 import ObjectState from "./ObjectState";
 
 /**
- * Represents the state data of a Device that 
- * is useful for IO operations involving the Device.
+ * Represents the state data of a Device.
+ * Contains the computations needed for turning a
+ * Device into a DDeviceState and
+ * for injecting state information from a
+ * DDeviceState to a Device. Useful for
+ * IO where communicating about the state
+ * of Devices is needed.
  */
 export default class DeviceState extends ObjectState implements IState<DDeviceState> {
     constructor(public target: Device) {

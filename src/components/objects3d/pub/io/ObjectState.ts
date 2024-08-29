@@ -4,9 +4,13 @@ import DObjectState from "./DObjectState";
 import IState from "./IState";
 
 /**
- * Represents the state data of an Object. Useful 
- * for IO operations where we need the communicate about 
- * the state of Objects.
+ * Represents the state data of an objects3d Object.
+ * Contains the computations needed for turning a
+ * Object into a DObjectState and
+ * for injecting state information from a
+ * DObjectState to a Object. Useful for
+ * IO where communicating about the state
+ * of Objects is needed.
  */
 export default class ObjectState implements IState<DObjectState> {
     constructor(public target: Object) {

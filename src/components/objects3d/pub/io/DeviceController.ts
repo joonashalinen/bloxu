@@ -9,15 +9,14 @@ import DeviceState from "./DeviceState";
  * provide different modes of controlling the Device.
  */
 export default class DeviceController extends ObjectController {
-    deviceState: DeviceState;
     
     constructor(public device: Device) {
         super(device);
-        this.deviceState = new DeviceState(device);
+        this.targetState = new DeviceState(device);
     }
 
     move(direction: DVector2) {
-        const stateBefore = this.deviceState.extract(
+        const stateBefore = this.targetState.extract(
             ["perpetualMotionDirection", "absolutePosition"]);
 
         const direction3D = new Vector3(direction.x, 0, direction.y);
@@ -47,7 +46,7 @@ export default class DeviceController extends ObjectController {
         );
         this.device.setPerpetualMotionDirection(relativeDirection);
 
-        const stateAfter = this.deviceState.extract(
+        const stateAfter = this.targetState.extract(
             ["perpetualMotionDirection", "absolutePosition"]);
         return {before: stateBefore, after: stateAfter};
     }

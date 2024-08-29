@@ -9,17 +9,16 @@ import CreatureBodyState from "./CreatureBodyState";
  * provide different modes of controlling the CreatureBody.
  */
 export default class CreatureBodyController extends DeviceController {
-    creatureBodyState: CreatureBodyState;
 
     constructor(public creatureBody: CreatureBody) {
         super(creatureBody);
-        this.creatureBodyState = new CreatureBodyState(creatureBody);
+        this.targetState = new CreatureBodyState(creatureBody);
     }
 
     triggerPointer(buttonIndex: number) {
         const properties = ["absolutePosition", "horizontalAngle",
             "activeStateName", "selectedItemName"];
-        const stateBefore = this.creatureBodyState.extract(properties);
+        const stateBefore = this.targetState.extract(properties);
 
         if (buttonIndex === 0) {
             this.creatureBody.doItemMainAction();
@@ -27,14 +26,14 @@ export default class CreatureBodyController extends DeviceController {
             this.creatureBody.doItemSecondaryAction();
         }
 
-        const stateAfter = this.creatureBodyState.extract(properties);
+        const stateAfter = this.targetState.extract(properties);
         return {before: stateBefore, after: stateAfter};
     }
 
     pressFeatureKey(key: string) {
         const properties = ["absolutePosition", "horizontalAngle",
             "activeStateName", "selectedItemName"];
-        const stateBefore = this.creatureBodyState.extract(properties);
+        const stateBefore = this.targetState.extract(properties);
 
         if (key === " ") {
             this.creatureBody.jump();
@@ -46,7 +45,7 @@ export default class CreatureBodyController extends DeviceController {
             if (selectedItem !== undefined) selectedItem.redo();
         }
 
-        const stateAfter = this.creatureBodyState.extract(properties);
+        const stateAfter = this.targetState.extract(properties);
         return {before: stateBefore, after: stateAfter};
     }
 

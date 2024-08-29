@@ -5,6 +5,12 @@ import IState from "./IState";
 
 /**
  * Represents the state data of a CreatureBody.
+ * Contains the computations needed for turning a
+ * CreatureBody into a DCreatureBodyState and
+ * for injecting state information from a
+ * DCreatureBodyState to a CreatureBody. Useful for
+ * IO where communicating about the state
+ * of CreatureBody objects is needed.
  */
 export default class CreatureBodyState extends DeviceState implements IState<DCreatureBodyState> {
     constructor(public target: CreatureBody) {
