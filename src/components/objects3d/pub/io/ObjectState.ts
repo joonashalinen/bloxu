@@ -1,6 +1,6 @@
 import IState from "../../../controls/pub/IState";
 import Vector3Utils from "../../../graphics3d/pub/Vector3Utils";
-import Object from "../Object";
+import Object3D from "../Object";
 import DObjectState from "./DObjectState";
 
 /**
@@ -13,7 +13,7 @@ import DObjectState from "./DObjectState";
  * of Objects is needed.
  */
 export default class ObjectState implements IState<DObjectState> {
-    constructor(public target: Object) {
+    constructor(public target: Object3D) {
         
     }
 
@@ -37,6 +37,13 @@ export default class ObjectState implements IState<DObjectState> {
      * Sets the given state information for the Object.
      */
     inject(data: DObjectState) {
-        
+        Object.keys(data).forEach((property: string) => {
+            if (property === "horizontalAngle") {
+                this.target.setHorizontalAngle(data.horizontalAngle);
+            } else if (property === "absolutePosition") {
+                this.target.transformNode.setAbsolutePosition(
+                    Vector3Utils.fromObject(data.absolutePosition));
+            }
+        });
     }
 }

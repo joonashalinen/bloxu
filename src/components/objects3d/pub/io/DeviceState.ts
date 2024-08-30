@@ -32,6 +32,14 @@ export default class DeviceState extends ObjectState implements IState<DDeviceSt
     }
 
     inject(data: DDeviceState): void {
-        
+        Object.keys(data).forEach((property: string) => {
+            if (property === "perpetualMotionDirection") {
+                this.target.setPerpetualMotionDirection(
+                    Vector3Utils.fromObject(data.perpetualMotionDirection));
+            } else if (property === "perpetualMotionSpeed") {
+                this.target.perpetualMotionSpeed = data.perpetualMotionSpeed;
+            }
+        });
+        super.inject(data);
     }
 }

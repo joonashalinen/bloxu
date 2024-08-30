@@ -108,8 +108,8 @@ export default class OnlineSynchronizerClient {
         // server so that we can set the proper 'sender' field 
         // for future requests. 'playerId' is the only request for 
         // which it is fine to have the default connection id.
-        this.serverConnectionId = (await this.makeSyncRequestToServer("playerId"))[0] as string;
-        this.gameConnectionId = (await this.makeGameConnectionSyncRequest("playerId"))[0] as string;
+        this.serverConnectionId = await this.makeSyncRequestToServer("playerId") as string;
+        this.gameConnectionId = await this.makeGameConnectionSyncRequest("playerId") as string;
         this.serverMessageFactory.sender = this.serverConnectionId;
         this.gameMessageFactory.sender = this.gameConnectionId;
 
@@ -149,7 +149,7 @@ export default class OnlineSynchronizerClient {
      * Host a new game.
      */
     async hostGame() {
-        const code = (await this.makeSyncRequestToServer("hostGame"))[0] as string;
+        const code = await this.makeSyncRequestToServer("hostGame") as string;
         const playerIdInGame = await this.joinGame(code);
         return [code, playerIdInGame];
     }
@@ -158,10 +158,10 @@ export default class OnlineSynchronizerClient {
      * Join an existing game by using a code.
      */
     async joinGame(code: string) {
-        const response = (await this.makeGameConnectionSyncRequest(
+        const response = await this.makeGameConnectionSyncRequest(
             "joinGame", 
             [code, this.gameConnectionId]
-        ))[0] as string | {error: string};
+        ) as string | {error: string};
         
         // If no error occurred.
         if (typeof response === "string") {
@@ -183,11 +183,10 @@ export default class OnlineSynchronizerClient {
         // manually set events that we wish to redirect to the 
         // local player's mirror services in other players' games.
         if (this.joinedGame && msg.sender === this.playerIdInGame) {
-            const event = msg.message.args[0];
             // Redirect the event to the player's mirror services on the 
             // other players' games. We wrap the event with the tag 'OnlineSynchronizer'
             // so that the remote player knows it is a synchronization message.
-            this.sendEventInGame(this.playerIdInGame, `OnlineSynchronizer:${msg.message.type}`, [event]);
+            this.sendEventInGame(this.playerIdInGame, `OnlineSynchronizer:${msg.message.type}`, msg.message.args);
         }
     }
 }

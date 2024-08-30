@@ -19,15 +19,15 @@ export default class SyncMessenger {
      * Posts a synchronous message that will yield 
      * a response as a result.
      */
-    async postSyncMessage(req: DMessage): Promise<Array<unknown>> {
+    async postSyncMessage(req: DMessage): Promise<unknown> {
         if (req.id === undefined) {
             req.id = req.sender + ":" + this.idGenerator.next();
         }
 
-        const waitForResponse = new Promise<Array<unknown>>((resolve) => {
+        const waitForResponse = new Promise<unknown>((resolve) => {
             this.messenger.onMessage((res: DMessage) => {
                 if (res.type === "response" && res.recipient === req.sender && res.id === req.id) {
-                    resolve(res.message.args);
+                    resolve(res.message.args[0]);
                 }
             });
         });

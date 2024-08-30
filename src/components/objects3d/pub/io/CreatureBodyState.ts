@@ -30,6 +30,21 @@ export default class CreatureBodyState extends DeviceState implements IState<DCr
     }
 
     inject(data: DCreatureBodyState): void {
-        throw new Error("Method not implemented.");
+        Object.keys(data).forEach((property: string) => {
+            if (property === "selectedItemName" &&
+                this.target.selectedItemName !== data.selectedItemName) {
+                
+                this.target.selectItem(data.selectedItemName);
+
+            } else if (property === "activeStateName") {
+                const activeStateName = this.target.actionStateMachine.firstActiveState()?.name;
+                if (activeStateName !== data.activeStateName) {
+                    this.target.actionStateMachine.changeState(
+                        activeStateName !== undefined ? activeStateName : "", 
+                        data.activeStateName);
+                }
+            }
+        });
+        super.inject(data);
     }
 }

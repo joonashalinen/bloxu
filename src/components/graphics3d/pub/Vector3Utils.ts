@@ -16,4 +16,11 @@ export default class Vector3Utils {
     static toObject(v: Vector3): DVector3 {
         return {x: v.x, y: v.y, z: v.z};
     }
+
+    /**
+     * Transforms the given DVector3 to a Vector3.
+     */
+    static fromObject(v: DVector3): Vector3 {
+        return new Vector3(v.x, v.y, v.z);
+    }
 }

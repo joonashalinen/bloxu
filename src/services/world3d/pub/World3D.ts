@@ -13,7 +13,7 @@ import SyncMessenger from "../../../components/messaging/pub/SyncMessenger";
 import FunctionWrapper from "../../../components/services/pub/FunctionWrapper";
 import meshConstructors from "../conf/meshConstructors";
 import objectConstructors from "../conf/objectConstructors";
-import controllerConstructors from "../conf/controllerConstructors";
+import controllerConstructors, { TControllerConstructors } from "../conf/controllerConstructors";
 import Glow from "../../../components/graphics3d/pub/effects/Glow";
 import maps from "../conf/maps/maps";
 import ObjectManager from "../../../components/objects3d/pub/ObjectManager";
@@ -21,11 +21,14 @@ import createGlobals from "../conf/globals";
 import createBackgrounds, { IBackgrounds } from "../conf/backgrounds";
 import ILiveEnvironment from "../../../components/graphics3d/pub/ILiveEnvironment";
 import IController, { DStateUpdate } from "../../../components/controls/pub/IController";
+import RemoteController, { DRemoteControlResult} from "../../../components/controls/pub/RemoteController";
+import createRemoteControllerConstructors from "../conf/remoteControllerConstructors";
+import Object3D from "../../../components/objects3d/pub/Object";
 
 type Types = {[type: string]: Function};
 type Instances = {[name: string]: Object};
 type MeshConstructors = {[name: string]: Function};
-type ControllerConstructors = {[id: string]: (...args: unknown[]) => IController};
+type RemoteControllerConstructors = {[id: string]: (...args: unknown[]) => RemoteController};
 type MapGenerator = (scene: Scene, meshConstructors: MeshConstructors,
     objects: ObjectManager, globals: {[name: string]: unknown}) => Promise<Mesh>;
 
@@ -51,13 +54,18 @@ export default class World3D implements IService {
     gravity: Vector3;
     glowLayer: babylonjs.GlowLayer;
     controllers: {[id: string]: IController};
-    controllerConstructors: ControllerConstructors;
+    controllerConstructors: TControllerConstructors;
+    remoteControllers: {[id: string]: RemoteController};
+    remoteControllerConstructors: RemoteControllerConstructors;
     globals: {[name: string]: unknown};
 
     constructor(public id: string, document: Document) {
         this.objects = new ObjectManager();
         this.controllers = {};
         this.controllerConstructors = controllerConstructors;
+        this.remoteControllers = {};
+        this.remoteControllerConstructors = createRemoteControllerConstructors(
+            controllerConstructors);
         this.globals = createGlobals();
 
         this.effects = {};
@@ -153,6 +161,20 @@ export default class World3D implements IService {
     }
 
     /**
+     * Create a new RemoteController of the given type for the 
+     * object with the given id.
+     */
+    createRemoteController(type: string, objectId: string): boolean {
+        const controllerConstructor = this.remoteControllerConstructors[type];
+        if (controllerConstructor === undefined) {
+            return false;
+        }
+        const obj = this.getObject(objectId);
+        this.remoteControllers[objectId] = controllerConstructor(obj);
+        return true;
+    }
+
+    /**
      * Create new object of given type with given id and args in the world.
      */
     createEffect(id: string, type: string, args: Array<unknown> | FunctionWrapper<Function> = []): World3D {
@@ -174,8 +196,25 @@ export default class World3D implements IService {
             typeof controller[controllerMethod]  !== "function") {
             return false;
         }
-        const stateUpdate: DStateUpdate<unknown> = controller[controllerMethod](...args);
+        const stateUpdate: DStateUpdate<Object3D> = controller[controllerMethod](...args);
         return stateUpdate;
+    }
+
+    /**
+     * Redirect a control input to the RemoteController of the 
+     * object with the given objectId. The method specified by 
+     * controllerMethod will be called with the given args.
+     */
+    remoteControl(objectId: string, controllerMethod: string, args: unknown[] = [],
+        stateUpdate: DStateUpdate<Object3D>) {
+        const controller = this.remoteControllers[objectId];
+        if (controller === undefined ||
+            typeof controller[controllerMethod]  !== "function") {
+            return false;
+        }
+        const result: DRemoteControlResult<Object3D> = controller[controllerMethod](
+            ...args, stateUpdate);
+        return result;
     }
 
     /**

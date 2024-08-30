@@ -36,7 +36,7 @@ export default class UI {
         this.mainMenu = new MainMenu(this.wrapper!, document);
 
         this.mainMenu.onHostGame(async () => {
-            const response = (await this.syncMessenger.postSyncMessage({
+            const response = await this.syncMessenger.postSyncMessage({
                 recipient: "gameMaster",
                 sender: "ui",
                 type: "request",
@@ -44,7 +44,7 @@ export default class UI {
                     type: "hostGame",
                     args: []
                 }
-            }))[0] as string | {error: string};
+            }) as string | {error: string};
             // If no error occurred.
             if (typeof response === "string") {
                 const currentState = this.mainMenu.subMenuStateMachine.firstActiveState();
@@ -56,7 +56,7 @@ export default class UI {
         });
 
         this.mainMenu.emitter.on("playSinglePlayer", async () => {
-            (await this.syncMessenger.postSyncMessage({
+            await this.syncMessenger.postSyncMessage({
                 recipient: "gameMaster",
                 sender: "ui",
                 type: "request",
@@ -64,13 +64,13 @@ export default class UI {
                     type: "startLocalGame",
                     args: []
                 }
-            }))[0] as string | {error: string};
+            }) as string | {error: string};
 
             this.mainMenu.hide();
         });
 
         this.mainMenu.onJoinGame(async (code: string) => {
-            const response = (await this.syncMessenger.postSyncMessage({
+            const response = await this.syncMessenger.postSyncMessage({
                 recipient: "gameMaster",
                 sender: "ui",
                 type: "request",
@@ -78,7 +78,7 @@ export default class UI {
                     type: "joinGame",
                     args: [code]
                 }
-            }))[0] as string | {error: string};
+            }) as string | {error: string};
 
             if (typeof response === "string") {
                 this.mainMenu.hide();

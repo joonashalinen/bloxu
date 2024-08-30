@@ -82,7 +82,7 @@ export default class GameMaster {
         );
 
         // Create map.
-        const success = (await this.syncMessenger.postSyncMessage({
+        const success = await this.syncMessenger.postSyncMessage({
             recipient: "world3d",
             sender: "gameMaster",
             type: "request",
@@ -90,7 +90,7 @@ export default class GameMaster {
                 type: "selectMap",
                 args: ["level1"]
             }
-        }))[0] as boolean;
+        }) as boolean;
 
         this.gameRunning = true;
     }
@@ -148,7 +148,7 @@ export default class GameMaster {
      * to invite other players to the game.
      */
     async hostGame() {
-        const [code, localPlayerId] = (await this.syncMessenger.postSyncMessage({
+        const [code, localPlayerId] = await this.syncMessenger.postSyncMessage({
             recipient: "onlineSynchronizer",
             sender: "gameMaster",
             type: "request",
@@ -156,7 +156,7 @@ export default class GameMaster {
                 type: "hostGame",
                 args: []
             }
-        }))[0] as [string, string];
+        }) as [string, string];
 
         this.localPlayerId = localPlayerId;
 
@@ -169,7 +169,7 @@ export default class GameMaster {
      * Starts a local game against an AI opponent.
      */
     async startLocalGame() {
-        const [code, localPlayerId] = (await this.syncMessenger.postSyncMessage({
+        const [code, localPlayerId] = await this.syncMessenger.postSyncMessage({
             recipient: "onlineSynchronizer",
             sender: "gameMaster",
             type: "request",
@@ -177,7 +177,7 @@ export default class GameMaster {
                 type: "hostGame",
                 args: []
             }
-        }))[0] as [string, string];
+        }) as [string, string];
 
         this.localPlayerId = localPlayerId;
 
@@ -191,7 +191,7 @@ export default class GameMaster {
      * the host of the game.
      */
     async joinGame(code: string) {
-        const response = (await this.syncMessenger.postSyncMessage({
+        const response = await this.syncMessenger.postSyncMessage({
             recipient: "onlineSynchronizer",
             sender: "gameMaster",
             type: "request",
@@ -199,7 +199,7 @@ export default class GameMaster {
                 type: "joinGame",
                 args: [code]
             }
-        }))[0] as string | {error: string};
+        }) as string | {error: string};
 
         if (typeof response === "string") {
             this.localPlayerId = response;

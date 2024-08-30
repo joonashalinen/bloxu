@@ -65,19 +65,20 @@ export default class Creature implements IService {
         const stateUpdate = await this.world3dChannel.request("control",
             [this.bodyId(), "point", [position, pointerIndex]]);
         this.allChannel.sendEvent("Creature:<event>controllerPoint",
-            [position, pointerIndex, stateUpdate]);
+            [position, pointerIndex, controllerIndex, stateUpdate]);
     }
 
     /**
      * When a pointer control has been pressed down (e.g. a mouse button).
      */
-    async onTriggerPointerInput(buttonIndex: number, pointerIndex: number, controllerIndex: number) {
+    async onTriggerPointerInput(buttonIndex: number, pointerIndex: number,
+        controllerIndex: number) {
         if (!this.spawned) {return}
         if (this.controlsDisabled) {return}
         const stateUpdate = await this.world3dChannel.request("control",
             [this.bodyId(), "triggerPointer", [buttonIndex, pointerIndex]]);
         this.allChannel.sendEvent("Creature:<event>controllerTriggerPointer",
-            [buttonIndex, pointerIndex, stateUpdate]);
+            [buttonIndex, pointerIndex, controllerIndex, stateUpdate]);
     }
 
     /**
@@ -89,7 +90,7 @@ export default class Creature implements IService {
         const stateUpdate = await this.world3dChannel.request("control",
             [this.bodyId(), "pressKey", [key, keyControllerIndex]]);
         this.allChannel.sendEvent("Creature:<event>controllerPressKey",
-            [key, keyControllerIndex, stateUpdate]);
+            [key, keyControllerIndex, controllerIndex, stateUpdate]);
     }
 
     /**
@@ -101,20 +102,21 @@ export default class Creature implements IService {
         const stateUpdate = await this.world3dChannel.request("control",
             [this.bodyId(), "releaseKey", [key, keyControllerIndex]]);
         this.allChannel.sendEvent("Creature:<event>controllerReleaseKey",
-            [key, keyControllerIndex, stateUpdate]);
+            [key, keyControllerIndex, controllerIndex, stateUpdate]);
     }
 
     /**
      * Does what Creature wants to do when the controller's main
      * direction control has changed (for example, the thumb joystick or WASD keys).
      */
-    async onChangeDirectionInput(direction: DVector2, directionControllerIndex: number, controllerIndex: number) {
+    async onChangeDirectionInput(direction: DVector2, directionControllerIndex: number,
+        controllerIndex: number) {
         if (!this.spawned) {return}
         if (this.controlsDisabled) {return}
         const stateUpdate = await this.world3dChannel.request("control",
             [this.bodyId(), "changeDirection", [direction, directionControllerIndex]]);
         this.allChannel.sendEvent("Creature:<event>controllerChangeDirection",
-            [direction, directionControllerIndex, stateUpdate]);
+            [direction, directionControllerIndex, controllerIndex, stateUpdate]);
     }
 
     /**
@@ -135,7 +137,7 @@ export default class Creature implements IService {
         this.world3dChannel.request("createController", ["CreatureBodyController", this.bodyId()]);
 
         if (!this.controlsDisabled) {
-            this._makeBodyCameraTarget();
+            this.makeBodyCameraTarget();
         }
 
         this.spawned = true;
@@ -158,14 +160,14 @@ export default class Creature implements IService {
         if (!this.controlsDisabled) return;
         this.controlsDisabled = false;
         if (this.spawned) {
-            await this._makeBodyCameraTarget();
+            await this.makeBodyCameraTarget();
         }
     }
 
     /**
      * Makes the player's body the centered target of the camera.
      */
-    private async _makeBodyCameraTarget() {
+    async makeBodyCameraTarget() {
         const targetBody = function(this: World3D, bodyId: string) {
             const body = this.getObject(bodyId) as CreatureBody;
             this.camera.lockedTarget = body.transformNode;
