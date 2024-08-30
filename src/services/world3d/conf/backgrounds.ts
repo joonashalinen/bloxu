@@ -12,17 +12,17 @@ export default function createBackgrounds(meshConstructors: {[name: string]: Fun
         "Default": () => new CloudySky(
             meshConstructors["Background::cloudPrototype"]("default"),
             {
-                minBounds: new Vector3(-200, -50, -200),
-                maxBounds: new Vector3(200, -40, 200),
+                minBounds: new Vector3(-500, -50, -500),
+                maxBounds: new Vector3(500, -40, 500),
                 minClusterBounds: new Vector3(-10, -2, -10),
                 maxClusterBounds: new Vector3(10, 2, 10),
                 minCloudScaling: new Vector3(0.2, 0.2, 0.2),
                 maxCloudScaling: new Vector3(5, 5, 5),
-                clustersNum: 50,
+                clustersNum: 100,
                 maxCloudsPerCluster: 5,
                 minCloudVisibility: 0.3,
                 maxCloudVisibility: 1,
-                windVelocity: 0.2
+                windVelocity: 1
             }
         )
     };

@@ -1,4 +1,4 @@
-import { AbstractMesh, TransformNode, Vector3 } from "@babylonjs/core";
+import { AbstractMesh, TransformNode, Vector3, MeshBuilder } from "@babylonjs/core";
 import ILiveEnvironment from "../ILiveEnvironment";
 
 export type TCloudySkyOptions = {
@@ -19,18 +19,22 @@ export type TCloudySkyOptions = {
  * A sky with clusters of clouds that move.
  */
 export default class CloudySky implements ILiveEnvironment {
-    clusters: TransformNode[] = [];
+    clusters: AbstractMesh[] = [];
+    wrapper: AbstractMesh;
 
     constructor(public cloudPrototype: AbstractMesh, public options: TCloudySkyOptions) {
-        
+        this.wrapper = MeshBuilder.CreateBox("CloudySky:wrapper", {size: 1});
+        this.wrapper.visibility = 0;
     }
 
     generate(): void {
         const worldBoundsSize = this.options.maxBounds.subtract(this.options.minBounds);
         for (let i = 0; i < this.options.clustersNum; i++) {
             // Create cluster parent node.
-            const cluster = new TransformNode("CloudySky:cluster?" + i,
+            const cluster = MeshBuilder.CreateBox("CloudySky:cluster?" + i, {size: 1},
                 this.cloudPrototype.getScene());
+            cluster.visibility = 0;
+            this.wrapper.addChild(cluster);
             cluster.setAbsolutePosition(new Vector3(
                 this.options.minBounds.x + worldBoundsSize.x * Math.random(),
                 this.options.minBounds.y + worldBoundsSize.y * Math.random(),
@@ -70,16 +74,14 @@ export default class CloudySky implements ILiveEnvironment {
     }
 
     doOnTick(passedTime: number, absoluteTime: number): void {
-        this.clusters.forEach((cluster) => {
-            const currentAbsolutePosition = cluster.absolutePosition;
-            // Make cloud clusters wrap around to the maximum of the 
-            // bounded area once they have reached the minimum bounds.
-            if (currentAbsolutePosition.x >= this.options.minBounds.x) {
-                currentAbsolutePosition.x -= (passedTime / 1000) * this.options.windVelocity
-            } else {
-                currentAbsolutePosition.x = this.options.maxBounds.x;                
-            }
-            cluster.setAbsolutePosition(currentAbsolutePosition);
-        });
+        const currentAbsolutePosition = this.wrapper.absolutePosition;
+        // Make the clouds wrap around to the maximum of the 
+        // bounded area once they have reached the minimum bounds.
+        if (currentAbsolutePosition.x >= this.options.minBounds.x) {
+            currentAbsolutePosition.x -= (passedTime / 1000) * this.options.windVelocity
+        } else {
+            currentAbsolutePosition.x = this.options.maxBounds.x;                
+        }
+        this.wrapper.setAbsolutePosition(currentAbsolutePosition);
     }
 }
