@@ -95,8 +95,9 @@ export default class RemoteController {
             const properties = this[`${expectOrSet}StateProperties`][beforeOrAfter][method];
             if (properties !== undefined) {
                 properties.forEach((property) => {
-                    remoteStateUpdate[expectOrSet][beforeOrAfter][property] = 
-                        stateUpdate[beforeOrAfter][property];
+                    const propertyName = typeof property === "string" ? property : property.name;
+                    remoteStateUpdate[expectOrSet][beforeOrAfter][propertyName] = 
+                        stateUpdate[beforeOrAfter][propertyName];
                 });
             }
         }

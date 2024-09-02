@@ -45,6 +45,7 @@ export default class Object {
     private _isHidden: boolean = false;
     private _runningId: number = 0;
     private _meshVisibilities: Map<AbstractMesh, number> = new Map();
+    private _bringingBackFromTheVoidCounter: number = 0;
 
     constructor(wrappee: AbstractMesh | Physical) {
         if (wrappee instanceof TransformNode) {
@@ -181,7 +182,6 @@ export default class Object {
 
         this.changeState("teleportToVoid", [],
             () => {
-                if (this.bringingBackFromTheVoid) return;
                 this.isInVoid = true;
                 this._playTeleportAnimation(this.createTeleportOutAnimation);
                 this.asPhysical.disable();
@@ -199,8 +199,8 @@ export default class Object {
 
         this.changeState("bringBackFromTheVoid", [],
             () => {
-                if (this.bringingBackFromTheVoid) return;
                 this.bringingBackFromTheVoid = true;
+                this._bringingBackFromTheVoidCounter++;
                 this.isInVoid = false;
                 this.asPhysical.enable();
                 this._playTeleportAnimation(this.createTeleportInAnimation).then(() => {
@@ -210,7 +210,10 @@ export default class Object {
                     // teleport-in animation. For example, the default teleport-in animation
                     // enlarges the object from zero to its full size.
                     if (!this.isInVoid) this.show();
-                    this.bringingBackFromTheVoid = false;
+                    this._bringingBackFromTheVoidCounter--;
+                    if (this._bringingBackFromTheVoidCounter === 0) {
+                        this.bringingBackFromTheVoid = false;
+                    }
                 });
             }, this.teleportToVoid);
     }
@@ -347,22 +350,6 @@ export default class Object {
         if (this.isInAir) {
             const otherBounds = event.collidedAgainst.transformNode.getHierarchyBoundingVectors();
             const ownBounds = this.transformNode.getHierarchyBoundingVectors();
-            // How much our own maximum point has crossed in each direction
-            // to the other side of the minimum point of the other body.
-            //const maxCross = ownBounds.max.subtract(otherBounds.min);
-            // How much our own minimum point has crossed in each direction
-            // to the other side of the maximum point of the other body.
-            //const minCross = otherBounds.max.subtract(ownBounds.min);
-            // If both our maximum and minimum point have completely crossed horizontally
-            // then we have horizontal overlap with the other body.
-            /* const overlapsHorizontally = (maxCross.x > 0 && maxCross.z > 0 &&
-                minCross.x > 0 && minCross.z > 0); */
-            // We check for the overlap because babylonjs sometimes triggers 
-            // collisions that seem like landings based on the normal vector but 
-            // really there is no horizontal overlap. This happens when moving 
-            // against a wall of physics bodies that are perfectly aligned horizontally and 
-            // so should not trigger these types of collisions if the body moving against 
-            // the wall is larger than the gaps between these bodies.
             if (event.normal.y < 0) {
                 if (this.canLand(event)) {
                     this.land();
@@ -370,12 +357,6 @@ export default class Object {
                     this.rectifyFalseLanding(event);
                 }
             } else {
-                /* console.log(event.point);
-                console.log(otherBounds.min.clone());
-                console.log(otherBounds.max.clone());
-                console.log(ownBounds.min.clone());
-                console.log(ownBounds.max.clone());
-                console.log(""); */
                 if (this.isFalling()) {
                     
                 }

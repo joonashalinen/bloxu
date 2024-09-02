@@ -2,12 +2,10 @@ import DVector3 from "../../../components/graphics3d/pub/DVector3";
 import Creature from "./Creature";
 import IService from "../../../components/services/pub/IService";
 import { DMessage } from "../../../components/messaging/pub/DMessage";
-import MessageFactory from "../../../components/messaging/pub/MessageFactory";
 import ProxyMessenger from "../../../components/messaging/pub/ProxyMessenger";
-import SyncMessenger from "../../../components/messaging/pub/SyncMessenger";
 import DVector2 from "../../../components/graphics3d/pub/DVector2";
 import { DStateUpdate } from "../../../components/controls/pub/IController";
-import DCreatureBodyState from "../../../components/objects3d/pub/io/DCreatureBodyState";
+import { DCreatureBodyState } from "../../../components/objects3d/pub/io/CreatureBodyState";
 
 /**
  * A Creature that is controlled remotely by another online creature.
@@ -42,7 +40,7 @@ export default class RemoteCreature implements IService {
     spawn(startingPosition: DVector3) {
         // Create the player's body and the controller for the body.
         this.creature.world3dChannel.request("createObject",
-            [this.creature.bodyId(), this.creature.bodyType, [startingPosition]]);
+            [this.creature.bodyId(), this.creature.bodyType, [startingPosition, false]]);
         this.creature.world3dChannel.request("createRemoteController",
             ["RemoteCreatureBodyController", this.creature.bodyId()]);
 

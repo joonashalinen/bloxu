@@ -1,21 +1,29 @@
 import { AbstractMesh, Vector3 } from "@babylonjs/core";
 import Object from "../Object";
-import IPlacer from "./IPlacer";
-import ISelector, { DSelectInfo } from "./ISelector";
+import IPlacer, { DPlacementInfo } from "./IPlacer";
 import ObjectGrid from "../ObjectGrid";
 import EventEmitter from "../../../events/pub/EventEmitter";
 import Item from "./Item";
 import Action from "../../../computation/pub/Action";
-import IItem from "./IItem";
 import Selector from "./Selector";
+
+export interface DActionContext {
+    objectWasInVoid: boolean;
+    objectWasHeld: boolean;
+    objectOriginalPosition: Vector3;
+    selectionPosition: Vector3;
+    heldObjects: Object[];
+    objectGrid?: ObjectGrid;
+}
 
 /**
  * An item that can place objects.
  */
-export default class Placer extends Item<Object, Placer> implements IPlacer {
+export default class Placer extends Item<Object, DActionContext> implements IPlacer {
     emitter: EventEmitter = new EventEmitter();
     heldObjects: Object[] = [];
     maxHeldObjects: number = 1;
+    passiveModeEnabled: boolean = false;
     getObjectToPlace: () => Object;
     public get transformNode() {return this.selector.transformNode};
     public get menu() {return this.selector.menu};
@@ -35,6 +43,7 @@ export default class Placer extends Item<Object, Placer> implements IPlacer {
     }
 
     doMainAction() {
+        if (this.passiveModeEnabled) return;
         if (this.getObjectToPlace !== undefined) {
             this.placeObject(this.getObjectToPlace());
         } else if (this.canPlaceHeldObject()) {
@@ -48,8 +57,7 @@ export default class Placer extends Item<Object, Placer> implements IPlacer {
      * Whether there is an object held by the placer that we can place.
      */
     canPlaceHeldObject() {
-        return (this.heldObjects !== undefined && this.heldObjects.length > 0 &&
-            this.heldObjects.length > 0);
+        return (this.heldObjects !== undefined && this.heldObjects.length > 0);
     }
 
     /**
@@ -72,11 +80,10 @@ export default class Placer extends Item<Object, Placer> implements IPlacer {
             this.emitter.trigger("useEnd");
             return false;
         }
-        
+
         // We do not allow placing if the possible associated
         // object grid already has an object placed at the cell we are about to place
-        // into. Note: the coordinates of .grid are local to the possible object followed by
-        // GridMenu, whereas the coordinates of .objectGrid are absolute.
+        // into.
         if ((this.objectGrid !== undefined &&
             this.objectGrid.cellIsOccupiedAtPosition(this.selector.selectionPosition)) && 
             this.objectGrid.objectAtPosition(this.selector.selectionPosition) !== object) {
@@ -85,32 +92,16 @@ export default class Placer extends Item<Object, Placer> implements IPlacer {
         }
 
         // Perform block placement in such a way that we support undo/redo.
-        const objectWasInVoid = object.isInVoid;
         const objectWasHeld = this.heldObjects[this.heldObjects.length - 1] === object;
-        const objectOriginalPosition = object.transformNode.getAbsolutePosition().clone();
-        const selectionPosition = this.selector.selectionPosition.clone();
-        const doWith = (f: (object: Object, context: Placer) => void) => (object: Object, context: Placer) => {
-            f(object, context);
-            if (objectWasInVoid) object.bringBackFromTheVoid();
-            if (objectWasHeld) context.heldObjects.pop();
-        };
-        const undoWith = (f: (object: Object, context: Placer) => void) => (object: Object, context: Placer) => {
-            f(object, context);
-            if (objectWasInVoid) object.teleportToVoid();
-            if (objectWasHeld) context.heldObjects.push(object);
-            object.setAbsolutePosition(objectOriginalPosition);
-        };
-        if (this.objectGrid !== undefined) {
-            this.history.perform(new Action(object, this,
-                doWith((object, context) => { context.objectGrid.placeAtPosition(selectionPosition, object); }),
-                undoWith((object, context) => { context.objectGrid.clearCellAtPosition(selectionPosition); })
-            ));
-        } else {
-            this.history.perform(new Action(object, this,
-                doWith((object, context) => { object.transformNode.setAbsolutePosition(selectionPosition); }),
-                undoWith((object, context) => {  })
-            ));
-        }
+        const action = this.createPlaceAction(object, {
+            objectWasInVoid: object.isInVoid,
+            objectWasHeld: objectWasHeld,
+            objectOriginalPosition: object.transformNode.getAbsolutePosition().clone(),
+            selectionPosition: this.selector.selectionPosition.clone(),
+            heldObjects: this.heldObjects,
+            objectGrid: this.objectGrid
+        });
+        this.history.perform(action);
 
         // We don't currently support undo that would bring back the preview 
         // mesh. If this is needed, it can be implemented in the future.
@@ -118,7 +109,8 @@ export default class Placer extends Item<Object, Placer> implements IPlacer {
 
         this.emitter.trigger("place", [{
             object: object,
-            absolutePosition: object.transformNode.absolutePosition.clone()}]);
+            absolutePosition: object.transformNode.getAbsolutePosition().clone(),
+            objectWasHeld: objectWasHeld}]);
         this.emitter.trigger("useEnd");
 
         return true;
@@ -147,6 +139,7 @@ export default class Placer extends Item<Object, Placer> implements IPlacer {
         if (lastUndoable === undefined) return;
         if (lastUndoable.target.bringingBackFromTheVoid) return;
         this.history.undo();
+        this.emitter.trigger("undo");
     }
 
     /**
@@ -157,20 +150,57 @@ export default class Placer extends Item<Object, Placer> implements IPlacer {
         if (lastRedoable === undefined) return;
         if (lastRedoable.target.bringingBackFromTheVoid) return;
         this.history.redo();
+        this.emitter.trigger("redo");
     }
 
     /**
      * Listen to 'place' events for when an object 
      * has been placed.
      */
-    onPlace(callback: (info: DSelectInfo) => void) {
+    onPlace(callback: (info: DPlacementInfo) => void) {
         this.emitter.on("place", callback);
     }
 
     /**
      * Stop listening to 'place' events.
      */
-    offPlace(callback: (info: DSelectInfo) => void) {
+    offPlace(callback: (info: DPlacementInfo) => void) {
         this.emitter.off("place", callback);
+    }
+
+    /**
+     * Creates an Action object that performs object placing.
+     */
+    createPlaceAction(object: Object, context: DActionContext) {
+        const doWith = (f: (object: Object, context: DActionContext) => void) =>
+            (object: Object, context: DActionContext) => {
+            f(object, context);
+            if (context.objectWasInVoid) object.bringBackFromTheVoid();
+            if (context.objectWasHeld) context.heldObjects.pop();
+        };
+        const undoWith = (f: (object: Object, context: DActionContext) => void) =>
+            (object: Object, context: DActionContext) => {
+            f(object, context);
+            if (context.objectWasInVoid) object.teleportToVoid();
+            if (context.objectWasHeld) context.heldObjects.push(object);
+            object.setAbsolutePosition(context.objectOriginalPosition);
+        };
+        if (this.objectGrid !== undefined) {
+            return new Action(object, context,
+                doWith((object, context) => {
+                    context.objectGrid.placeAtPosition(context.selectionPosition, object);
+                }),
+                undoWith((object, context) => {
+                    context.objectGrid.clearCellAtPosition(context.selectionPosition);
+                })
+            );
+        } else {
+            return new Action(object, context,
+                doWith((object, context) => {
+                    object.transformNode.setAbsolutePosition(context.selectionPosition);
+                }),
+                undoWith((object, context) => {  })
+            );
+        }
     }
 }

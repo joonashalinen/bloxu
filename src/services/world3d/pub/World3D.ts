@@ -13,7 +13,7 @@ import SyncMessenger from "../../../components/messaging/pub/SyncMessenger";
 import FunctionWrapper from "../../../components/services/pub/FunctionWrapper";
 import meshConstructors from "../conf/meshConstructors";
 import objectConstructors from "../conf/objectConstructors";
-import controllerConstructors, { TControllerConstructors } from "../conf/controllerConstructors";
+import createControllerConstructors, { TControllerConstructors } from "../conf/controllerConstructors";
 import Glow from "../../../components/graphics3d/pub/effects/Glow";
 import maps from "../conf/maps/maps";
 import ObjectManager from "../../../components/objects3d/pub/ObjectManager";
@@ -62,10 +62,10 @@ export default class World3D implements IService {
     constructor(public id: string, document: Document) {
         this.objects = new ObjectManager();
         this.controllers = {};
-        this.controllerConstructors = controllerConstructors;
+        this.controllerConstructors = createControllerConstructors(this.objects);
         this.remoteControllers = {};
         this.remoteControllerConstructors = createRemoteControllerConstructors(
-            controllerConstructors);
+            this.controllerConstructors);
         this.globals = createGlobals();
 
         this.effects = {};

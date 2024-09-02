@@ -30,7 +30,8 @@ export default function (
     glowLayer: GlowLayer,
     globals: {[name: string]: unknown}) {
     return {
-        "PlayerBody": (id: string, startPosition: DVector3 = {x: 0, y: 0, z: 0}) => {
+        "PlayerBody": (id: string, startPosition: DVector3 = {x: 0, y: 0, z: 0},
+            isControllable: boolean) => {
             const characterHeight = 1.55;
             const characterWidth = 0.4;
             const blockSize = 1.4;
@@ -159,6 +160,7 @@ export default function (
 
             const picker = new Picker(projectileWeapon);
             picker.ownerId = id;
+            if (!isControllable) picker.waitForBringBackFromVoidToFinish = false;
 
             const placer = new Placer(
                 new GridMenu(
@@ -170,6 +172,10 @@ export default function (
                 globals.objectGrid as ObjectGrid
             );
             placer.ownerId = id;
+            if (!isControllable) {
+                (placer.selector as GridMenu).visualsEnabled = false;
+                placer.passiveModeEnabled = true;
+            }
             (placer.selector as GridMenu).followedNode = body.transformNode;
 
             const pickerPlacer = new PickerPlacer(picker, placer);

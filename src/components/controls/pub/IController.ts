@@ -1,12 +1,12 @@
 import DVector2 from "../../graphics3d/pub/DVector2";
-import IState from "./IState";
+import IState, { TProperty } from "./IState";
 
 export interface DStateUpdate<T> {
     before: T;
     after: T;
 }
 
-export type TProperties = { [controllerMethod: string]: string[]; };
+export type TProperties = { [controllerMethod: string]: TProperty[]; };
 
 /**
  * Handles inputs and controls something based on those inputs.

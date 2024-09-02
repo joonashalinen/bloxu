@@ -4,6 +4,10 @@ import ObjectGrid from "../ObjectGrid";
 import IItem from "./IItem";
 import { DSelectInfo } from "./ISelector";
 
+export interface DPlacementInfo extends DSelectInfo {
+    objectWasHeld: boolean;
+}
+
 export default interface IPlacer {
     heldObjects: Object[];
     maxHeldObjects: number;
@@ -13,6 +17,6 @@ export default interface IPlacer {
     placeObject(object: Object): boolean;
     getObjectToPlace: () => Object;
     setPreviewMeshFromObject(object: Object): void;
-    onPlace(callback: (info: DSelectInfo) => void): void;
-    offPlace(callback: (info: DSelectInfo) => void): void;
+    onPlace(callback: (info: DPlacementInfo) => void): void;
+    offPlace(callback: (info: DPlacementInfo) => void): void;
 }

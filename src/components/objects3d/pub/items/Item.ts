@@ -72,6 +72,22 @@ export default class Item<Target, Context> implements IItem<Target, Context> {
         this.emitter.off("useEnd", callback);
     }
 
+    onUndo(callback: () => void): void {
+        this.emitter.on("undo", callback);
+    }
+
+    offUndo(callback: () => void): void {
+        this.emitter.off("undo", callback);
+    }
+
+    onRedo(callback: () => void): void {
+        this.emitter.on("redo", callback);
+    }
+
+    offRedo(callback: () => void): void {
+        this.emitter.off("redo", callback);
+    }
+
     doMainAction(): void {
         this._itemUsed = false;
         this._animationEnded = false;

@@ -8,6 +8,7 @@ import Selector from "../items/Selector";
 export default class Menu extends Selector implements IMenu {
     followedNode: TransformNode;
     offset: Vector3 = new Vector3(0, 0, 0);
+    visualsEnabled: boolean = true;
     createFollowVector: (passedTime: number, absoluteTime: number) => Vector3 = 
         (passedTime, absoluteTime) => this.followedNode.absolutePosition.clone();
     
@@ -19,7 +20,7 @@ export default class Menu extends Selector implements IMenu {
     activate(): void {
         if (this.isActive) return;
         super.activate();
-        this.transformNode.setEnabled(true);
+        if (this.visualsEnabled) this.transformNode.setEnabled(true);
     }
 
     deactivate(): void {

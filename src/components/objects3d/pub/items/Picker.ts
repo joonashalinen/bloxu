@@ -13,6 +13,7 @@ import Selector from "./Selector";
 export default class Picker extends Item<Object, Picker> implements IPicker {
     heldObjects: Object[] = [];
     maxHeldObjects: number = 1;
+    waitForBringBackFromVoidToFinish: boolean = true;
     canPick: () => boolean = () => { return this.heldObjects.length < this.maxHeldObjects; };
     canPickObject: (object: Object) => boolean = (object) => true;
     paintPickedObject: (object: Object) => void = (object) => {};
@@ -29,17 +30,7 @@ export default class Picker extends Item<Object, Picker> implements IPicker {
             if (!this.isActive) return;
             if (info.object !== undefined) {
                 if (this.canPick() && this.canPickObject(info.object)) {
-                    this.history.perform(new Action(info.object, this,
-                        (object, context) => {
-                            context.paintPickedObject(object);
-                            object.teleportToVoid();
-                            context.heldObjects.push(object);
-                        },
-                        (object, context) => {
-                            object.bringBackFromTheVoid();
-                            context.heldObjects.pop();
-                        }
-                    ));
+                    this.history.perform(this.createPickAction(info.object));
                     this.emitter.trigger("pick", [info]);
                 }
             }
@@ -92,8 +83,10 @@ export default class Picker extends Item<Object, Picker> implements IPicker {
     undo() {
         const lastUndoable = this.history.undoableActions[this.history.undoableActions.length - 1];
         if (lastUndoable === undefined) return;
-        if (lastUndoable.target.bringingBackFromTheVoid) return;
+        if (this.waitForBringBackFromVoidToFinish &&
+            lastUndoable.target.bringingBackFromTheVoid) return;
         this.history.undo();
+        this.emitter.trigger("undo");
     }
 
     /**
@@ -102,7 +95,27 @@ export default class Picker extends Item<Object, Picker> implements IPicker {
     redo() {
         const lastRedoable = this.history.redoableActions[this.history.redoableActions.length - 1];
         if (lastRedoable === undefined) return;
-        if (lastRedoable.target.bringingBackFromTheVoid) return;
+        if (this.waitForBringBackFromVoidToFinish &&
+            lastRedoable.target.bringingBackFromTheVoid) return;
         this.history.redo();
+        this.emitter.trigger("redo");
+    }
+
+    /**
+     * Creates an Action object that is performed when
+     * the Picker picks an object.
+     */
+    createPickAction(object: Object) {
+        return new Action(object, this,
+            (object, context) => {
+                context.paintPickedObject(object);
+                object.teleportToVoid();
+                context.heldObjects.push(object);
+            },
+            (object, context) => {
+                object.bringBackFromTheVoid();
+                context.heldObjects.pop();
+            }
+        );
     }
 }

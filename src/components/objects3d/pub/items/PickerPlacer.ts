@@ -6,7 +6,7 @@ import Object from "../Object";
 import Action from "../../../computation/pub/Action";
 import History from "../../../data_structures/pub/History";
 import IItem from "./IItem";
-import Placer from "./Placer";
+import Placer, { DActionContext as DPlacerActionContext} from "./Placer";
 import Picker from "./Picker";
 
 /**
@@ -37,11 +37,9 @@ export default class PickerPlacer extends Item<Object, Picker | Placer> {
             if (this._redoing) return;
             if (info.object !== undefined) {
                 this.placer.heldObjects.push(info.object);
-                this.picker.deactivate();
-                this.placer.activate();
-                this._selectedItem = "placer";
+                this.switchToPlacer();
                 
-                if (!this.ownedObjects.has(info.object)) this._takeOwnership(info.object);
+                if (!this.ownedObjects.has(info.object)) this.takeOwnership(info.object);
                 this.placer.setPreviewMeshFromObject(info.object);
             }
         });
@@ -99,8 +97,8 @@ export default class PickerPlacer extends Item<Object, Picker | Placer> {
     doMainAction() {
         if (this._selectedItem === "picker") {
             this.picker.doMainAction();
-        } else if (this.placer.canPlaceHeldObject()){
-            this._placeHeldObject();
+        } else if (this.placer.canPlaceHeldObject() && !this.placer.passiveModeEnabled){
+            this.placeHeldObject();
         }
     }
 
@@ -139,8 +137,9 @@ export default class PickerPlacer extends Item<Object, Picker | Placer> {
         // we should release ownership of it.
         if (this.placer.history.undoableActions
             .find((action) => action.target === lastUndoable.target) === undefined) {
-            this._releaseOwnership(lastUndoable.target);
+            this.releaseOwnership(lastUndoable.target);
         }
+        this.emitter.trigger("undo");
     }
 
     /**
@@ -160,10 +159,6 @@ export default class PickerPlacer extends Item<Object, Picker | Placer> {
         const affectedObjectWasInUndoHistory = this.placer.history.undoableActions
             .find((action) => action.target === lastRedoable.target) !== undefined;
 
-        // If the object affected by the redo was previously not in the
-        // undoable history but now is again then we should repaint it.
-        //if (!affectedObjectWasInUndoHistory) this.paintOwnedObject(lastRedoable.target);
-
         this.picker.redo();
         this.picker.heldObjects.pop();
         this.placer.redo();
@@ -171,9 +166,10 @@ export default class PickerPlacer extends Item<Object, Picker | Placer> {
         // If the object affected by the redo was previously not in the
         // undoable history but now is again then we should repaint it and
         // reclaim ownership of it.
-        if (!affectedObjectWasInUndoHistory) this._takeOwnership(lastRedoable.target);
+        if (!affectedObjectWasInUndoHistory) this.takeOwnership(lastRedoable.target);
         
         this._redoing = false;
+        this.emitter.trigger("redo");
     }
 
     /**
@@ -188,39 +184,32 @@ export default class PickerPlacer extends Item<Object, Picker | Placer> {
     }
 
     /**
-     * Places the last held object using .placer.
-     */
-    private _placeHeldObject() {
-        if (this.placer.placeHeldObject()) {
-            this.picker.heldObjects.pop();
-            this.placer.deactivate();
-            this.picker.activate();
-            this._selectedItem = "picker";
-        }
-    }
-
-    /**
      * Take ownership of an object we don't own.
      */
-    private _takeOwnership(object: Object) {
+    takeOwnership(object: Object) {
         // If any of the linked PickerPlacers own the object, we want to copy their 
         // undo/redo history for the object.
         this.linkedPickerPlacers.forEach((other) => {
             if (other.ownedObjects.has(object)) {
-                const p = (action: Action<Object, Picker | Placer>) => action.target === object;
+                const p = (action: Action<Object, Picker | DPlacerActionContext>) =>
+                    action.target === object;
 
-                ["picker", "placer"].forEach((item) => 
+                ["picker", "placer"].forEach((item) =>
                     ["undoableActions", "redoableActions"].forEach((actions) => {
                         const copiedHistory = (
-                            (other[item].history as History<Object, Picker | Placer>)
-                            [actions] as Action<Object, Picker | Placer>[]
+                            (other[item].history as History<Object, Picker | DPlacerActionContext>)
+                            [actions] as Action<Object, Picker | DPlacerActionContext>[]
                         ).filter(p);
-                        // We need to reassign the context because it is different now that
-                        // we own the action.
-                        copiedHistory.forEach((action) => {action.context = this[item];});
+                        // We need to reassign some of the context properties because
+                        // it is different now that we own the action.
+                        copiedHistory.forEach((action) => {
+                            action.context.heldObjects = (this[item] as Picker | Placer)
+                                .heldObjects;
+                            if (item === "picker") { (action.context as Picker) = this.picker };
+                        });
 
-                        ((this[item].history as History<Object, Picker | Placer>)
-                            [actions] as Action<Object, Picker | Placer>[])
+                        ((this[item].history as History<Object, Picker | DPlacerActionContext>)
+                            [actions] as Action<Object, Picker | DPlacerActionContext>[])
                             .push(...copiedHistory);
                     })
                 );
@@ -237,7 +226,7 @@ export default class PickerPlacer extends Item<Object, Picker | Placer> {
                 this.ownedObjects.delete(object);
                 delete this._ownershipChangeListeners[object.id];
                 // We also remove all undo/redo history of the released object.
-                const f = (action: Action<Object, Picker | Placer>) => action.target !== object;
+                const f = (action: Action<Object, Picker | DPlacerActionContext>) => action.target !== object;
                 this.picker.history.redoableActions = this.picker.history.redoableActions.filter(f);
                 this.picker.history.undoableActions = this.picker.history.undoableActions.filter(f);
                 this.placer.history.redoableActions = this.placer.history.redoableActions.filter(f);
@@ -258,10 +247,61 @@ export default class PickerPlacer extends Item<Object, Picker | Placer> {
     /**
      * Release ownership of an object that we own.
      */
-    private _releaseOwnership(object: Object) {
+    releaseOwnership(object: Object) {
         this.unpaintOwnedObject(object);
         this.ownedObjects.delete(object);
         object.offChangeState(this._ownershipChangeListeners[object.id]);
         delete this._ownershipChangeListeners[object.id];
+    }
+
+    /**
+     * Switches to the picker as the currently selected item.
+     */
+    switchToPicker() {
+        this.placer.deactivate();
+        this.picker.activate();
+        this._selectedItem = "picker";
+    }
+
+    /**
+     * Switches to the placer as the currently selected item.
+     */
+    switchToPlacer() {
+        this.picker.deactivate();
+        this.placer.activate();
+        this._selectedItem = "placer";
+    }
+
+    /**
+     * Places the last held object using .placer.
+     */
+    placeHeldObject() {
+        if (this.placer.placeHeldObject()) {
+            this.doAfterPlacing();
+        }
+    }
+
+    /**
+     * What the PickerPlacer does after placing an object.
+     * This method is made public for classes that wish to 
+     * have fine-grained control over the PickerPlacer, such
+     * as PickerPlacerState.
+     */
+    doAfterPlacing() {
+        const object = this.picker.heldObjects.pop();
+        this.switchToPicker();
+        this.emitter.trigger("place", [object]);
+    }
+
+    /**
+     * Listens to the 'place' event, which is triggered whenever
+     * the PickerPlacer places an object.
+     */
+    onPlace(callback: (object: Object) => void) {
+        this.emitter.on("place", callback);
+    }
+
+    offPlace(callback: (object: Object) => void) {
+        this.emitter.off("place", callback);
     }
 }

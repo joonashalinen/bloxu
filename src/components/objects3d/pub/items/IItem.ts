@@ -24,5 +24,9 @@ export default interface IItem<Target, Context> {
     doSecondaryAction(): void;
     undo(): void;
     redo(): void;
+    onUndo(callback: () => void): void;
+    offUndo(callback: () => void): void;
+    onRedo(callback: () => void): void;
+    offRedo(callback: () => void): void;
     doOnTick(passedTime: number, absoluteTime: number): void;
 }

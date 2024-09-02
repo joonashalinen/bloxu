@@ -3,6 +3,7 @@ import DVector2 from "../../../graphics3d/pub/DVector2";
 import DeviceController from "./DeviceController";
 import CreatureBody from "../creatures/CreatureBody";
 import CreatureBodyState from "./CreatureBodyState";
+import ObjectManager from "../ObjectManager";
 
 /**
  * An input controller for a CreatureBody that is meant to 
@@ -10,9 +11,9 @@ import CreatureBodyState from "./CreatureBodyState";
  */
 export default class CreatureBodyController extends DeviceController {
 
-    constructor(public creatureBody: CreatureBody) {
+    constructor(public creatureBody: CreatureBody, public objectManager: ObjectManager) {
         super(creatureBody);
-        this.targetState = new CreatureBodyState(creatureBody);
+        this.targetState = new CreatureBodyState(creatureBody, objectManager);
     }
 
     override point(position: DVector2, pointerIndex: number) {

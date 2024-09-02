@@ -5,8 +5,6 @@ import DVector3 from "../../../components/graphics3d/pub/DVector3";
 import DVector2 from "../../../components/graphics3d/pub/DVector2";
 import IService from "../../../components/services/pub/IService";
 import CreatureBody from "../../../components/objects3d/pub/creatures/CreatureBody";
-import DCreatureBodyState from "../../../components/objects3d/pub/io/DCreatureBodyState";
-import { DStateUpdate } from "../../../components/controls/pub/IController";
 import Channel from "../../../components/messaging/pub/Channel";
 
 type TOtherServiceIdMap = {
@@ -133,7 +131,7 @@ export default class Creature implements IService {
     spawn(startingPosition: DVector3): boolean {
         // Create the player's body and the controller for the body.
         this.world3dChannel.request("createObject",
-            [this.bodyId(), this.bodyType, [startingPosition]]);
+            [this.bodyId(), this.bodyType, [startingPosition, true]]);
         this.world3dChannel.request("createController", ["CreatureBodyController", this.bodyId()]);
 
         if (!this.controlsDisabled) {
