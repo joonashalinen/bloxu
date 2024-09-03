@@ -28,7 +28,7 @@ export default class Picker extends Item<Object, Picker> implements IPicker {
         super();
         this.selector.onSelect((info) => {
             if (!this.isActive) return;
-            if (info.object !== undefined) {
+            if (info.object !== undefined && !info.object.isLocked) {
                 if (this.canPick() && this.canPickObject(info.object)) {
                     this.history.perform(this.createPickAction(info.object));
                     this.emitter.trigger("pick", [info]);

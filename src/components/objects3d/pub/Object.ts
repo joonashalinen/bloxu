@@ -41,6 +41,7 @@ export default class Object {
     useTimeoutLandingDetection: boolean = false;
     canLand: (event: IPhysicsCollisionEvent) => boolean = () => true;
     rectifyFalseLanding: (event: IPhysicsCollisionEvent) => void = () => {};
+    isLocked: boolean = false;
     private _lastPositionUpdateTime: number = 0;
     private _isHidden: boolean = false;
     private _runningId: number = 0;

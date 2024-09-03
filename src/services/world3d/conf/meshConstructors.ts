@@ -33,6 +33,7 @@ export default async function(babylonjs: typeof BABYLON, scene: BABYLON.Scene) {
         "Blocks::dirt": "blocks/dirt.glb",
         "Blocks::grassyDirt": "blocks/grassy_dirt.glb",
         "Blocks::stone": "blocks/stone.glb",
+        "Blocks::partition": "blocks/partition.glb",
         "Background::cloudPrototype": "cloud_prototype.glb"
     };
 
@@ -43,6 +44,7 @@ export default async function(babylonjs: typeof BABYLON, scene: BABYLON.Scene) {
     assetLoader.loadModel("Blocks::dirt");
     assetLoader.loadModel("Blocks::grassyDirt");
     assetLoader.loadModel("Blocks::stone");
+    assetLoader.loadModel("Blocks::partition");
     assetLoader.loadModel("Background::cloudPrototype");
 
     function plainConstructor(type: string, id?: string) {
@@ -176,6 +178,11 @@ export default async function(babylonjs: typeof BABYLON, scene: BABYLON.Scene) {
         "Blocks::dirt": () => plainConstructor("Blocks::dirt"),
         "Blocks::grassyDirt": () => plainConstructor("Blocks::grassyDirt"),
         "Blocks::stone": () => plainConstructor("Blocks::stone"),
+        "Blocks::partition": () => {
+            const mesh = plainConstructor("Blocks::partition");
+            mesh.visibility = 0.5;
+            return mesh;
+        },
         "Interactables::portal": (id: string) => {
             function createMaterial(name: string) {
                 const material = new BABYLON.StandardMaterial(name, scene);

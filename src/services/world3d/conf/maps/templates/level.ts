@@ -61,9 +61,11 @@ export default async function level(
             block.triggerChangeStateEvents = true;
             (globals.objectGrid as ObjectGrid).placeAtPosition(
                 block.transformNode.getAbsolutePosition().clone(), block);
+            if (meshName.includes("Blocks::partition")) block.isLocked = true;
 
         } else if (meshName.includes("Interactables::portal")) {
-            objects.createObject(mesh.id, "Interactables::portal", [mesh]);
+            const portal = objects.createObject(mesh.id, "Interactables::portal", [mesh]);
+            portal.isLocked = true;
         }
     });
     return rootMesh;
