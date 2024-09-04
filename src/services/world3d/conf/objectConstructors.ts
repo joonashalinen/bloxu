@@ -69,6 +69,7 @@ export default function (
             body.runSpeed = 2.5;
             body.respawnPoint = new Vector3(startPosition.x, startPosition.y, startPosition.z);
             body.respawnOnDeath = true;
+            body.isLocked = true;
             body.canLand = (event: IPhysicsCollisionEvent) => {
                 const objectLandedOn = objectManager
                     .getObjectWithMeshId(event.collidedAgainst.transformNode.id);
