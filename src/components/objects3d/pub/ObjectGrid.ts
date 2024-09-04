@@ -134,4 +134,13 @@ export default class ObjectGrid {
         const coordinates = this.coordinatesByObjectIds[object.id];
         return coordinates?.clone();
     }
+
+    /**
+     * Resets the ObjectGrid so that all its cells are empty.
+     * Does not affect the objects themselves, only the record-keeping.
+     */
+    reset() {
+        this.objectsByCoordinates = {};
+        this.coordinatesByObjectIds = {};
+    }
 }

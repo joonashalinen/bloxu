@@ -12,10 +12,14 @@ export default async function level(
     meshConstructors: MeshConstructors,
     objects: ObjectManager,
     globals: {[name: string]: unknown}) {
+    // Reset the object grid in case another map's objects were still
+    // present there.
+    (globals.objectGrid as ObjectGrid).reset();
+
     const blockSize = 1.4;
 
     const levelMapImport = (await SceneLoader.LoadAssetContainerAsync(
-        "assets/models/",
+        "assets/models/maps/",
         levelName + ".gltf",
         scene
     ));

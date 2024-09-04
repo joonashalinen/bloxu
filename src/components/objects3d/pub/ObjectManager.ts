@@ -1,6 +1,6 @@
 import { TObjectConstructor } from "../../../services/world3d/conf/objectConstructors";
 import HistoryCollection from "../../data_structures/pub/HistoryCollection";
-import Object from "./Object";
+import Object3D from "./Object";
 
 /**
  * An instance of this class is meant to be 
@@ -9,9 +9,9 @@ import Object from "./Object";
  */
 export default class ObjectManager {
     objectConstructors: {[typeName: string]: TObjectConstructor} = {};
-    history: HistoryCollection<Object, Object> = new HistoryCollection();
-    private _objectsById: {[name: string]: Object} = {};
-    private _objectsByMeshId: {[name: string]: Object} = {};
+    history: HistoryCollection<Object3D, Object3D> = new HistoryCollection();
+    private _objectsById: {[name: string]: Object3D} = {};
+    private _objectsByMeshId: {[name: string]: Object3D} = {};
 
     constructor() {
         
@@ -22,7 +22,7 @@ export default class ObjectManager {
      * so that it can be retrieved with either the 
      * id of the root mesh or the object id.
      */
-    addObject(id: string, object: Object) {
+    addObject(id: string, object: Object3D) {
         const meshId = object.transformNode.id;
         if (this.hasObjectWithMeshId(meshId)) {
             throw new Error(`Object with mesh id '${meshId}' 
@@ -95,6 +95,18 @@ export default class ObjectManager {
         object.id = type + "?" + id;
         this.addObject(id, object);
         return object;
+    }
+
+    /**
+     * Removes all objects managed by the ObjectManager
+     * and destroys them from the scene, making them and their 
+     * meshes no longer usable.
+     */
+    destroyAllObjects() {
+        this.history = new HistoryCollection();
+        Object.values(this._objectsById).forEach((object) => { object.destroy(); });
+        this._objectsById = {};
+        this._objectsByMeshId = {};
     }
 
     /**

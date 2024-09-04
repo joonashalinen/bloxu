@@ -3,6 +3,10 @@ import ProxyMessenger from "../../../components/messaging/pub/ProxyMessenger";
 import SyncMessenger from "../../../components/messaging/pub/SyncMessenger";
 import MessageFactory from "../../../components/messaging/pub/MessageFactory";
 import World3D from "../../world3d/pub/World3D";
+import Channel from "../../../components/messaging/pub/Channel";
+import LevelLogic from "../prv/LevelLogic";
+import createLevelLogic from "../conf/level_logic";
+import getPlayers, { IPlayerInfo } from "../conf/players";
 
 interface Vector3D {
     x: number;
@@ -24,75 +28,21 @@ export default class GameMaster {
     gameRunning: boolean = false;
     cubeSize: number = 1.34;
     characterHeight: number = 1.8;
+    levelLogic: LevelLogic;
+    worldChannel: Channel;
+    players: IPlayerInfo[];
     
     constructor() {
         this.syncMessenger = new SyncMessenger(this.proxyMessenger);
+        this.levelLogic = createLevelLogic(this.proxyMessenger);
+        this.worldChannel = new Channel("gameMaster", "world3d", this.proxyMessenger);
+        this.players = getPlayers();
         this.eventHandlers = {
             "Player:<event>die": this.onPlayerDeath.bind(this),
-            "OnlineSynchronizer:<event>remotePlayerJoined": this.onPlayerJoined.bind(this)
+            "OnlineSynchronizer:<event>remotePlayerJoined": this.onPlayerJoined.bind(this),
+            "*": this.onAnyEvent.bind(this)
         };
         this.initialized = false;
-    }
-
-    /**
-     * Spawn everything needed for the game 
-     * and make the 3D world run.
-     */
-    private async _startGame(isSinglePlayer: boolean = false) {
-
-        // vvv Setup environment. vvv
-
-        // Make world run.
-        this.proxyMessenger.postMessage(
-            this.messageFactory.createRequest("world3d", "run")
-        );
-
-        // vvv Setup players. vvv        
-
-        // Tell the player services who is the main player and who is the remote / AI player.
-        this.proxyMessenger.postMessage(
-            this.messageFactory.createRequest(this.localPlayerId,
-                "beCreature", ["PlayerBody", true])
-        );
-        this.proxyMessenger.postMessage(
-            this.messageFactory.createRequest(this.remotePlayerId(),
-                !isSinglePlayer ? "beRemoteCreature" : "beCreature", ["PlayerBody"])
-        );
-
-        // Initialize players.
-        await this.syncMessenger.postSyncMessage(
-            this.messageFactory.createRequest(this.localPlayerId, "initialize")
-        );
-        await this.syncMessenger.postSyncMessage(
-            this.messageFactory.createRequest(this.remotePlayerId(), "initialize")
-        );
-        // Initialize coordinator service for the players.
-        await this.syncMessenger.postSyncMessage(
-            this.messageFactory.createRequest(
-                "playerCoordinator", "initialize",
-                [["player-1", "player-2"], this.localPlayerId === "player-1" ? 0 : 1])
-        );
-
-        // Spawn players.
-        this.proxyMessenger.postMessage(
-            this.messageFactory.createRequest("player-1", "spawn", [{x: 4, y: 6, z: -7}])
-        );
-        this.proxyMessenger.postMessage(
-            this.messageFactory.createRequest("player-2", "spawn", [{x: 0, y: 6, z: -7}])
-        );
-
-        // Create map.
-        const success = await this.syncMessenger.postSyncMessage({
-            recipient: "world3d",
-            sender: "gameMaster",
-            type: "request",
-            message: {
-                type: "selectMap",
-                args: ["level1"]
-            }
-        }) as boolean;
-
-        this.gameRunning = true;
     }
 
     /**
@@ -136,10 +86,10 @@ export default class GameMaster {
      * We assume the game is 2-player.
      */
     remotePlayerId() {
-        if (this.localPlayerId === "player-1") {
-            return "player-2";
+        if (this.localPlayerId === this.players[0].id) {
+            return this.players[1].id;
         } else {
-            return "player-1";
+            return this.players[0].id;
         }
     }
 
@@ -247,5 +197,89 @@ export default class GameMaster {
         this.proxyMessenger.postMessage(
             this.messageFactory.createEvent("*", "GameMaster:<event>startGame")
         );
+    }
+
+    /**
+     * Fallback for any event that does not 
+     * have a specific handler.
+     */
+    onAnyEvent(msg: DMessage) {
+        this.levelLogic.handleEvent(msg.message.type, msg.message.args);
+    }
+
+    /**
+     * Spawn everything needed for the game 
+     * and make the 3D world run.
+     */
+    private async _startGame(isSinglePlayer: boolean = false) {
+
+        // vvv Setup environment. vvv
+
+        // Make world run.
+        this.proxyMessenger.postMessage(
+            this.messageFactory.createRequest("world3d", "run")
+        );
+
+        // Create map.
+        await this.worldChannel.request("selectMap", 
+            [this.levelLogic.levels[this.levelLogic.currentLevelIndex]]);
+
+        // vvv Setup players. vvv        
+
+        // Tell the player services who is the main player and who is the remote / AI player.
+        this.proxyMessenger.postMessage(
+            this.messageFactory.createRequest(this.localPlayerId,
+                "beCreature", ["PlayerBody", true])
+        );
+        this.proxyMessenger.postMessage(
+            this.messageFactory.createRequest(this.remotePlayerId(),
+                !isSinglePlayer ? "beRemoteCreature" : "beCreature", ["PlayerBody"])
+        );
+
+        // Initialize players.
+        await this.syncMessenger.postSyncMessage(
+            this.messageFactory.createRequest(this.localPlayerId, "initialize")
+        );
+        await this.syncMessenger.postSyncMessage(
+            this.messageFactory.createRequest(this.remotePlayerId(), "initialize")
+        );
+        // Initialize coordinator service for the players.
+        await this.syncMessenger.postSyncMessage(
+            this.messageFactory.createRequest(
+                "playerCoordinator", "initialize",
+                [this.players.map((player) => player.id),
+                    this.localPlayerId === this.players[0].id ? 0 : 1]
+            )
+        );
+
+        // Spawn players.
+        this.players.forEach((player) => {
+            this.proxyMessenger.postMessage(
+                this.messageFactory.createRequest(player.id, "spawn", [player.spawnLocation])
+            );
+        });
+
+        // vvv Setup level change logic. vvv
+
+        await this.levelLogic.handleStartLevel();
+
+        // Setup event listener for when the level ends and the map should change.
+        this.levelLogic.onEndLevel(async (nextLevelId: string | undefined) => {
+            if (nextLevelId !== undefined) {
+                // Select next map.
+                await this.worldChannel.request("selectMap", [nextLevelId]);
+                // Respawn players.
+                this.players.forEach((player) => {
+                    this.proxyMessenger.postMessage(
+                        this.messageFactory.createRequest(player.id, "respawn", [player.spawnLocation])
+                    );
+                });
+                // Reset level change logic.
+                await this.levelLogic.handleEndLevel();
+                await this.levelLogic.handleStartLevel();
+            }
+        });
+
+        this.gameRunning = true;
     }
 }

@@ -52,6 +52,10 @@ export default class RemoteCreature implements IService {
         return true;
     }
 
+    respawn(startingPosition: DVector3) {
+        this.creature.respawn(startingPosition);
+    }
+
     /**
      * When the host Creature has called 'point' for its body's controller.
      */

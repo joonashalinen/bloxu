@@ -11,11 +11,11 @@ import IService from "../../../components/services/pub/IService";
 import MessageFactory from "../../../components/messaging/pub/MessageFactory";
 import SyncMessenger from "../../../components/messaging/pub/SyncMessenger";
 import FunctionWrapper from "../../../components/services/pub/FunctionWrapper";
-import meshConstructors from "../conf/meshConstructors";
+import meshConstructors, { TMeshConstructors } from "../conf/meshConstructors";
 import objectConstructors from "../conf/objectConstructors";
 import createControllerConstructors, { TControllerConstructors } from "../conf/controllerConstructors";
 import Glow from "../../../components/graphics3d/pub/effects/Glow";
-import maps from "../conf/maps/maps";
+import maps, { TMapGenerator } from "../conf/maps/maps";
 import ObjectManager from "../../../components/objects3d/pub/ObjectManager";
 import createGlobals from "../conf/globals";
 import createBackgrounds, { IBackgrounds } from "../conf/backgrounds";
@@ -27,10 +27,7 @@ import Object3D from "../../../components/objects3d/pub/Object";
 
 type Types = {[type: string]: Function};
 type Instances = {[name: string]: Object};
-type MeshConstructors = {[name: string]: Function};
 type RemoteControllerConstructors = {[id: string]: (...args: unknown[]) => RemoteController};
-type MapGenerator = (scene: Scene, meshConstructors: MeshConstructors,
-    objects: ObjectManager, globals: {[name: string]: unknown}) => Promise<Mesh>;
 
 /**
  * Class containing the state and operations of the world3d service.
@@ -42,7 +39,7 @@ export default class World3D implements IService {
     effects: Instances;
     effectTypes: Types;
     skybox: Mesh;
-    meshConstructors: {[name: string]: Function};
+    meshConstructors: TMeshConstructors;
     proxyMessenger: ProxyMessenger<DMessage, DMessage>;
     syncMessenger: SyncMessenger;
     messageFactory: MessageFactory;
@@ -58,6 +55,7 @@ export default class World3D implements IService {
     remoteControllers: {[id: string]: RemoteController};
     remoteControllerConstructors: RemoteControllerConstructors;
     globals: {[name: string]: unknown};
+    currentMapId: string;
 
     constructor(public id: string, document: Document) {
         this.objects = new ObjectManager();
@@ -249,11 +247,10 @@ export default class World3D implements IService {
      * @param id - The identifier for the object.
      * @param wrapper - The object containing boundArgs and the modifier function.
      */
-    modifyObject(id: string, wrapper: FunctionWrapper<Function>): World3D {
+    async modifyObject(id: string, wrapper: FunctionWrapper<Function>) {
         const { boundArgs, f: modifier } = wrapper;
         var obj = this.getObject(id);
-        modifier.bind(this, ...boundArgs)(obj);
-        return this;
+        return await (modifier.bind(this, ...boundArgs)(obj));
     }
 
     /**
@@ -261,7 +258,7 @@ export default class World3D implements IService {
      * Returns whether this is successful or not.
      */
     async selectMap(id: string) {
-        if (maps[id]) {
+        if (id !== this.currentMapId && maps[id] !== undefined) {
             // Switch background.
             if (this.currentBackground !== undefined) {
                 this.currentBackground.destroy();
@@ -270,9 +267,17 @@ export default class World3D implements IService {
                 this.backgrounds[id]() : this.backgrounds.Default();
             this.currentBackground.generate();
             
+            // Delete all currently existing objects
+            // and controllers.
+            this.objects.destroyAllObjects();
+            this.controllers = {};
+            this.remoteControllers = {};
+
             // Generate map.
-            const mapGenerator: MapGenerator = maps[id];
+            const mapGenerator: TMapGenerator = maps[id];
             await mapGenerator(this.scene, this.meshConstructors, this.objects, this.globals);
+
+            this.currentMapId = id;
             return true;
         } else {
             return false;

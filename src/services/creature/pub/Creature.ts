@@ -126,10 +126,10 @@ export default class Creature implements IService {
     }
 
     /**
-     * Spawn the player's body at the given position.
+     * Spawn the creature's body at the given position.
      */
     spawn(startingPosition: DVector3): boolean {
-        // Create the player's body and the controller for the body.
+        // Create the creature's body and the controller for the body.
         this.world3dChannel.request("createObject",
             [this.bodyId(), this.bodyType, [startingPosition, true]]);
         this.world3dChannel.request("createController", ["CreatureBodyController", this.bodyId()]);
@@ -143,6 +143,16 @@ export default class Creature implements IService {
     }
 
     /**
+     * Spawns the creature again, after having been
+     * spawned previously. We assume that the creature's
+     * objects have been disposed of in World3D.
+     */
+    respawn(startingPosition: DVector3) {
+        this.spawned = false;
+        this.spawn(startingPosition);
+    }
+
+    /**
      * Disables controls for the player.
      */
     disableControls() {
@@ -152,7 +162,7 @@ export default class Creature implements IService {
     }
 
     /**
-     * Enables controls for the player.
+     * Enables controls for the creature.
      */
     async enableControls() {
         if (!this.controlsDisabled) return;
@@ -163,7 +173,7 @@ export default class Creature implements IService {
     }
 
     /**
-     * Makes the player's body the centered target of the camera.
+     * Makes the creature's body the centered target of the camera.
      */
     async makeBodyCameraTarget() {
         const targetBody = function(this: World3D, bodyId: string) {

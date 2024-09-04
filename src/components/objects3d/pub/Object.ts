@@ -344,6 +344,16 @@ export default class Object {
     }
 
     /**
+     * Permanently destroys the Object and all its related meshes.
+     */
+    destroy() {
+        this.transformNode.getScene().removeMesh(this.transformNode as Mesh);
+        this.transformNode.setEnabled(false);
+        this.asPhysical.physicsAggregate.dispose();
+        this.transformNode.dispose();
+    }
+
+    /**
      * When the physics body of the Object has 
      * collided with another physics body.
      */
