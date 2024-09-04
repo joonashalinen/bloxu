@@ -25,6 +25,7 @@ export default class Creature implements IService {
     controlsDisabled: boolean;
     disableEvents: boolean;
     isAlive: boolean;
+    paused: boolean = false;
 
     constructor(public id: string, public bodyType: string,
         public otherServiceIdMap: TOtherServiceIdMap = {world3d: "world3d"}) {
@@ -60,6 +61,7 @@ export default class Creature implements IService {
     async onPointInput(position: DVector2, pointerIndex: number, controllerIndex: number) {
         if (!this.spawned) {return}
         if (this.controlsDisabled) {return}
+        if (this.paused) {return}
         const stateUpdate = await this.world3dChannel.request("control",
             [this.bodyId(), "point", [position, pointerIndex]]);
         this.allChannel.sendEvent("Creature:<event>controllerPoint",
@@ -73,6 +75,7 @@ export default class Creature implements IService {
         controllerIndex: number) {
         if (!this.spawned) {return}
         if (this.controlsDisabled) {return}
+        if (this.paused) {return}
         const stateUpdate = await this.world3dChannel.request("control",
             [this.bodyId(), "triggerPointer", [buttonIndex, pointerIndex]]);
         this.allChannel.sendEvent("Creature:<event>controllerTriggerPointer",
@@ -85,6 +88,7 @@ export default class Creature implements IService {
     async onPressKeyInput(key: string, keyControllerIndex: number, controllerIndex: number) {
         if (!this.spawned) {return}
         if (this.controlsDisabled) {return}
+        if (this.paused) {return}
         const stateUpdate = await this.world3dChannel.request("control",
             [this.bodyId(), "pressKey", [key, keyControllerIndex]]);
         this.allChannel.sendEvent("Creature:<event>controllerPressKey",
@@ -97,6 +101,7 @@ export default class Creature implements IService {
     async onReleaseKeyInput(key: string, keyControllerIndex: number, controllerIndex: number) {
         if (!this.spawned) {return}
         if (this.controlsDisabled) {return}
+        if (this.paused) {return}
         const stateUpdate = await this.world3dChannel.request("control",
             [this.bodyId(), "releaseKey", [key, keyControllerIndex]]);
         this.allChannel.sendEvent("Creature:<event>controllerReleaseKey",
@@ -111,6 +116,7 @@ export default class Creature implements IService {
         controllerIndex: number) {
         if (!this.spawned) {return}
         if (this.controlsDisabled) {return}
+        if (this.paused) {return}
         const stateUpdate = await this.world3dChannel.request("control",
             [this.bodyId(), "changeDirection", [direction, directionControllerIndex]]);
         this.allChannel.sendEvent("Creature:<event>controllerChangeDirection",
@@ -149,16 +155,34 @@ export default class Creature implements IService {
      */
     respawn(startingPosition: DVector3) {
         this.spawned = false;
-        this.spawn(startingPosition);
+        return this.spawn(startingPosition);
     }
 
     /**
      * Disables controls for the player.
      */
     disableControls() {
-        if (this.controlsDisabled) return;
+        if (this.controlsDisabled) return true;
         this.onChangeDirectionInput({x: 0, y: 0}, 0, 0);
         this.controlsDisabled = true;
+        return true;
+    }
+
+    /**
+     * Pauses the Creature service, making it temporarily
+     * halt its regular behavior.
+     */
+    pause() {
+        this.paused = true;
+        return true;
+    }
+
+    /**
+     * Undoes the effect of .pause()
+     */
+    resume() {
+        this.paused = false;
+        return true;
     }
 
     /**

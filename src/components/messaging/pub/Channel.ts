@@ -24,7 +24,7 @@ export default class Channel {
      * Sends a request message to the target.
      * Returns a promise that is fulfilled with the response of the target.
      */
-    async request(method: string, args: unknown[]) {
+    async request(method: string, args: unknown[] = []) {
         return await (this.syncMessenger.postSyncMessage(
             this.messageFactory.createRequest(this.targetId, method, args)
         ));
@@ -33,7 +33,7 @@ export default class Channel {
     /**
      * Sends an event message to the target.
      */
-    sendEvent(eventName: string, args: unknown[]) {
+    sendEvent(eventName: string, args: unknown[] = []) {
         this.messenger.postMessage(
             this.messageFactory.createEvent(this.targetId, eventName, args)
         );

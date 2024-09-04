@@ -30,11 +30,23 @@ export default class RemoteCreature implements IService {
         };
     }
     
+    bodyId() {
+        return this.creature.bodyId();
+    }
+
     /**
      * Initialize RemoteCreature service.
      */
     async initialize() {
         return this.creature.initialize();
+    }
+
+    pause() {
+        return this.creature.pause();
+    }
+
+    resume() {
+        return this.creature.resume();
     }
 
     spawn(startingPosition: DVector3) {
@@ -53,7 +65,8 @@ export default class RemoteCreature implements IService {
     }
 
     respawn(startingPosition: DVector3) {
-        this.creature.respawn(startingPosition);
+        this.creature.spawned = false;
+        return this.spawn(startingPosition);
     }
 
     /**
@@ -101,6 +114,7 @@ export default class RemoteCreature implements IService {
      */
     private async _callController(methodName: string, args: unknown[]) {
         if (!this.creature.spawned) {return}
+        if (this.creature.paused) {return}
         const controlResult = await this.creature.world3dChannel.request("remoteControl",
             [this.creature.bodyId(), methodName, args]);
     }

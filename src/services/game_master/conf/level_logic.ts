@@ -18,7 +18,7 @@ export default function createLevelLogic(proxyMessenger: ProxyMessenger<DMessage
     levelLogic.handleStartLevel = async () => {
         const playerBodyIds = [];
         for (let i = 0; i < playerChannels.length; i++) {
-            const playerBodyId = await playerChannels[i].request("bodyId", []);
+            const playerBodyId = await (playerChannels[i].request("bodyId"));
             playerBodyIds.push(playerBodyId);
         }
 
@@ -34,10 +34,12 @@ export default function createLevelLogic(proxyMessenger: ProxyMessenger<DMessage
             return true;
         };
 
+
         for (let i = 0; i < playerBodyIds.length; i++) {
             await worldChannel.request("modifyObject",
                 [playerBodyIds[i], {boundArgs: [], f: setPortalEnterListener}]);
         }
+
     };
 
     levelLogic.handleEndLevel = () => {

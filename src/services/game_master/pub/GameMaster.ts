@@ -216,9 +216,7 @@ export default class GameMaster {
         // vvv Setup environment. vvv
 
         // Make world run.
-        this.proxyMessenger.postMessage(
-            this.messageFactory.createRequest("world3d", "run")
-        );
+        await this.worldChannel.request("run");
 
         // Create map.
         await this.worldChannel.request("selectMap", 
@@ -243,6 +241,7 @@ export default class GameMaster {
         await this.syncMessenger.postSyncMessage(
             this.messageFactory.createRequest(this.remotePlayerId(), "initialize")
         );
+
         // Initialize coordinator service for the players.
         await this.syncMessenger.postSyncMessage(
             this.messageFactory.createRequest(
@@ -253,11 +252,12 @@ export default class GameMaster {
         );
 
         // Spawn players.
-        this.players.forEach((player) => {
-            this.proxyMessenger.postMessage(
+        for (let i = 0; i < this.players.length; i++) {
+            const player = this.players[i];
+            await this.syncMessenger.postSyncMessage(
                 this.messageFactory.createRequest(player.id, "spawn", [player.spawnLocation])
             );
-        });
+        }
 
         // vvv Setup level change logic. vvv
 
@@ -266,6 +266,14 @@ export default class GameMaster {
         // Setup event listener for when the level ends and the map should change.
         this.levelLogic.onEndLevel(async (nextLevelId: string | undefined) => {
             if (nextLevelId !== undefined) {
+                // Pause player services to make sure they don't handle inputs
+                // while we are resetting the world and the creatures's
+                // controllers and bodies in the world.
+                for (let i = 0; i < this.players.length; i++) {
+                    await this.syncMessenger.postSyncMessage(
+                        this.messageFactory.createRequest(this.players[i].id, "pause")
+                    );
+                }
                 // Select next map.
                 await this.worldChannel.request("selectMap", [nextLevelId]);
                 // Respawn players.
@@ -277,6 +285,12 @@ export default class GameMaster {
                 // Reset level change logic.
                 await this.levelLogic.handleEndLevel();
                 await this.levelLogic.handleStartLevel();
+                // Resume player services.
+                for (let i = 0; i < this.players.length; i++) {
+                    await this.syncMessenger.postSyncMessage(
+                        this.messageFactory.createRequest(this.players[i].id, "resume")
+                    );
+                }
             }
         });
 

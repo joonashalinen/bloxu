@@ -250,7 +250,8 @@ export default class World3D implements IService {
     async modifyObject(id: string, wrapper: FunctionWrapper<Function>) {
         const { boundArgs, f: modifier } = wrapper;
         var obj = this.getObject(id);
-        return await (modifier.bind(this, ...boundArgs)(obj));
+        const result = await (modifier.bind(this, ...boundArgs)(obj));
+        return result;
     }
 
     /**
@@ -404,6 +405,7 @@ export default class World3D implements IService {
     run() {
         this.runRenderLoop();
         this.show();
+        return true;
     }
 
     /**
