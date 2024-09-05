@@ -11,7 +11,7 @@ export default class LevelLogic {
     handleStartLevel: () => void | Promise<void> = () => {};
     handleEndLevel: () => void | Promise<void> = () => {};
     handleEvent: (type: string, args: unknown[]) => void | Promise<void> = () => {};
-    currentLevelIndex: number = 6;
+    currentLevelIndex: number = 0;
     levels: string[] = [];
 
     constructor() {
