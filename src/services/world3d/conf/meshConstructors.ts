@@ -1,7 +1,6 @@
 import * as BABYLON from "@babylonjs/core";
 import "@babylonjs/loaders"
 import AssetLoader from "../prv/AssetLoader";
-import MeshSize from "../../../components/graphics3d/pub/MeshSize";
 
 export type TMeshConstructors = {[name: string]: Function};
 
