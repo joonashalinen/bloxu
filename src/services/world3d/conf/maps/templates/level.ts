@@ -16,8 +16,6 @@ export default async function level(
     // present there.
     (globals.objectGrid as ObjectGrid).reset();
 
-    const blockSize = 1.4;
-
     const levelMapImport = (await SceneLoader.LoadAssetContainerAsync(
         "assets/models/maps/",
         levelName + ".gltf",
@@ -28,7 +26,18 @@ export default async function level(
     const rootMesh = entries.rootNodes[0] as Mesh;
     rootMesh.translate(Vector3.Forward(), -5);
     rootMesh.translate(Vector3.Right(), -2);
-    rootMesh.scaling.scaleInPlace(12);
+
+    // First we scale the map parent mesh so that its blocks are of 
+    // the standard block size used in the game.
+
+    const firstBlockMesh = rootMesh.getChildMeshes().find((mesh) => mesh.id.includes("Blocks::"));
+    const initialMapBlockWidth = (new MeshSize(firstBlockMesh)).width();
+    const mapScalingFactor = (globals.cellSize as number) / initialMapBlockWidth;
+    rootMesh.scaling.scaleInPlace(mapScalingFactor);
+
+    // Then, we transform all individual meshes from the map
+    // into their corresponding game meshes and objects.
+
     [...rootMesh.getChildMeshes()].forEach((mesh: Mesh, index: number) => {
         const meshName = mesh.name.includes("Clone of ") ? 
             mesh.name.split("Clone of ")[1] : mesh.name;
@@ -49,7 +58,7 @@ export default async function level(
             mesh = replacementMesh;
             mesh.setAbsolutePosition((new GridVector(
                 mesh.absolutePosition,
-                blockSize)
+                globals.cellSize as number)
             ).floor())
         }
 
@@ -61,7 +70,7 @@ export default async function level(
             mesh.rotate(Vector3.Up(), (Math.PI / 2) * rotations, Space.WORLD);
 
             mesh.setParent(null);
-            const block = objects.createObject(mesh.id, "Object", [blockSize, mesh, 0]);
+            const block = objects.createObject(mesh.id, "Object", [globals.cellSize as number, mesh, 0]);
             block.triggerChangeStateEvents = true;
             (globals.objectGrid as ObjectGrid).placeAtPosition(
                 block.transformNode.getAbsolutePosition().clone(), block);
