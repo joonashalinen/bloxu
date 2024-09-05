@@ -26,9 +26,9 @@ export default class ObjectGrid {
         // some floating point number errors.
         coordinates.scaleInPlace(1 / this.cellSize);
         // We round the coordinates to integers to get rid of floating point number errors.
-        coordinates.x = parseInt(coordinates.x.toPrecision(1));
-        coordinates.y = parseInt(coordinates.y.toPrecision(1));
-        coordinates.z = parseInt(coordinates.z.toPrecision(1));
+        coordinates.x = parseInt(coordinates.x.toFixed(0));
+        coordinates.y = parseInt(coordinates.y.toFixed(0));
+        coordinates.z = parseInt(coordinates.z.toFixed(0));
         return coordinates;
     }
 
