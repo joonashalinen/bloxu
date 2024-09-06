@@ -359,8 +359,6 @@ export default class Object {
      */
     protected _handleCollisionEvent(event: IPhysicsCollisionEvent) {
         if (this.isInAir) {
-            const otherBounds = event.collidedAgainst.transformNode.getHierarchyBoundingVectors();
-            const ownBounds = this.transformNode.getHierarchyBoundingVectors();
             if (event.normal.y < 0) {
                 if (this.canLand(event)) {
                     this.land();
