@@ -298,6 +298,7 @@ export default class PickerPlacer extends Item<Object, Picker | Placer> {
      * owned by it.
      */
     destroy() {
+        super.destroy();
         this.picker.destroy();
         this.placer.destroy();
     }

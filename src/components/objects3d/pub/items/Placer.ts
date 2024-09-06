@@ -203,4 +203,12 @@ export default class Placer extends Item<Object, DActionContext> implements IPla
             );
         }
     }
+
+    /**
+     * Destroys the Placer and the owned Selector
+     */
+    destroy() {
+        super.destroy();
+        this.selector.destroy();
+    }
 }

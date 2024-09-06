@@ -118,4 +118,12 @@ export default class Picker extends Item<Object, Picker> implements IPicker {
             }
         );
     }
+
+    /**
+     * Destroys the Picker and the owned Selector
+     */
+    destroy() {
+        super.destroy();
+        this.selector.destroy();
+    }
 }

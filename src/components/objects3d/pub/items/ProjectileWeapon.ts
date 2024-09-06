@@ -104,6 +104,14 @@ export default class ProjectileWeapon extends Selector implements IProjectileWea
         projectile.physicsBody().dispose();
     }
 
+    /**
+     * Destroys the ProjectileWeapon and all of its active projectiles.
+     */
+    destroy() {
+        super.destroy();
+        this.projectiles.forEach((projectile) => { projectile.destroy(); });
+    }
+
     doOnTick(passedTime: number, absoluteTime: number) {
         this.projectiles.forEach((projectile) => projectile
             .doOnTick(passedTime, absoluteTime));
