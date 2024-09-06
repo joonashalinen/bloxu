@@ -235,8 +235,6 @@ export default function (
             
             // Configure physics settings.
             const physicsAggregate = body.asPhysical.physicsAggregate;
-            // Enable collision callbacks so we can detect when the player gets hit 
-            // by a projectile.
             physicsAggregate.body.setCollisionCallbackEnabled(true);
             physicsAggregate.body.setMassProperties({
                 inertia: new Vector3(0, 0, 0)
@@ -261,7 +259,10 @@ export default function (
         },
         "Interactables::portal": (id: string, mesh: AbstractMesh) => {
             mesh.setEnabled(true);
-            return new Portal(mesh);
+            const portal = new Portal(mesh);
+            portal.spawnOffset = new Vector3(0, (2 * (globals.cellSize as number)),
+                (-2) * (globals.cellSize as number));
+            return portal;
         }
     }; 
 }

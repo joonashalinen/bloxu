@@ -1,4 +1,4 @@
-import { AbstractMesh, IPhysicsCollisionEvent, Mesh, MeshBuilder, Observer, PhysicsAggregate, PhysicsShapeType, TransformNode, Vector3 } from "@babylonjs/core";
+import { AbstractMesh, IPhysicsCollisionEvent, Mesh, MeshBuilder, Observer, PhysicsAggregate, PhysicsShapeType, Quaternion, TransformNode, Vector3 } from "@babylonjs/core";
 
 export interface HitboxInfo {
     width: number;
@@ -19,7 +19,9 @@ export default class Physical {
     hitboxSize: {width: number, height: number, depth: number};
     terminalVelocity: number = -9.8;
     enabled: boolean = true;
-    private _collisionObservers: Observer<IPhysicsCollisionEvent>[] = [];
+    private _filterCollideMask: number;
+    private _rotation: Vector3;
+    private _rotationQuaternion: Quaternion;
 
     constructor(
         public wrappable: AbstractMesh,
@@ -106,8 +108,12 @@ export default class Physical {
     disable() {
         if (!this.enabled) return;
         this.enabled = false;
-        this._collisionObservers = [...this.physicsAggregate.body.getCollisionObservable().observers];
-        this.physicsAggregate.dispose();
+
+        this._filterCollideMask = this.physicsAggregate.shape.filterCollideMask;
+        this.physicsAggregate.shape.filterCollideMask = 0;
+        this.setMass(0);
+        this.physicsAggregate.body.setAngularVelocity(Vector3.Zero());
+        this.physicsAggregate.body.setLinearVelocity(Vector3.Zero());
     }
 
     /**
@@ -117,16 +123,19 @@ export default class Physical {
     enable() {
         if (this.enabled) return;
         this.enabled = true;
-        this.physicsAggregate = new PhysicsAggregate(
-            this.transformNode, 
-            PhysicsShapeType.BOX, 
-            { mass: this.mass, friction: 0 }, 
-            this.wrappable.getScene()
-        );
-        this._collisionObservers.forEach((observer) => {
-            this.physicsAggregate.body.getCollisionObservable().add(
-                observer.callback, observer.mask, false,
-                observer.scope, observer.unregisterOnNextCall);
-        });
+
+        this.physicsAggregate.shape.filterCollideMask = this._filterCollideMask;
+        this.setMass(this.mass);
+        this.physicsAggregate.body.setAngularVelocity(Vector3.Zero());
+        this.physicsAggregate.body.setLinearVelocity(Vector3.Zero());
+    }
+
+    /**
+     * Sets the mass of the physics body.
+     */
+    setMass(mass: number) {
+        const massProperties = this.physicsAggregate.body.getMassProperties();
+        massProperties.mass = mass;
+        this.physicsAggregate.body.setMassProperties(massProperties);
     }
 }

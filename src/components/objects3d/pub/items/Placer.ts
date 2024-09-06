@@ -120,10 +120,10 @@ export default class Placer extends Item<Object, DActionContext> implements IPla
      * Sets the current preview mesh to a clone of the given object's root mesh.
      */
     setPreviewMeshFromObject(object: Object) {
-        const previewMesh = (object.transformNode as AbstractMesh).clone(
-            "Placer:previewMesh?" + object.transformNode.name, null);
+        const previewMesh = (object.rootMesh() as AbstractMesh).clone(
+            "Placer:previewMesh?" + object.rootMesh().name, null);
         previewMesh.setEnabled(false);
-        previewMesh.getChildMeshes().at(0).visibility = 0.5;
+        previewMesh.visibility = 0.5;
         this.selector.previewMesh = previewMesh;
     }
 

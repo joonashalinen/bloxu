@@ -71,13 +71,14 @@ export default async function level(
 
             mesh.setParent(null);
             const block = objects.createObject(mesh.id, "Object", [globals.cellSize as number, mesh, 0]);
+            block.physicsBody().disablePreStep = false;
             block.triggerChangeStateEvents = true;
             (globals.objectGrid as ObjectGrid).placeAtPosition(
                 block.transformNode.getAbsolutePosition().clone(), block);
             if (meshName.includes("Blocks::partition")) block.isLocked = true;
 
         } else if (meshName.includes("Interactables::portal")) {
-            const portal = objects.createObject(mesh.id, "Interactables::portal", [mesh]);
+            const portal = objects.createObject("Interactables::portal?0", "Interactables::portal", [mesh]);
             portal.isLocked = true;
         }
     });

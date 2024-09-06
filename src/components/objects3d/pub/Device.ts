@@ -69,6 +69,7 @@ export default class Device extends Object {
      */
     setHorizontalAngle(angle: number) {
         if (!this.horizontalRotationEnabled) return;
+        if (this.isInVoid) return;
         super.setHorizontalAngle(angle);
 
         // Update rotation animation.

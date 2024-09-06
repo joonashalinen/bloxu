@@ -54,6 +54,8 @@ export default class ObjectGrid {
      * If the object is already in the grid, the object is moved.
      */
     placeAtCoordinates(coordinates: Vector3, object: Object) {
+        /* const prestepDisabled = object.physicsBody().disablePreStep;
+        object.physicsBody().disablePreStep = false; */
         this.setObjectAtCoordinates(coordinates, object);
         object.setAbsolutePosition(this.coordinatesToPosition(coordinates));
     }

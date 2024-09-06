@@ -3,6 +3,11 @@ import MessageFactory from "../../../../components/messaging/pub/MessageFactory"
 import ProxyMessenger from "../../../../components/messaging/pub/ProxyMessenger";
 import SyncMessenger from "../../../../components/messaging/pub/SyncMessenger";
 import WebSocketMessenger from "../../../../components/network/pub/browser/WebSocketMessenger";
+import getEventsConfig from "../../conf/events";
+
+interface IEventsConfig {
+    redirect: string[];
+}
 
 /**
  * Contains the operations and state of the 
@@ -21,6 +26,7 @@ export default class OnlineSynchronizerClient {
     // real in-game player id.
     playerIdInGame = this.serviceId;
     eventHandlers: {[name: string]: Function};
+    eventsConfig: IEventsConfig;
     
     // This WebSocket is used to communicate with OnlineSynchronizerServer.
     socketToServer: WebSocket = new WebSocket(this.websocketServerAddress);
@@ -42,6 +48,7 @@ export default class OnlineSynchronizerClient {
         this.eventHandlers = {
             "*": this.onAnyEvent.bind(this)
         };
+        this.eventsConfig = getEventsConfig();
     }
 
     /**
@@ -182,11 +189,12 @@ export default class OnlineSynchronizerClient {
         // If the message is from the local player or is one of the 
         // manually set events that we wish to redirect to the 
         // local player's mirror services in other players' games.
-        if (this.joinedGame && msg.sender === this.playerIdInGame) {
+        if (this.joinedGame && (msg.sender === this.playerIdInGame || 
+            this.eventsConfig.redirect.includes(msg.message.type))) {
             // Redirect the event to the player's mirror services on the 
             // other players' games. We wrap the event with the tag 'OnlineSynchronizer'
             // so that the remote player knows it is a synchronization message.
-            this.sendEventInGame(this.playerIdInGame, `OnlineSynchronizer:${msg.message.type}`, msg.message.args);
+            this.sendEventInGame(msg.sender, `OnlineSynchronizer:${msg.message.type}`, msg.message.args);
         }
     }
 }

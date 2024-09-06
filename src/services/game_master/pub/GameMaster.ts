@@ -31,10 +31,10 @@ export default class GameMaster {
     levelLogic: LevelLogic;
     worldChannel: Channel;
     players: IPlayerInfo[];
+    isOnlineGame: boolean = false;
     
     constructor() {
         this.syncMessenger = new SyncMessenger(this.proxyMessenger);
-        this.levelLogic = createLevelLogic(this.proxyMessenger);
         this.worldChannel = new Channel("gameMaster", "world3d", this.proxyMessenger);
         this.players = getPlayers();
         this.eventHandlers = {
@@ -109,6 +109,7 @@ export default class GameMaster {
         }) as [string, string];
 
         this.localPlayerId = localPlayerId;
+        this.isOnlineGame = true;
 
         await this._startGame();
 
@@ -130,6 +131,7 @@ export default class GameMaster {
         }) as [string, string];
 
         this.localPlayerId = localPlayerId;
+        this.isOnlineGame = false;
 
         await this._startGame(true);
 
@@ -150,6 +152,8 @@ export default class GameMaster {
                 args: [code]
             }
         }) as string | {error: string};
+
+        this.isOnlineGame = true;
 
         if (typeof response === "string") {
             this.localPlayerId = response;
@@ -204,6 +208,7 @@ export default class GameMaster {
      * have a specific handler.
      */
     onAnyEvent(msg: DMessage) {
+        if (!this.gameRunning) return;
         this.levelLogic.handleEvent(msg.message.type, msg.message.args);
     }
 
@@ -212,6 +217,8 @@ export default class GameMaster {
      * and make the 3D world run.
      */
     private async _startGame(isSinglePlayer: boolean = false) {
+
+        this.levelLogic = createLevelLogic(this.proxyMessenger, this.isOnlineGame);
 
         // vvv Setup environment. vvv
 
