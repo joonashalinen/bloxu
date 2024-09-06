@@ -110,6 +110,15 @@ export default class Item<Target, Context> implements IItem<Target, Context> {
     doSecondaryAction(): void {
     }
 
+    /**
+     * Destroys the item irreversably.
+     */
+    destroy() {
+        if (this.menu !== undefined) {
+            this.menu.destroy();
+        }
+    }
+
     doOnTick(passedTime: number, absoluteTime: number) {
         
     }

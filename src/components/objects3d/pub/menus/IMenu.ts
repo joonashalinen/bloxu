@@ -6,4 +6,5 @@ export default interface IMenu {
     follow(other: TransformNode): void;
     doOnTick(passedTime: number, absoluteTime: number): void;
     point(position: Vector2): void;
+    destroy(): void;
 }

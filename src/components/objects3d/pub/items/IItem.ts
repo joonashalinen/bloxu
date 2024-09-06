@@ -1,7 +1,6 @@
 import { AnimationGroup, TransformNode, Vector3 } from "@babylonjs/core";
 import EventEmitter from "../../../events/pub/EventEmitter";
 import IMenu from "../menus/IMenu";
-import Object from "../Object";
 import History from "../../../data_structures/pub/History";
 
 export default interface IItem<Target, Context> {
@@ -22,6 +21,7 @@ export default interface IItem<Target, Context> {
     offItemUseEnded(callback: () => void): void;
     doMainAction(): void;
     doSecondaryAction(): void;
+    destroy(): void;
     undo(): void;
     redo(): void;
     onUndo(callback: () => void): void;

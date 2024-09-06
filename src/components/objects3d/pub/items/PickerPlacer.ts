@@ -294,6 +294,15 @@ export default class PickerPlacer extends Item<Object, Picker | Placer> {
     }
 
     /**
+     * Destroys the PickerPlacer and the Picker and Placer
+     * owned by it.
+     */
+    destroy() {
+        this.picker.destroy();
+        this.placer.destroy();
+    }
+
+    /**
      * Listens to the 'place' event, which is triggered whenever
      * the PickerPlacer places an object.
      */

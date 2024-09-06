@@ -147,4 +147,12 @@ export default class CreatureBody extends Device implements ICreatureBodyActions
         this.isDead = true;
         this.transformNode.setAbsolutePosition(this.respawnPoint);
     }
+
+    /**
+     * Destroys the CreatureBody and the items owned by it.
+     */
+    destroy() {
+        super.destroy();
+        Object.values(this.items).forEach((item) => { item.destroy(); });
+    }
 }

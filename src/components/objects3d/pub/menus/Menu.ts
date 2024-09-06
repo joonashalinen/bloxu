@@ -1,4 +1,4 @@
-import { TransformNode, Vector2, Vector3 } from "@babylonjs/core";
+import { Mesh, TransformNode, Vector2, Vector3 } from "@babylonjs/core";
 import IMenu from "./IMenu";
 import Selector from "../items/Selector";
 
@@ -42,5 +42,13 @@ export default class Menu extends Selector implements IMenu {
 
     point(position: Vector2): void {
         
+    }
+
+    destroy(): void {
+        if (this.transformNode !== undefined) {
+            this.transformNode.getScene().removeMesh(this.transformNode as Mesh);
+            this.transformNode.setEnabled(false);
+            this.transformNode.dispose();
+        }
     }
 }
