@@ -24,6 +24,7 @@ export default class UI {
         this.eventHandlers = {
             "GameMaster:<event>loseGame": this.onGameLose.bind(this),
             "GameMaster:<event>winGame": this.onGameWin.bind(this),
+            "GameMaster:<event>completeGame": this.onGameComplete.bind(this),
             "GameMaster:<event>startGame": this.onGameStart.bind(this)
         };
 
@@ -117,6 +118,13 @@ export default class UI {
      */
     onGameWin() {
         this.showEndScreen("You won!");
+    }
+
+    /**
+     * When the player has completed the game.
+     */
+    onGameComplete() {
+        this.showEndScreen("You completed the game!");
     }
 
     /**

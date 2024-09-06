@@ -299,6 +299,10 @@ export default class GameMaster {
                         this.messageFactory.createRequest(this.players[i].id, "resume")
                     );
                 }
+            } else {
+                this.proxyMessenger.postMessage(
+                    this.messageFactory.createEvent("*", "GameMaster:<event>completeGame")
+                );
             }
         });
 
