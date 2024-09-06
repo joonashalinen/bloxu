@@ -250,11 +250,12 @@ export default class GameMaster {
         );
 
         // Initialize coordinator service for the players.
+        const selectablePlayers = this.isOnlineGame ? [this.localPlayerId] :
+            this.players.map((player) => player.id);
         await this.syncMessenger.postSyncMessage(
             this.messageFactory.createRequest(
                 "playerCoordinator", "initialize",
-                [this.players.map((player) => player.id),
-                    this.localPlayerId === this.players[0].id ? 0 : 1]
+                [selectablePlayers, this.localPlayerId === this.players[0].id ? 0 : 1]
             )
         );
 
