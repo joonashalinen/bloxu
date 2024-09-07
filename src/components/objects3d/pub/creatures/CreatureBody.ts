@@ -144,7 +144,7 @@ export default class CreatureBody extends Device implements ICreatureBodyActions
      * and become alive again, if it was dead.
      */
     respawn() {
-        this.isDead = true;
+        this.isDead = false;
         this.transformNode.setAbsolutePosition(this.respawnPoint);
     }
 
