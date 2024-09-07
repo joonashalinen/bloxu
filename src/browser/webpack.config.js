@@ -8,6 +8,7 @@ module.exports = {
     output: {
         filename: "index.js", //name for the js file that is created/compiled in memory
         clean: true,
+        publicPath: ''
     },
     resolve: {
         extensions: [".tsx", ".ts", ".js"],
@@ -33,7 +34,7 @@ module.exports = {
     },
     plugins: [
         new HtmlWebpackPlugin({
-            inject: true,
+            inject: false,
             template: path.resolve(appDirectory, "public/index.html"),
         })
     ],

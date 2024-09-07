@@ -8,6 +8,52 @@
     />
     <title>Bloxu</title>
     
+    <style>
+      body {
+        font-family: Helvetica, Arial;
+        background-color: rgb(8, 44, 57);
+        background: rgb(70, 124, 171);
+        background: linear-gradient(360deg, rgb(3, 25, 44) 0%, rgb(9, 57, 67) 100%);
+      }
+  
+      #first-loading-screen {
+        width: 400px;
+        height: 140px;
+        position: absolute;
+        left: 50%;
+        margin-left: -200px;
+        top: 50%;
+        margin-top: -70px;
+        color:rgb(236, 249, 255);
+      }
+
+      #first-loading-screen > h1 {
+        text-align: center;
+      }
+  
+      #ui-main-menu-loading-message {
+        text-align:center;
+        font-weight: normal;
+        margin-top:5px;
+        margin-bottom: 10px;
+      }
+  
+      #ui-main-menu-loading-bar {
+        margin:auto;
+        width: 100px;
+        height: 30px;
+        border: 2px solid rgb(236, 249, 255);
+        border-radius: 5px;
+      }
+  
+      #ui-main-menu-loading-bar > #ui-main-menu-loading-bar-bar {
+        background-color: rgba(14, 136, 142, 0.591);
+        width: 0%;
+        height: 100%;
+        transition: width 0.5s;
+      }
+    </style>
+
     <link rel="stylesheet" href="index.css">
     <link rel="stylesheet" href="ui.css">
     
@@ -16,10 +62,49 @@
     <link href="https://fonts.googleapis.com/css2?family=Lilita+One&display=swap" rel="stylesheet">
 
   </head>
+
   <body>
-    <div id="first-loading-screen" style="width: 400px; height: 140px; position:absolute; left:50%;margin-left: -200px; top: 50%; margin-top:-70px">
-      <img src="assets/images/ui_first_loading_animation.gif" width="70px" height="70px" style="display: block;margin:auto">
-      <p style="color:rgb(45, 58, 64);text-align:center; margin-top:5px;margin-bottom: 10px;">Loading assets, please wait.</p>
-      <p style="margin-top: 0px; color:rgb(86, 104, 113); font-size:14px; font-weight: normal;text-align:center">(May take up to 30 seconds)</p>
+    <div id="first-loading-screen">
+      <h1>Bloxu</h1>
+      <div id="ui-main-menu-loading-bar">
+        <div id="ui-main-menu-loading-bar-bar"></div>
+      </div>
+      <p id="ui-main-menu-loading-message">Downloading code and assets...</p>
     </div>
+    <script id="game-javascript"></script>
+    <script>
+      (async function () {
+        const req = new XMLHttpRequest();
+        const loadingBar = document.getElementById("ui-main-menu-loading-bar-bar");
+        const loadingMessage = document.getElementById("ui-main-menu-loading-message");
+        const totalSize = 76911521;
+        let lastProgressUpdate = 0;
+        
+        // Report progress events.
+        req.addEventListener("progress", function(event) {
+            const timeNow = Date.now();
+            if (timeNow - lastProgressUpdate > 200) {
+              console.log("updating progress");
+              lastProgressUpdate = timeNow;
+              const percentComplete = (event.loaded / totalSize) * 80;
+              loadingBar.style.width = percentComplete + "%";
+            }
+        }, false);
+
+        // Load responseText into a new script element.
+        req.addEventListener("load", function(event) {
+            loadingBar.style.width = "80%";
+            loadingMessage.textContent = "Initializing services...";
+            setTimeout(() => {
+              const e = event.target;
+              const s = document.createElement("script");
+              s.innerHTML = e.responseText;
+              document.documentElement.appendChild(s);
+            }, 500)
+        }, false);
+
+        req.open("GET", "index.js");
+        req.send();
+      })();
+    </script>
   </body>
