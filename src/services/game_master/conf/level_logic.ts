@@ -61,9 +61,15 @@ export default function createLevelLogic(
                     levelLogic.emitter.trigger("endLevel",
                         [levelLogic.levels[levelLogic.currentLevelIndex]]);
                 }
+
+                if (!levelLogic.isOnlineGame || playerBodyId.includes(levelLogic.localPlayerId)) {
+                    allChannel.sendEvent("GameMaster:<event>playerEnterPortal", []);
+                }
             }
         } else if (type === "IOService:<event>pressKey" && args[0] === "r") {
-            const selectedPlayerId = await playerCoordinator.request("selectedCreature") as string;
+            const selectedPlayerId = levelLogic.isOnlineGame ?
+                levelLogic.localPlayerId : 
+                await playerCoordinator.request("selectedCreature") as string;
             const selectedPlayerBodyMeshId = playerBodiesInPortal.find((bodyId) =>
                 bodyId.includes(selectedPlayerId));
             // If the selected player really is in the portal.
@@ -74,7 +80,7 @@ export default function createLevelLogic(
                     bodyId.includes(selectedPlayerId));
                 // Unteleport the player.
                 unteleport(selectedPlayerBodyId, selectedPlayerBodyMeshId);
-                
+
                 allChannel.sendEvent("GameMaster:<event>playerLeavePortal", 
                     [selectedPlayerId, selectedPlayerBodyId, selectedPlayerBodyMeshId]);
             }

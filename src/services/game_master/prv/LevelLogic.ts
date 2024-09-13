@@ -14,6 +14,7 @@ export default class LevelLogic {
     currentLevelIndex: number = 0;
     levels: string[] = [];
     isOnlineGame: boolean = false;
+    localPlayerId: string;
     previewedLevel: number;
 
     constructor() {

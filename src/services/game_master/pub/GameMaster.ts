@@ -110,6 +110,7 @@ export default class GameMaster {
         }) as [string, string];
 
         this.localPlayerId = localPlayerId;
+        this.levelLogic.localPlayerId = this.localPlayerId;
         this.levelLogic.isOnlineGame = true;
 
         await this._startGame();
@@ -132,6 +133,7 @@ export default class GameMaster {
         }) as [string, string];
 
         this.localPlayerId = localPlayerId;
+        this.levelLogic.localPlayerId = this.localPlayerId;
         this.levelLogic.isOnlineGame = false;
 
         await this._startGame(true);
@@ -158,6 +160,7 @@ export default class GameMaster {
 
         if (typeof response === "string") {
             this.localPlayerId = response;
+            this.levelLogic.localPlayerId = this.localPlayerId;
             await this._startGame();
         }
 
@@ -211,12 +214,6 @@ export default class GameMaster {
     onAnyEvent(msg: DMessage) {
         if (!this.gameRunning) return;
         this.levelLogic.handleEvent(msg.message.type, msg.message.args);
-
-        if (msg.message.type === "GameMaster:<event>playerEnterPortal") {
-            this.proxyMessenger.postMessage(
-                this.messageFactory.createEvent("*", "GameMaster:<event>playerEnterPortal", [])
-            );
-        }
     }
 
     /**
