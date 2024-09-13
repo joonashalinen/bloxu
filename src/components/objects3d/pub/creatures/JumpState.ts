@@ -11,7 +11,7 @@ import CreatureBodyState from "./CreatureBodyState";
 export default class JumpState extends CreatureBodyState implements ICreatureBodyState {
     name = "jump";
     timeAtJumpStart: number = 0;
-    jumpFactor: number = 5.5;
+    jumpFactor: number = 5.8;
     
     constructor(creatureBody: CreatureBody,
         public jumpAnimation: AnimationGroup) {
