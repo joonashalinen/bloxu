@@ -111,11 +111,8 @@ export default class PickerPlacer extends Item<Object, Picker | Placer> {
     }
 
     doOnTick(passedTime: number, absoluteTime: number) {
-        if (this._selectedItem === "picker") {
-            this.picker.doOnTick(passedTime, absoluteTime);
-        } else if (this.placer.canPlaceHeldObject()){
-            this.placer.doOnTick(passedTime, absoluteTime);
-        }
+        this.picker.doOnTick(passedTime, absoluteTime);
+        this.placer.doOnTick(passedTime, absoluteTime);
     }
 
     /**
