@@ -15,6 +15,9 @@ import Mixin from "../components/classes/pub/Mixin";
 import OpenService from "../components/services/pub/OpenService";
 import createInputEmitters from "../services/io/conf/createInputEmitters";
 
+type LoadingEventCallback = (loadingEvent: {
+    type: "statusUpdate", message: string, percentageComplete: number}) => void;
+
 class App {
 
     mediator: Mediator;
@@ -43,8 +46,16 @@ class App {
      */
     async initialize(): Promise<void> {
 
+        // Get possible callback function set to the window object
+        // by an initialization script for sending loading status updates.
+        const windowLoadingEvent = (window as unknown as {[p: string]: unknown}).___bloxuOnLoadingEvent;
+        const loadingEventCallback: LoadingEventCallback = windowLoadingEvent !== undefined ?
+            windowLoadingEvent as LoadingEventCallback: () => {};
+
         // ### Setup services. ###
 
+        loadingEventCallback({type: "statusUpdate", message: "Creating services...",
+            percentageComplete: 0});
         // Create World3D service.
         var plainWorld3d = new World3D("world3d", document);
         // Allow the World3D service to be freely modifiable by outsiders. 
@@ -89,6 +100,9 @@ class App {
         )
         var onlineSynchronizerWorker = new WebWorker(onlineSynchronizerNativeWorker);
         
+        loadingEventCallback({type: "statusUpdate", message: "Initializing services...",
+            percentageComplete: 0.5});
+
         console.log("initializing services..");
         // Now that we have communications between services, 
         // we can initialize them. World3D must be initialized first, since 
@@ -97,9 +111,6 @@ class App {
         await ioService.initialize();
         await this.initializeService(gameMasterWorker, "gameMaster");
         await this.initializeService(onlineSynchronizerWorker, "onlineSynchronizer");
-        console.log("all services initialized");
-        // We can now make the UI visible.
-        ui.show();
 
         // Setup communications between services.
         var messengers = {
@@ -114,6 +125,13 @@ class App {
         };
         this.mediator = new Mediator(messengers);
         this.mediator.emitter.on("error", (e) => console.log(e));
+
+        loadingEventCallback({type: "statusUpdate", message: "Services initialized.",
+            percentageComplete: 1});
+
+        // Wait for a moment before showing the main menu so the user can
+        // see the final loading message.
+        setTimeout(ui.show.bind(ui), 500);
     }    
 
     constructor() {

@@ -69,7 +69,7 @@
       <div id="ui-main-menu-loading-bar">
         <div id="ui-main-menu-loading-bar-bar"></div>
       </div>
-      <p id="ui-main-menu-loading-message">Downloading code and assets...</p>
+      <p id="ui-main-menu-loading-message">Downloading code & assets...</p>
     </div>
     <script id="game-javascript"></script>
     <script>
@@ -84,22 +84,29 @@
         req.addEventListener("progress", function(event) {
             const timeNow = Date.now();
             if (timeNow - lastProgressUpdate > 200) {
-              console.log("updating progress");
-              lastProgressUpdate = timeNow;
-              const percentComplete = (event.loaded / totalSize) * 80;
-              loadingBar.style.width = percentComplete + "%";
+                lastProgressUpdate = timeNow;
+                const percentComplete = (event.loaded / totalSize) * 80;
+                loadingBar.style.width = percentComplete + "%";
             }
         }, false);
 
         // Load responseText into a new script element.
         req.addEventListener("load", function(event) {
             loadingBar.style.width = "80%";
-            loadingMessage.textContent = "Initializing services...";
+            loadingMessage.textContent = "Running JavaScript...";
             setTimeout(() => {
-              const e = event.target;
-              const s = document.createElement("script");
-              s.innerHTML = e.responseText;
-              document.documentElement.appendChild(s);
+                // Define callback function for receiving run status updates
+                // from the loaded script.
+                window.___bloxuOnLoadingEvent = (loadingEvent) => {
+                  loadingBar.style.width = (80 + 20 * loadingEvent.percentageComplete) + "%";
+                  loadingMessage.textContent = loadingEvent.message;
+                };
+
+                // Run the script.
+                const eventTarget = event.target;
+                const script = document.createElement("script");
+                script.innerHTML = eventTarget.responseText;
+                document.documentElement.appendChild(script);
             }, 500)
         }, false);
 
