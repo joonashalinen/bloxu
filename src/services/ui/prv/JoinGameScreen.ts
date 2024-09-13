@@ -13,18 +13,20 @@ export default class JoinGameScreen implements IState, IScreen {
     codeInputTitle: HTMLElement;
     errorElement: HTMLElement;
     errorElementTimeout: NodeJS.Timeout;
+    wrapper: HTMLElement;
 
     constructor(
-        public wrapper: HTMLElement,
+        public overlay: HTMLElement,
         public document: Document
     ) {
-        this.wrapper.style.display = "none";
+        this.wrapper = overlay.children.item(0) as HTMLElement;
+        this.overlay.style.display = "none";
 
         // Create back button.
         const button = document.createElement("button");
         button.innerText = "← Back";
         button.classList.add("styleless-button", "ui-main-menu-button");
-        wrapper.appendChild(button);
+        this.wrapper.appendChild(button);
         
         // Make back button transition back to the main menu screen.
         button.addEventListener("click", () => {
@@ -74,7 +76,7 @@ export default class JoinGameScreen implements IState, IScreen {
 
     start(...args: unknown[]): unknown {
         if (!this.isActive) {
-            this.wrapper.style.display = "block";
+            this.overlay.style.display = "block";
             this.isActive = true;
         }
         return this;
@@ -82,7 +84,7 @@ export default class JoinGameScreen implements IState, IScreen {
 
     end(): unknown {
         if (this.isActive) {
-            this.wrapper.style.display = "none";
+            this.overlay.style.display = "none";
             this.codeInput.value = "";
             this.isActive = false;
         }

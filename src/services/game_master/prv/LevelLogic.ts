@@ -13,6 +13,8 @@ export default class LevelLogic {
     handleEvent: (type: string, args: unknown[]) => void | Promise<void> = () => {};
     currentLevelIndex: number = 0;
     levels: string[] = [];
+    isOnlineGame: boolean = false;
+    previewedLevel: number;
 
     constructor() {
         

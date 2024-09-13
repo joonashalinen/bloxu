@@ -31,12 +31,13 @@ export default class GameMaster {
     levelLogic: LevelLogic;
     worldChannel: Channel;
     players: IPlayerInfo[];
-    isOnlineGame: boolean = false;
+    worldIsRunning: boolean = false;
     
     constructor() {
         this.syncMessenger = new SyncMessenger(this.proxyMessenger);
         this.worldChannel = new Channel("gameMaster", "world3d", this.proxyMessenger);
         this.players = getPlayers();
+        this.levelLogic = createLevelLogic(this.proxyMessenger);
         this.eventHandlers = {
             "Player:<event>die": this.onPlayerDeath.bind(this),
             "OnlineSynchronizer:<event>remotePlayerJoined": this.onPlayerJoined.bind(this),
@@ -109,7 +110,7 @@ export default class GameMaster {
         }) as [string, string];
 
         this.localPlayerId = localPlayerId;
-        this.isOnlineGame = true;
+        this.levelLogic.isOnlineGame = true;
 
         await this._startGame();
 
@@ -131,7 +132,7 @@ export default class GameMaster {
         }) as [string, string];
 
         this.localPlayerId = localPlayerId;
-        this.isOnlineGame = false;
+        this.levelLogic.isOnlineGame = false;
 
         await this._startGame(true);
 
@@ -153,7 +154,7 @@ export default class GameMaster {
             }
         }) as string | {error: string};
 
-        this.isOnlineGame = true;
+        this.levelLogic.isOnlineGame = true;
 
         if (typeof response === "string") {
             this.localPlayerId = response;
@@ -213,21 +214,51 @@ export default class GameMaster {
     }
 
     /**
+     * Selects and loads the level with the given index.
+     */
+    async previewLevel(levelIndex: number) {
+        if (!this.worldIsRunning) {
+            // Make the world run.
+            await this.worldChannel.request("run");
+            this.worldIsRunning = true;
+
+            // Adjust the camera.
+            const adjustCamera = function(this: World3D) {
+                const target = new this.babylonjs.TransformNode("GameMaster:cameraTarget");
+                target.setAbsolutePosition(new this.babylonjs.Vector3(1.375, 3.5, -5.124));
+                this.camera.lockedTarget = target;
+                this.camera.radius = 16;
+            };
+            this.worldChannel.request("modify", [{boundArgs: [], f: adjustCamera}]);
+        }
+
+        // Select the preview level.
+        this.levelLogic.previewedLevel = levelIndex;
+        await this.worldChannel.request("selectMap", 
+            [this.levelLogic.levels[levelIndex]]);
+        return true;
+    }
+
+    /**
      * Spawn everything needed for the game 
      * and make the 3D world run.
      */
     private async _startGame(isSinglePlayer: boolean = false) {
 
-        this.levelLogic = createLevelLogic(this.proxyMessenger, this.isOnlineGame);
-
         // vvv Setup environment. vvv
 
-        // Make world run.
-        await this.worldChannel.request("run");
+        // Ensure world is running.
+        if (!this.worldIsRunning) {
+            await this.worldChannel.request("run");
+            this.worldIsRunning = true;
+        }
 
         // Create map.
-        await this.worldChannel.request("selectMap", 
-            [this.levelLogic.levels[this.levelLogic.currentLevelIndex]]);
+        if (this.levelLogic.previewedLevel === undefined ||
+            this.levelLogic.previewedLevel !== this.levelLogic.currentLevelIndex) {
+            await this.worldChannel.request("selectMap", 
+                [this.levelLogic.levels[this.levelLogic.currentLevelIndex]]);
+        }
 
         // vvv Setup players. vvv        
 
@@ -250,7 +281,7 @@ export default class GameMaster {
         );
 
         // Initialize coordinator service for the players.
-        const selectablePlayers = this.isOnlineGame ? [this.localPlayerId] :
+        const selectablePlayers = this.levelLogic.isOnlineGame ? [this.localPlayerId] :
             this.players.map((player) => player.id);
         await this.syncMessenger.postSyncMessage(
             this.messageFactory.createRequest(

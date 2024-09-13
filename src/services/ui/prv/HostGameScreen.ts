@@ -13,12 +13,14 @@ export default class HostGameScreen implements IState, IScreen {
     codeElement: HTMLElement;
     errorElement: HTMLElement;
     errorElementTimeout: NodeJS.Timeout;
+    wrapper: HTMLElement;
 
     constructor(
-        public wrapper: HTMLElement,
+        public overlay: HTMLElement,
         public document: Document
     ) {
-        this.wrapper.style.display = "none";
+        this.wrapper = overlay.children.item(0) as HTMLElement;
+        this.overlay.style.display = "none";
 
         this.codeElement = document.createElement("p");
         this.wrapper.appendChild(this.codeElement);
@@ -47,7 +49,7 @@ export default class HostGameScreen implements IState, IScreen {
 
     start(...args: unknown[]): unknown {
         if (!this.isActive) {
-            this.wrapper.style.display = "block";
+            this.overlay.style.display = "block";
             this.isActive = true;
         }
         return this;
@@ -55,7 +57,7 @@ export default class HostGameScreen implements IState, IScreen {
 
     end(): unknown {
         if (this.isActive) {
-            this.wrapper.style.display = "none";
+            this.overlay.style.display = "none";
             this.codeElement.innerText = "";
             this.isActive = false;
         }

@@ -21,15 +21,15 @@ export default class MainMenu implements IEventable {
         this.subMenuStateMachine = new StateMachine(
             {
                 "home": new MainMenuHomeScreen(
-                    this._makeWrapper("ui-main-menu-home-screen", ["ui-main-menu-screen"]),
+                    this._makeWrapper("ui-main-menu-home-screen", ["ui-main-menu-screen"], ["overlay"]),
                     document
                 ),
                 "joinGame": new JoinGameScreen(
-                    this._makeWrapper("ui-main-menu-join-game-screen", ["ui-main-menu-screen"]),
+                    this._makeWrapper("ui-main-menu-join-game-screen", ["ui-main-menu-screen"], ["overlay", "ui-opaque-overlay"]),
                     document
                 ),
                 "hostGame": new HostGameScreen(
-                    this._makeWrapper("ui-main-menu-host-game-screen", ["ui-main-menu-screen"]),
+                    this._makeWrapper("ui-main-menu-host-game-screen", ["ui-main-menu-screen"], ["overlay", "ui-opaque-overlay"]),
                     document
                 )
             }
@@ -53,12 +53,16 @@ export default class MainMenu implements IEventable {
     /**
      * Make new wrapper that is a child of the current wrapper.
      */
-    private _makeWrapper(id: string, classes: string[] = []) {
+    private _makeWrapper(id: string, wrapperClasses: string[] = [], overlayClasses: string[] = []) {
         const wrapper = this.document.createElement("div");
-        this.wrapper.appendChild(wrapper);
         wrapper.id = id;
-        wrapper.classList.add(...classes);
-        return wrapper;
+        wrapper.classList.add(...wrapperClasses);
+
+        const overlay = document.createElement("div");
+        overlay.classList.add(...overlayClasses);
+        overlay.appendChild(wrapper);
+        this.wrapper.appendChild(overlay);
+        return overlay;
     }
 
     /**

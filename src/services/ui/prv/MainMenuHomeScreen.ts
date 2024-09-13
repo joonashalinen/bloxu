@@ -16,11 +16,13 @@ export default class MainMenuHomeScreen implements IState, IEventable, IScreen {
         "playSinglePlayer": "Play Single"
     };
     title: HTMLElement;
+    wrapper: HTMLElement;
 
     constructor(
-        public wrapper: HTMLElement,
+        public overlay: HTMLElement,
         public document: Document
     ) {
+        this.wrapper = overlay.children.item(0) as HTMLElement;
         // Create title element.
         this.title = document.createElement("h1");
         this.title.innerText = "Bloxu";
@@ -31,7 +33,7 @@ export default class MainMenuHomeScreen implements IState, IEventable, IScreen {
             const button = document.createElement("button");
             button.innerText = this.buttonTitles[name];
             button.classList.add("styleless-button", "ui-main-menu-button");
-            wrapper.appendChild(button);
+            this.wrapper.appendChild(button);
             this.buttons[name] = button;
         });
         // Add event listeners to menu buttons.
@@ -55,15 +57,16 @@ export default class MainMenuHomeScreen implements IState, IEventable, IScreen {
 
     start(...args: unknown[]): unknown {
         if (!this.isActive) {
-            this.wrapper.style.display = "block";
+            this.overlay.style.display = "block";
             this.isActive = true;
+            
         }
         return this;
     }
 
     end(): unknown {
         if (this.isActive) {
-            this.wrapper.style.display = "none";
+            this.overlay.style.display = "none";
             this.isActive = false;
         }
         return this;

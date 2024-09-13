@@ -8,8 +8,7 @@ import LevelLogic from "../prv/LevelLogic";
 import getLevels from "./levels";
 
 export default function createLevelLogic(
-    proxyMessenger: ProxyMessenger<DMessage, DMessage>,
-    isOnlineGame: boolean) {
+    proxyMessenger: ProxyMessenger<DMessage, DMessage>) {
     // Create other service channels.
     const players = [1, 2].map((num) =>
         new Channel("gameMaster", "player-" + num, proxyMessenger));
@@ -76,7 +75,7 @@ export default function createLevelLogic(
                 // Unteleport the player.
                 unteleport(selectedPlayerBodyId, selectedPlayerBodyMeshId);
                 // Send event to remote game if the game is online.
-                if (isOnlineGame) {
+                if (levelLogic.isOnlineGame) {
                     allChannel.sendEvent("GameMaster:<event>playerLeavePortal", 
                         [selectedPlayerId, selectedPlayerBodyId, selectedPlayerBodyMeshId]);
                 }

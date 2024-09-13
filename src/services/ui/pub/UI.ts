@@ -4,6 +4,7 @@ import SyncMessenger from "../../../components/messaging/pub/SyncMessenger";
 import Notification from "../prv/Notification";
 import MainMenu from "../prv/MainMenu";
 import HostGameScreen from "../prv/HostGameScreen";
+import Channel from "../../../components/messaging/pub/Channel";
 
 /**
  * Contains the state and operations of the UI service.
@@ -16,6 +17,7 @@ export default class UI {
     mainMenu: MainMenu;
     codeWrapper: HTMLElement;
     endGameScreenWrapper: HTMLElement;
+    gameChannel: Channel = new Channel("ui", "gameMaster", this.proxyMessenger);
 
     constructor(
         public document: Document,
@@ -174,11 +176,18 @@ export default class UI {
     /**
      * Show the UI
      */
-    show() {
+    async show() {
+        await this.gameChannel.request("previewLevel", [0]);
         this.mainMenu.show();
         // Hide the initial loading screen.
-        const loadingScreen = document.getElementById("first-loading-screen");
-        loadingScreen.style.display = "none";
+        await new Promise((resolve) => {
+            const loadingScreen = document.getElementById("first-loading-screen-overlay");
+            loadingScreen.style.opacity = "0%";
+            setTimeout(() => {
+                loadingScreen.style.display = "none";
+                resolve(null);
+            }, 1000);
+        });
     }
 
     /**
