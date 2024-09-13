@@ -12,10 +12,8 @@ import Channel from "../../../components/messaging/pub/Channel";
 export default class UI {
     proxyMessenger = new ProxyMessenger<DMessage, DMessage>();
     syncMessenger: SyncMessenger;
-    codeText: HTMLSpanElement;
     eventHandlers: {[event: string]: Function}
     mainMenu: MainMenu;
-    codeWrapper: HTMLElement;
     endGameScreenWrapper: HTMLElement;
     gameChannel: Channel = new Channel("ui", "gameMaster", this.proxyMessenger);
 
@@ -58,6 +56,10 @@ export default class UI {
             }
         });
 
+        this.mainMenu.onSelectLevel((levelIndex: number) => {
+            this.gameChannel.request("selectLevel", [levelIndex, true]);
+        });
+
         this.mainMenu.emitter.on("playSinglePlayer", async () => {
             await this.syncMessenger.postSyncMessage({
                 recipient: "gameMaster",
@@ -90,22 +92,19 @@ export default class UI {
             }
         });
 
-        this.codeWrapper = document.createElement("div");
-        this.codeWrapper.classList.add("ui-code-wrapper");
-        document.body.appendChild(this.codeWrapper);
-        this.codeWrapper.style.display = "none";
+        this.mainMenu.hide();
+    }
 
-        const codeTitle = document.createElement("span");
-        codeTitle.innerText = "Game Code: ";
-        this.codeWrapper.appendChild(codeTitle);
-
-        this.codeText = document.createElement("span");
-        this.codeWrapper.appendChild(this.codeText);
-
+    /**
+     * Creates the UI's elements and makes it interactive.
+     * Note: does not show the UI.
+     */
+    async render() {
         this.endGameScreenWrapper = this.createOverlayWrapper("ui-end-game-screen-wrapper");
         this.endGameScreenWrapper.style.display = "none";
 
-        this.mainMenu.hide();
+        const levels = await this.gameChannel.request("levels") as string[];
+        this.mainMenu.render(levels);
     }
 
     /**
@@ -174,7 +173,7 @@ export default class UI {
     }
 
     /**
-     * Show the UI
+     * Show the UI.
      */
     async show() {
         await this.gameChannel.request("previewLevel", [0]);

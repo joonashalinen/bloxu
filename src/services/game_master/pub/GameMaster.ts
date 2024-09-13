@@ -214,9 +214,28 @@ export default class GameMaster {
     }
 
     /**
+     * Returns the list of levels the game has.
+     */
+    levels() {
+        return this.levelLogic.levels;
+    }
+
+    /**
+     * Sets the given level as the level
+     * that will start once the game begins.
+     */
+    async selectLevel(levelIndex: number, preview: boolean = false) {
+        this.levelLogic.currentLevelIndex = levelIndex;
+        if (preview) this.previewLevel(levelIndex);
+        return true;
+    }
+
+    /**
      * Selects and loads the level with the given index.
      */
     async previewLevel(levelIndex: number) {
+        if (this.levelLogic.previewedLevel === levelIndex) return;
+
         if (!this.worldIsRunning) {
             // Make the world run.
             await this.worldChannel.request("run");

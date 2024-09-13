@@ -126,6 +126,8 @@ class App {
         this.mediator = new Mediator(messengers);
         this.mediator.emitter.on("error", (e) => console.log(e));
 
+        await ui.render();
+
         loadingEventCallback({type: "statusUpdate", message: "Services initialized.",
             percentageComplete: 1});
 

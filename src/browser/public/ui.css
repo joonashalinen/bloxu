@@ -25,27 +25,40 @@ body {
     border-color: white;
 }
 
-.ui-main-menu-button:hover {
+.ui-main-menu-button:hover, .ui-main-menu-selected-button {
     background-color: white;
     color: rgb(34, 57, 64);
 }
 
-#ui-main-menu-home-screen {
+.ui-main-menu-sidebar {
     height: calc(100% - 30px);
     padding-top: 30px;
     position: absolute;
     top: 0%;
     width: 180px;
     margin: 0 auto;
-    left: 0%;
-    box-shadow: 4px 0 4px #0b314f42;
     background: linear-gradient(360deg, rgb(29 76 76) 0%, rgb(43 99 128) 100%);
 }
 
-#ui-main-menu-home-screen > .ui-main-menu-button {
+.ui-main-menu-left-sidebar {
+    left: 0%;
+    box-shadow: 4px 0 4px #0b314f42;
+}
+
+.ui-main-menu-right-sidebar {
+    right: 0%;
+    box-shadow: -4px 0 4px #0b314f42;
+}
+
+.ui-main-menu-sidebar > .ui-main-menu-button {
     width: 100%;
     height: 50px;
     border-radius: 0px;
+}
+
+#ui-main-menu-home-screen {
+    width: 100%;
+    height: 100%;
 }
 
 #ui-main-menu-join-game-screen {
@@ -56,6 +69,10 @@ body {
 #ui-main-menu-host-game-screen {
     margin-top: calc(50vh - 28px);
 }
+
+#ui-main-menu-host-game-screen > p {
+    margin-top: 20px;
+} 
 
 .ui-end-game-screen-box {
     height: 120px;
@@ -87,7 +104,6 @@ body {
     display: block;
     margin: 0 auto;
     color: white;
-    margin-top: 20px;
     text-align: center;
 }
 

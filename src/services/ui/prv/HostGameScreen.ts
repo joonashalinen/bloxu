@@ -20,18 +20,6 @@ export default class HostGameScreen implements IState, IScreen {
         public document: Document
     ) {
         this.wrapper = overlay.children.item(0) as HTMLElement;
-        this.overlay.style.display = "none";
-
-        this.codeElement = document.createElement("p");
-        this.wrapper.appendChild(this.codeElement);
-
-        this.messageElement = document.createElement("p");
-        this.messageElement.innerText = "Waiting for the other player to join..";
-        this.wrapper.appendChild(this.messageElement);
-
-        // Create element for showing error messages.
-        this.errorElement = document.createElement("p");
-        this.wrapper.appendChild(this.errorElement);
     }
 
     showError(error: string): void {
@@ -45,6 +33,22 @@ export default class HostGameScreen implements IState, IScreen {
         this.errorElementTimeout = setTimeout(() => {
             this.errorElement.innerText = "";
         }, 10000);
+    }
+
+    /**
+     * Creates the screen's elements.
+     */
+    render() {
+        this.codeElement = document.createElement("p");
+        this.wrapper.appendChild(this.codeElement);
+
+        this.messageElement = document.createElement("p");
+        this.messageElement.innerText = "Waiting for the other player to join..";
+        this.wrapper.appendChild(this.messageElement);
+
+        // Create element for showing error messages.
+        this.errorElement = document.createElement("p");
+        this.wrapper.appendChild(this.errorElement);
     }
 
     start(...args: unknown[]): unknown {

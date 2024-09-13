@@ -20,8 +20,12 @@ export default class JoinGameScreen implements IState, IScreen {
         public document: Document
     ) {
         this.wrapper = overlay.children.item(0) as HTMLElement;
-        this.overlay.style.display = "none";
+    }
 
+    /**
+     * Creates the screen's elements.
+     */
+    render() {
         // Create back button.
         const button = document.createElement("button");
         button.innerText = "← Back";

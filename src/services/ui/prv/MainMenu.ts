@@ -18,6 +18,12 @@ export default class MainMenu implements IEventable {
         public wrapper: HTMLElement,
         public document: Document
     ) {
+    }
+
+    /**
+     * Creates the UI elements.
+     */
+    render(levels: string[]) {
         this.subMenuStateMachine = new StateMachine(
             {
                 "home": new MainMenuHomeScreen(
@@ -39,7 +45,11 @@ export default class MainMenu implements IEventable {
             this.emitter.trigger("hostGame");
         });
 
-        (this.subMenuStateMachine.states["home"] as MainMenuHomeScreen).emitter.on("playSinglePlayer", () => {
+        const homeScreen = (this.subMenuStateMachine.states["home"] as MainMenuHomeScreen);
+        homeScreen.onSelectLevel((levelIndex) => {
+            this.emitter.trigger("selectLevel", [levelIndex]);
+        });
+        homeScreen.emitter.on("playSinglePlayer", () => {
             this.emitter.trigger("playSinglePlayer");
         });
 
@@ -47,22 +57,11 @@ export default class MainMenu implements IEventable {
             this.emitter.trigger("joinGame", [code]);
         });
 
+        this.subMenuStateMachine.states["home"].render(levels);
+        this.subMenuStateMachine.states["joinGame"].render();
+        this.subMenuStateMachine.states["hostGame"].render();
+
         this.subMenuStateMachine.activateState("home");
-    }
-
-    /**
-     * Make new wrapper that is a child of the current wrapper.
-     */
-    private _makeWrapper(id: string, wrapperClasses: string[] = [], overlayClasses: string[] = []) {
-        const wrapper = this.document.createElement("div");
-        wrapper.id = id;
-        wrapper.classList.add(...wrapperClasses);
-
-        const overlay = document.createElement("div");
-        overlay.classList.add(...overlayClasses);
-        overlay.appendChild(wrapper);
-        this.wrapper.appendChild(overlay);
-        return overlay;
     }
 
     /**
@@ -79,6 +78,14 @@ export default class MainMenu implements IEventable {
      */
     onJoinGame(callback: (code: string) => void) {
         this.emitter.on("joinGame", callback);
+    }
+    
+    onSelectLevel(callback: (levelIndex: number) => void) {
+        this.emitter.on("selectLevel", callback);
+    }
+
+    offSelectLevel(callback: (levelIndex: number) => void) {
+        this.emitter.off("selectLevel", callback);
     }
 
     /**
@@ -103,5 +110,21 @@ export default class MainMenu implements IEventable {
         if (currentState !== undefined) {
             currentState.showError(msg);
         }
+    }
+
+    /**
+     * Make new wrapper that is a child of the current wrapper.
+     */
+    private _makeWrapper(id: string, wrapperClasses: string[] = [], overlayClasses: string[] = []) {
+        const wrapper = this.document.createElement("div");
+        wrapper.id = id;
+        wrapper.classList.add(...wrapperClasses);
+
+        const overlay = document.createElement("div");
+        overlay.classList.add(...overlayClasses);
+        overlay.appendChild(wrapper);
+        this.wrapper.appendChild(overlay);
+        overlay.style.display = "none";
+        return overlay;
     }
 }
