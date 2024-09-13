@@ -75,9 +75,7 @@ export default class UI {
                 }
             }) as string | {error: string};
 
-            this.mainMenu.hide();
             this.gameUI.handleSinglePlayer();
-            this.gameUI.show();
         });
 
         this.mainMenu.onJoinGame(async (code: string) => {
@@ -91,10 +89,7 @@ export default class UI {
                 }
             }) as string | {error: string};
 
-            if (typeof response === "string") {
-                this.mainMenu.hide();
-                this.gameUI.show();
-            } else {
+            if (typeof response !== "string") {
                 this.mainMenu.showError(response.error);
             }
         });
@@ -138,9 +133,7 @@ export default class UI {
     }
 
     /**
-     * When the game has started. Relevant only when hosting a game (and thus waiting 
-     * for the other player to join before hiding the main menu)
-     * since when joining a game the game starts immediately.
+     * When the game has started.
      */
     onGameStart() {
         this.mainMenu.hide();

@@ -41,6 +41,7 @@ export default class GameMaster {
         this.eventHandlers = {
             "Player:<event>die": this.onPlayerDeath.bind(this),
             "OnlineSynchronizer:<event>remotePlayerJoined": this.onPlayerJoined.bind(this),
+            "OnlineSynchronizer:GameMaster:<event>remoteStartGame": this.onRemoteStartGame.bind(this),
             "*": this.onAnyEvent.bind(this)
         };
         this.initialized = false;
@@ -113,8 +114,6 @@ export default class GameMaster {
         this.levelLogic.localPlayerId = this.localPlayerId;
         this.levelLogic.isOnlineGame = true;
 
-        await this._startGame();
-
         return code;
     }
 
@@ -161,7 +160,6 @@ export default class GameMaster {
         if (typeof response === "string") {
             this.localPlayerId = response;
             this.levelLogic.localPlayerId = this.localPlayerId;
-            await this._startGame();
         }
 
         return response;
@@ -199,12 +197,21 @@ export default class GameMaster {
     /**
      * When a player other than the main local player has joined the game.
      */
-    onPlayerJoined(playerId: string) {
-        // We assume there are only two players, which means 
-        // the game has started, since all players are present.
+    async onPlayerJoined(playerId: string) {
+        await this._startGame();
         this.proxyMessenger.postMessage(
-            this.messageFactory.createEvent("*", "GameMaster:<event>startGame")
+            this.messageFactory.createEvent("*", "GameMaster:<event>remoteStartGame",
+                [this.levelLogic.currentLevelIndex]
+            )
         );
+    }
+
+    /**
+     * When a remote GameMaster has started a game.
+     */
+    async onRemoteStartGame(levelIndex: number) {
+        await this.selectLevel(levelIndex);
+        await this._startGame();
     }
 
     /**
@@ -367,6 +374,12 @@ export default class GameMaster {
         this.proxyMessenger.postMessage(
             this.messageFactory.createEvent("*", "GameMaster:<event>startLevel",
                 [this.levelLogic.currentLevelIndex])
+        );
+
+        this.proxyMessenger.postMessage(
+            this.messageFactory.createEvent("*", "GameMaster:<event>startGame",
+                [this.levelLogic.currentLevelIndex]
+            )
         );
 
         this.gameRunning = true;
