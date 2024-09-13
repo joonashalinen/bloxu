@@ -5,6 +5,7 @@ import Notification from "../prv/Notification";
 import MainMenu from "../prv/MainMenu";
 import HostGameScreen from "../prv/HostGameScreen";
 import Channel from "../../../components/messaging/pub/Channel";
+import GameUI from "../prv/GameUI";
 
 /**
  * Contains the state and operations of the UI service.
@@ -14,27 +15,30 @@ export default class UI {
     syncMessenger: SyncMessenger;
     eventHandlers: {[event: string]: Function}
     mainMenu: MainMenu;
+    gameUI: GameUI;
+    mainMenuWrapper: HTMLElement;
+    gameUIWrapper: HTMLElement;
     endGameScreenWrapper: HTMLElement;
     gameChannel: Channel = new Channel("ui", "gameMaster", this.proxyMessenger);
 
     constructor(
-        public document: Document,
-        public wrapper?: HTMLElement
+        public document: Document
     ) {
         this.eventHandlers = {
             "GameMaster:<event>loseGame": this.onGameLose.bind(this),
             "GameMaster:<event>winGame": this.onGameWin.bind(this),
             "GameMaster:<event>completeGame": this.onGameComplete.bind(this),
-            "GameMaster:<event>startGame": this.onGameStart.bind(this)
+            "GameMaster:<event>startGame": this.onGameStart.bind(this),
+            "*": this.onAnyEvent.bind(this)
         };
 
         this.syncMessenger = new SyncMessenger(this.proxyMessenger);
 
-        if (wrapper === undefined) {
-            this.wrapper = this.createOverlayWrapper("ui-main-menu-wrapper");
-        }
+        this.mainMenuWrapper = this.createOverlayWrapper("ui-main-menu-wrapper");
+        this.gameUIWrapper = this.createOverlayWrapper("ui-game-ui-wrapper");
 
-        this.mainMenu = new MainMenu(this.wrapper!, document);
+        this.gameUI = new GameUI(this.gameUIWrapper, document);
+        this.mainMenu = new MainMenu(this.mainMenuWrapper, document);
 
         this.mainMenu.onHostGame(async () => {
             const response = await this.syncMessenger.postSyncMessage({
@@ -72,6 +76,8 @@ export default class UI {
             }) as string | {error: string};
 
             this.mainMenu.hide();
+            this.gameUI.handleSinglePlayer();
+            this.gameUI.show();
         });
 
         this.mainMenu.onJoinGame(async (code: string) => {
@@ -87,12 +93,14 @@ export default class UI {
 
             if (typeof response === "string") {
                 this.mainMenu.hide();
+                this.gameUI.show();
             } else {
                 this.mainMenu.showError(response.error);
             }
         });
 
         this.mainMenu.hide();
+        this.gameUI.hide();
     }
 
     /**
@@ -105,6 +113,7 @@ export default class UI {
 
         const levels = await this.gameChannel.request("levels") as string[];
         this.mainMenu.render(levels);
+        this.gameUI.render(levels);
     }
 
     /**
@@ -135,6 +144,7 @@ export default class UI {
      */
     onGameStart() {
         this.mainMenu.hide();
+        this.gameUI.show();
     }
 
     /**
@@ -194,5 +204,12 @@ export default class UI {
      */
     hide() {
         this.mainMenu.hide();
+    }
+
+    onAnyEvent(msg: DMessage) {
+        if (this.gameUI.isShown ||
+            msg.message.type === "GameMaster:<event>startLevel") {
+            this.gameUI.handleEvent(msg.message.type, msg.message.args);
+        }
     }
 }

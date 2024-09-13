@@ -34,7 +34,7 @@ export default function createLevelLogic(
                 if (event.collidedAgainst.transformNode.id.includes("Interactables::portal")) {
                     this.proxyMessenger.postMessage(
                         this.messageFactory.createEvent("gameMaster",
-                            "GameMaster<event>playerEnterPortal", [body.id])
+                            "GameMaster:<event>playerEnterPortal", [body.id])
                     );
                 }
             });
@@ -52,7 +52,7 @@ export default function createLevelLogic(
     };
 
     levelLogic.handleEvent = async (type: string, args: unknown[]) => {
-        if (type === "GameMaster<event>playerEnterPortal") {
+        if (type === "GameMaster:<event>playerEnterPortal") {
             const playerBodyId = args[0] as string;
             if (!playerBodiesInPortal.includes(playerBodyId)) {
                 playerBodiesInPortal.push(playerBodyId);
@@ -74,11 +74,9 @@ export default function createLevelLogic(
                     bodyId.includes(selectedPlayerId));
                 // Unteleport the player.
                 unteleport(selectedPlayerBodyId, selectedPlayerBodyMeshId);
-                // Send event to remote game if the game is online.
-                if (levelLogic.isOnlineGame) {
-                    allChannel.sendEvent("GameMaster:<event>playerLeavePortal", 
-                        [selectedPlayerId, selectedPlayerBodyId, selectedPlayerBodyMeshId]);
-                }
+                
+                allChannel.sendEvent("GameMaster:<event>playerLeavePortal", 
+                    [selectedPlayerId, selectedPlayerBodyId, selectedPlayerBodyMeshId]);
             }
         } else if (type === "OnlineSynchronizer:GameMaster:<event>playerLeavePortal") {
             unteleport(args[1] as string, args[2] as string);

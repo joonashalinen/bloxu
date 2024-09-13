@@ -12,6 +12,7 @@ import MainMenuHomeScreen from "./MainMenuHomeScreen";
  */
 export default class MainMenu implements IEventable {
     subMenuStateMachine: StateMachine<IState & IScreen>;
+    isShown: boolean = true;
     emitter = new EventEmitter();
 
     constructor(
@@ -79,7 +80,7 @@ export default class MainMenu implements IEventable {
     onJoinGame(callback: (code: string) => void) {
         this.emitter.on("joinGame", callback);
     }
-    
+
     onSelectLevel(callback: (levelIndex: number) => void) {
         this.emitter.on("selectLevel", callback);
     }
@@ -93,6 +94,7 @@ export default class MainMenu implements IEventable {
      */
     show() {
         this.wrapper.style.display = "block";
+        this.isShown = true;
     }
 
     /**
@@ -100,6 +102,7 @@ export default class MainMenu implements IEventable {
      */
     hide() {
         this.wrapper.style.display = "none";
+        this.isShown = false;
     }
 
     /**

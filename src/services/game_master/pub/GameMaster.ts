@@ -211,6 +211,12 @@ export default class GameMaster {
     onAnyEvent(msg: DMessage) {
         if (!this.gameRunning) return;
         this.levelLogic.handleEvent(msg.message.type, msg.message.args);
+
+        if (msg.message.type === "GameMaster:<event>playerEnterPortal") {
+            this.proxyMessenger.postMessage(
+                this.messageFactory.createEvent("*", "GameMaster:<event>playerEnterPortal", [])
+            );
+        }
     }
 
     /**
@@ -349,12 +355,22 @@ export default class GameMaster {
                         this.messageFactory.createRequest(this.players[i].id, "resume")
                     );
                 }
+                // Trigger event notifying of starting a new level.
+                this.proxyMessenger.postMessage(
+                    this.messageFactory.createEvent("*", "GameMaster:<event>startLevel",
+                        [this.levelLogic.currentLevelIndex])
+                );
             } else {
                 this.proxyMessenger.postMessage(
                     this.messageFactory.createEvent("*", "GameMaster:<event>completeGame")
                 );
             }
         });
+
+        this.proxyMessenger.postMessage(
+            this.messageFactory.createEvent("*", "GameMaster:<event>startLevel",
+                [this.levelLogic.currentLevelIndex])
+        );
 
         this.gameRunning = true;
     }

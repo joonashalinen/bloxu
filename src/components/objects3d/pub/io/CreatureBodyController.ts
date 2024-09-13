@@ -39,7 +39,6 @@ export default class CreatureBodyController extends DeviceController {
     override pressKey(key: string, keyControllerIndex: number) {
         return this._doWithStateExtractions("pressKey", () => {
             if (key === " ") {
-                console.log(this.creatureBody.transformNode.absolutePosition);
                 this.creatureBody.jump();
             } else if (key === "q") {
                 const selectedItem = this.creatureBody.selectedItem();

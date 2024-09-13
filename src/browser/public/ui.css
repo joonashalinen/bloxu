@@ -154,3 +154,19 @@ body {
     color: white;
     opacity: 1; /* Firefox */
   }
+
+.ui-game-screen-hint {
+    background-color: #1c2542b3;
+    color: white;
+    padding: 12px;
+    border-radius: 10px;
+    width: 250px;
+    margin: auto;
+    text-align: center;
+    margin-top: 25vh;
+    box-shadow: 0px 5px 5px #071a3147;
+}
+
+#ui-game-ui-wrapper {
+    height: auto;
+}
