@@ -236,7 +236,7 @@ export default class GameMaster {
      */
     async selectLevel(levelIndex: number, preview: boolean = false) {
         this.levelLogic.currentLevelIndex = levelIndex;
-        if (preview) this.previewLevel(levelIndex);
+        if (preview) await this.previewLevel(levelIndex);
         return true;
     }
 
@@ -257,8 +257,9 @@ export default class GameMaster {
                 target.setAbsolutePosition(new this.babylonjs.Vector3(1.375, 3.5, -5.124));
                 this.camera.lockedTarget = target;
                 this.camera.radius = 16;
+                return true;
             };
-            this.worldChannel.request("modify", [{boundArgs: [], f: adjustCamera}]);
+            await this.worldChannel.request("modify", [{boundArgs: [], f: adjustCamera}]);
         }
 
         // Select the preview level.

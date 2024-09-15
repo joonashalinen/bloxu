@@ -204,6 +204,7 @@ export default class Creature implements IService {
             const body = this.getObject(bodyId) as CreatureBody;
             this.camera.lockedTarget = body.transformNode;
             this.camera.radius = 16;
+            return true;
         };
 
         this.world3dChannel.request("modify", [{boundArgs: [this.bodyId()], f: targetBody}]);
