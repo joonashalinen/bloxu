@@ -40,11 +40,11 @@ export default async function(babylonjs: typeof BABYLON, scene: BABYLON.Scene) {
 
     const playerMeshImport = (await assetLoader.loadModelFromFile("player.glb"));
     const gunMeshImport = (await assetLoader.loadModelFromFile("plasma_pistol.glb"));
-    assetLoader.loadModel("Blocks::dirt");
-    assetLoader.loadModel("Blocks::grassyDirt");
-    assetLoader.loadModel("Blocks::stone");
-    assetLoader.loadModel("Blocks::partition");
-    assetLoader.loadModel("Background::cloudPrototype");
+    await assetLoader.loadModel("Blocks::dirt");
+    await assetLoader.loadModel("Blocks::grassyDirt");
+    await assetLoader.loadModel("Blocks::stone");
+    await assetLoader.loadModel("Blocks::partition");
+    await assetLoader.loadModel("Background::cloudPrototype");
 
     function plainConstructor(type: string, id?: string) {
         const modelImport = assetLoader.getModel(type);
