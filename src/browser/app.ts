@@ -69,7 +69,7 @@ class App {
         var ioService = new IOService(createInputEmitters(document, world3d.canvas));
 
         // Create UI service.
-        var ui = new UI(document);
+        var ui = new UI(document, window);
 
         // Create Player 1's service.
         var player1NativeWorker = new Worker(new URL('../services/creature/pub/index.ts', import.meta.url), {name: "player-1"})

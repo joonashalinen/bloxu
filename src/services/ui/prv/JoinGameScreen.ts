@@ -34,6 +34,7 @@ export default class JoinGameScreen implements IState, IScreen {
         
         // Make back button transition back to the main menu screen.
         button.addEventListener("click", () => {
+            if (!this.isActive) return;
             this.end();
             this.emitter.trigger("end", ["home"])
         });
@@ -51,10 +52,12 @@ export default class JoinGameScreen implements IState, IScreen {
 
         // Make input field's input text be always uppercase.
         this.codeInput.addEventListener("input", () => {
+            if (!this.isActive) return;
             this.codeInput.value = this.codeInput.value.toUpperCase();
         });
         // Add event listener for when the game code has been entered.
         this.codeInput.addEventListener('keydown', async (event) => {
+            if (!this.isActive) return;
             if (event.key === 'Enter') {
                 this.emitter.trigger("joinGame", [this.codeInput.value]);
             }

@@ -26,9 +26,25 @@ body {
     text-shadow: -2px 4px 12px #0b314f42;
 }
 
+.ui-main-menu-button-disabled {
+    color: white;
+    padding-left: 5vh;
+}
+
 .ui-main-menu-button:hover, .ui-main-menu-selected-button {
     background-color: white;
     color: rgb(34, 57, 64);
+}
+
+.ui-main-menu-button-disabled:hover {
+    background-color: transparent;
+    color: white;
+}
+
+.ui-main-menu-button-icon {
+    width: 4vh;
+    height: 4vh;
+    margin-left: 1vh;
 }
 
 .ui-main-menu-sidebar {

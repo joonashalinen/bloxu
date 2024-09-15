@@ -17,7 +17,8 @@ export default class MainMenu implements IEventable {
 
     constructor(
         public wrapper: HTMLElement,
-        public document: Document
+        public document: Document,
+        public window: Window
     ) {
     }
 
@@ -29,7 +30,8 @@ export default class MainMenu implements IEventable {
             {
                 "home": new MainMenuHomeScreen(
                     this._makeWrapper("ui-main-menu-home-screen", ["ui-main-menu-screen"], ["overlay"]),
-                    document
+                    document,
+                    window
                 ),
                 "joinGame": new JoinGameScreen(
                     this._makeWrapper("ui-main-menu-join-game-screen", ["ui-main-menu-screen"], ["overlay", "ui-opaque-overlay"]),
@@ -113,6 +115,16 @@ export default class MainMenu implements IEventable {
         if (currentState !== undefined) {
             currentState.showError(msg);
         }
+    }
+
+    handleEvent(type: string, args: unknown[]) {
+        const homeScreen = (this.subMenuStateMachine.states["home"] as MainMenuHomeScreen);
+        homeScreen.handleEvent(type, args);
+    }
+
+    selectLevel(levelIndex: number) {
+        const homeScreen = (this.subMenuStateMachine.states["home"] as MainMenuHomeScreen);
+        homeScreen.selectLevel(levelIndex);
     }
 
     /**

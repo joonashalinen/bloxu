@@ -20,9 +20,11 @@ export default class UI {
     gameUIWrapper: HTMLElement;
     endGameScreenWrapper: HTMLElement;
     gameChannel: Channel = new Channel("ui", "gameMaster", this.proxyMessenger);
+    private _selectingLevel: boolean = false;
 
     constructor(
-        public document: Document
+        public document: Document,
+        public window: Window
     ) {
         this.eventHandlers = {
             "GameMaster:<event>loseGame": this.onGameLose.bind(this),
@@ -38,7 +40,7 @@ export default class UI {
         this.gameUIWrapper = this.createOverlayWrapper("ui-game-ui-wrapper");
 
         this.gameUI = new GameUI(this.gameUIWrapper, document);
-        this.mainMenu = new MainMenu(this.mainMenuWrapper, document);
+        this.mainMenu = new MainMenu(this.mainMenuWrapper, document, window);
 
         this.mainMenu.onHostGame(async () => {
             const response = await this.syncMessenger.postSyncMessage({
@@ -60,8 +62,12 @@ export default class UI {
             }
         });
 
-        this.mainMenu.onSelectLevel((levelIndex: number) => {
-            this.gameChannel.request("selectLevel", [levelIndex, true]);
+        this.mainMenu.onSelectLevel(async (levelIndex: number) => {
+            if (this._selectingLevel) return;
+            this._selectingLevel = true;
+            await this.gameChannel.request("selectLevel", [levelIndex, true]);
+            this.mainMenu.selectLevel(levelIndex);
+            this._selectingLevel = false;
         });
 
         this.mainMenu.emitter.on("playSinglePlayer", async () => {
@@ -204,5 +210,6 @@ export default class UI {
             msg.message.type === "GameMaster:<event>startLevel") {
             this.gameUI.handleEvent(msg.message.type, msg.message.args);
         }
+        this.mainMenu.handleEvent(msg.message.type, msg.message.args);
     }
 }
