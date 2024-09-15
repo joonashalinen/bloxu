@@ -106,7 +106,7 @@ body {
 
 .ui-end-game-screen-box {
     height: 120px;
-    margin-top: -75px;
+    margin-top: calc(50vh - 60px);
     background-color: rgba(0, 0, 0, 0.3);
     border-radius: 20px;
     padding-top: 5px;
@@ -114,6 +114,11 @@ body {
 
 .ui-end-game-screen-box > .ui-main-menu-button {
     width: 180px;
+    border-style: solid;
+}
+
+.ui-end-game-screen-box > h3, .ui-end-game-screen-box > button {
+    margin-top: 20px;
 }
 
 .ui-code-wrapper {
