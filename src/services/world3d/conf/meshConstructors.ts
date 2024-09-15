@@ -38,9 +38,7 @@ export default async function(babylonjs: typeof BABYLON, scene: BABYLON.Scene) {
         "Background::cloudPrototype": "cloud_prototype.glb"
     };
 
-    const directionArrowMesh = (await assetLoader.loadModelFromFile("direction_arrow.glb")).meshes[0];
     const playerMeshImport = (await assetLoader.loadModelFromFile("player.glb"));
-    const skyboxImport = (await assetLoader.loadModelFromFile("skybox.glb"));
     const gunMeshImport = (await assetLoader.loadModelFromFile("plasma_pistol.glb"));
     assetLoader.loadModel("Blocks::dirt");
     assetLoader.loadModel("Blocks::grassyDirt");
@@ -65,12 +63,6 @@ export default async function(babylonjs: typeof BABYLON, scene: BABYLON.Scene) {
     }
 
     return {
-        "DirectionArrow": (id: string) => {
-            const mesh = directionArrowMesh.clone(id, null);
-            mesh!.setEnabled(true);
-            scene.addMesh(mesh!);
-            return mesh;
-        },
         "Player": (id: string, pistolMesh: BABYLON.Mesh) => {
             
             const entries = playerMeshImport
@@ -153,15 +145,6 @@ export default async function(babylonjs: typeof BABYLON, scene: BABYLON.Scene) {
             mesh.id = id;
 
             return mesh;
-        },
-        "SkyBox": () => {
-            const entries = skyboxImport.instantiateModelsToScene();
-            const rootMesh = entries.rootNodes[0] as BABYLON.TransformNode;
-            rootMesh.setEnabled(true);
-            rootMesh.position = new BABYLON.Vector3(0, 0, 0);
-            //rootMesh.rotate(BABYLON.Vector3.Up(), 1.7);
-            rootMesh.translate(BABYLON.Vector3.Up(), -200);
-            return rootMesh;
         },
         "Cube": (id: string, size: number) => {
             // Create cube mesh.
