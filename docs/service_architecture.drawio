@@ -1,6 +1,6 @@
-<mxfile host="Electron" modified="2024-08-27T10:51:34.944Z" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/21.2.8 Chrome/112.0.5615.165 Electron/24.2.0 Safari/537.36" etag="khOQvvMOrst84sj9JEov" version="21.2.8" type="device">
+<mxfile host="Electron" modified="2024-09-15T18:05:14.251Z" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/21.2.8 Chrome/112.0.5615.165 Electron/24.2.0 Safari/537.36" etag="f9rYwLNS3TTIiKUk5R-V" version="21.2.8" type="device">
   <diagram name="Page-1" id="8Ki3WzeOfG9bLv4DmGKw">
-    <mxGraphModel dx="1038" dy="616" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+    <mxGraphModel dx="1050" dy="629" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
@@ -10,7 +10,7 @@
         <mxCell id="Jj55U650Jitu8uKOLBNu-3" value="&amp;lt;&amp;lt;interface&amp;gt;&amp;gt;&lt;br&gt;Creature" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#333333;" parent="1" vertex="1">
           <mxGeometry x="200" y="260" width="100" height="40" as="geometry" />
         </mxCell>
-        <mxCell id="Jj55U650Jitu8uKOLBNu-4" value="GameMaster" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="1" vertex="1">
+        <mxCell id="Jj55U650Jitu8uKOLBNu-4" value="Game Master" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="1" vertex="1">
           <mxGeometry x="590" y="340" width="100" height="40" as="geometry" />
         </mxCell>
         <mxCell id="Jj55U650Jitu8uKOLBNu-10" value="" style="endArrow=classic;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;curved=1;exitX=1;exitY=0.75;exitDx=0;exitDy=0;" parent="1" source="Jj55U650Jitu8uKOLBNu-3" target="OCFg-jp6_DVnQoXGoYAK-1" edge="1">
@@ -43,7 +43,7 @@
         <mxCell id="OCFg-jp6_DVnQoXGoYAK-5" value="Online Synchronizer" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="1" vertex="1">
           <mxGeometry x="395" y="460" width="130" height="40" as="geometry" />
         </mxCell>
-        <mxCell id="OCFg-jp6_DVnQoXGoYAK-7" value="RemoteCreature" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="1" vertex="1">
+        <mxCell id="OCFg-jp6_DVnQoXGoYAK-7" value="Remote Creature" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="1" vertex="1">
           <mxGeometry x="150" y="340" width="110" height="40" as="geometry" />
         </mxCell>
         <mxCell id="OCFg-jp6_DVnQoXGoYAK-8" value="" style="endArrow=classic;html=1;rounded=0;entryX=0.75;entryY=1;entryDx=0;entryDy=0;exitX=0.75;exitY=0;exitDx=0;exitDy=0;" parent="1" source="OCFg-jp6_DVnQoXGoYAK-5" target="OCFg-jp6_DVnQoXGoYAK-1" edge="1">
@@ -125,7 +125,7 @@
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="LBKh72S285BoX8zyUNAG-2" value="CreatureCoordinator" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="1" vertex="1">
+        <mxCell id="LBKh72S285BoX8zyUNAG-2" value="Creature Coordinator" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="1" vertex="1">
           <mxGeometry x="205" y="680" width="130" height="40" as="geometry" />
         </mxCell>
         <mxCell id="LBKh72S285BoX8zyUNAG-3" value="&lt;i&gt;IO&lt;/i&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="1" vertex="1">
