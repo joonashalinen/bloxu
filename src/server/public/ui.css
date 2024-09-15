@@ -4,31 +4,105 @@ body {
 }
 
 #ui-main-menu-wrapper {
-    background-image: url("assets/images/ui_main_menu_background.jpg");
     background-size: cover;
     font-family: 'Lilita One';
 }
 
 .ui-main-menu-screen {
-    position: relative;
-    top: 50%;
     width: 400px;
     margin: 0 auto;
 }
 
+.ui-main-menu-button {
+    width: 110px;
+    height: 34px;
+    font-weight: bold;
+    text-align: center;
+    font-size: 18px;
+    color: white;
+    border-radius: 8px;
+    border-width: 2px;
+    border-color: white;
+    text-shadow: -2px 4px 12px #0b314f42;
+}
+
+.ui-main-menu-button-disabled {
+    color: white;
+    padding-left: 5vh;
+}
+
+.ui-main-menu-button:hover, .ui-main-menu-selected-button {
+    background-color: white;
+    color: rgb(34, 57, 64);
+}
+
+.ui-main-menu-button-disabled:hover {
+    background-color: transparent;
+    color: white;
+}
+
+.ui-main-menu-button-icon {
+    width: 4vh;
+    height: 4vh;
+    margin-left: 1vh;
+}
+
+.ui-main-menu-sidebar {
+    height: 50vh;
+    /* padding-top: 30px; */
+    position: absolute;
+    top: 20vh;
+    width: 24vw;
+    margin: 0 auto;
+    /* background: linear-gradient(360deg, rgb(29 76 76 / 16%) 0%, rgb(43 99 128 / 17%) 100%); */
+    border-radius: 10px;
+}
+
+.ui-main-menu-left-sidebar {
+    left: 15vw;
+    /* box-shadow: 4px 0 4px #0b314f42; */
+    transform: perspective(400px) rotateY(20deg);
+}
+
+.ui-main-menu-right-sidebar {
+    right: 15vw;
+    /* box-shadow: -4px 0 4px #0b314f42; */
+    transform: perspective(400px) rotateY(340deg);
+    height: 72vh;
+    top: 12vh;
+}
+
+.ui-main-menu-sidebar > .ui-main-menu-button {
+    width: 20vw;
+    min-width: 28vh;
+    height: 70px;
+    /* border-radius: 0px; */
+    margin-top: 1vh;
+    height: 9vh;
+    font-size: 5vh;
+}
+
 #ui-main-menu-home-screen {
-    height: 150px;
-    margin-top: -75px;
+    width: 100%;
+    height: 100%;
 }
 
 #ui-main-menu-join-game-screen {
     height: 150px;
-    margin-top: -75px;
+    margin-top: calc(50vh - 75px);
+}
+
+#ui-main-menu-join-game-screen > * {
+    margin-bottom: 20px;
 }
 
 #ui-main-menu-host-game-screen {
-    margin-top: -28px;
+    margin-top: calc(50vh - 28px);
 }
+
+#ui-main-menu-host-game-screen > p {
+    margin-top: 20px;
+} 
 
 .ui-end-game-screen-box {
     height: 120px;
@@ -60,30 +134,15 @@ body {
     display: block;
     margin: 0 auto;
     color: white;
-    margin-top: 20px;
     text-align: center;
 }
 
 .ui-main-menu-home-screen-title {
     text-align: center;
-}
-
-.ui-main-menu-button {
-    width: 140px;
-    height: 30px;
-    font-weight: bold;
-    text-align: center;
-    border-radius: 8px;
-    border: solid;
-    border-width: 3px;
-    font-size: 18px;
-    border-color: white;
-    color: white;
-}
-
-.ui-main-menu-button:hover {
-    background-color: white;
-    color: rgb(34, 57, 64);
+    font-size: 10vh;
+    text-shadow: -2px 4px 12px #0b314f42;
+    margin-bottom: 5vh;
+    margin-top: 0%;
 }
 
 .ui-main-menu-input {
@@ -111,3 +170,19 @@ body {
     color: white;
     opacity: 1; /* Firefox */
   }
+
+.ui-game-screen-hint {
+    background-color: #1c2542b3;
+    color: white;
+    padding: 12px;
+    border-radius: 10px;
+    width: 250px;
+    margin: auto;
+    text-align: center;
+    margin-top: 25vh;
+    box-shadow: 0px 5px 5px #071a3147;
+}
+
+#ui-game-ui-wrapper {
+    height: auto;
+}
