@@ -49,10 +49,10 @@ export default class Server {
         const app = (express as unknown as Function)();
         this.expressApp = app;
 
-        app.use(express.static("public"))
+        app.use(express.static("public"));
 
-        app.get('/', (req, res) => {
-            res.sendFile('public/index.html')
+        app.get('/bloxu', (req, res) => {
+            res.sendFile(path.join(__dirname, '../public', 'index.html'));
         });
         
         const httpsServer = https.createServer({
