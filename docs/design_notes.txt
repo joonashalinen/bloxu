@@ -41,7 +41,12 @@
   relationship between the players and the Game Master.
   The worlds, levels and goals created by the
   Game Master are simply vehicles for interacting
-  with the Game Master.
+  with the Game Master. The Game Master should
+  reference the fact that it is a computer program made
+  for the purpose of guiding and engaging the
+  players, and to build and manage the created world.
+  It should also reference the fact that it has a creator
+  (the game developer).
 
 - (Story)
   There needs to be an overarching story about the

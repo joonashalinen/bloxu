@@ -86,6 +86,13 @@
 3. Robots, which can be friendly or enemies.
 
 
+-- Items --
+
+1. A spy glass that allows the player to look around.
+   It could be necessary for seeing hidden blocks
+   necessary for solving a puzzle.
+
+
 -- Places --
 
 1. A home/hub realm that the player can always
@@ -93,6 +100,15 @@
    a home in the hub, to decorate it as they like and to
    display gathered objects/trophies in it. The player
    could maybe plant a garden to grow something in it.
+
+
+-- Levels --
+
+1. An interlude level where the players have 
+   a blank space to build something in. At the end,
+   a photo is taken of the built object and
+   saved as a memory that is displayed in the
+   hub.
 
 
 -- Scenes --
