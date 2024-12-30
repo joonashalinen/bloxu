@@ -67,6 +67,8 @@
    the grid, but instead a physical object that
    can be moved around via physics interactions.
 
+2. Rotator: a gun that rotates the hit block.
+
 
 -- Beings --
 
