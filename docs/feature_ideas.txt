@@ -1,0 +1,105 @@
+
+-- Blocks --
+
+1. Mini-world: a block that is a world of its own, that
+   the player can enter into. The player can manipulate
+   this mini-world block just as any other block.
+   The player can take a mini-world block into another
+   mini-world, to recursively create smaller mini-worlds.
+   If a mini-world contains another mini-world block
+   in it, then transporting it will also transport
+   the mini-world block along with it. The mini-world
+   block, among other things, provides the player with
+   the ability to transport large amounts of blocks
+   at once.
+
+2. Energy Shooter: block that shoots energy projectiles,
+   that can provide energy to other blocks.
+
+3. Energy pipe: a block that redirects
+   energy projectiles.
+
+4. Energy radiator: a block that radiates energy
+   around it in a certain radius upon receiving
+   energy.
+
+5a. Appearer: a block that becomes physical upon
+    receiving energy.
+
+5b. Disappearer: a block that becomes non-physical
+    upon receiving energy
+
+6. Teleporter: a teleportation block that
+   teleports anything entering into it to a
+   corresponding connected teleport block.
+
+7. Cloner: a cloner block that clones (and teleports)
+   anything entering into an input cloner block
+   so that it is output from the corresponding
+   output cloner blocks.
+
+8. Launcher: a launch block that launches forward anything
+   entering in front of it.
+
+9. Gridifier: a block that transforms a received
+   physical non-grid object into a grid-bound object.
+   Could be used to grid-bound the player so that
+   the player's body becomes a grid object
+   that can be manipulated just like any other
+   grid object (i.e. block).
+
+10. Water: a water block that hydrates the surrounding
+    blocks and colliding objects.
+
+11. Plants: blocks that can grow and/or provide fruit,
+    such as trees, bushes or grass. Plant blocks need
+    to be placed on dirt, and they need water near
+    them. They can be harvested for fruit.
+
+12. Random?: a block that does something random in
+    some way.
+
+
+-- Guns --
+
+1. Ungridifier: a gun that gives physics to
+   an block, making it no longer a part of
+   the grid, but instead a physical object that
+   can be moved around via physics interactions.
+
+
+-- Beings --
+
+1. Animals, which can be enemies, pets or
+   manipulated as part of a puzzle in some way.
+   The player could permanently take an animal,
+   name it and make it a pet that follows along
+   in all subsequent levels. Maybe the pets
+   could also be controllable by the player, and
+   have special abilites that help with puzzles.
+
+2. Humans, which can be friendly or enemies. They
+   can also be talked with.
+
+3. Robots, which can be friendly or enemies.
+
+
+-- Places --
+
+1. A home/hub realm that the player can always
+   return to from a level. The player can freely build
+   a home in the hub, to decorate it as they like and to
+   display gathered objects/trophies in it. The player
+   could maybe plant a garden to grow something in it.
+
+
+-- Scenes --
+
+1. (Opening scene)
+   In the opening scene, the Game Master creates bodies
+   for the players and provides them with choices
+   about their colors. Then, the Game Master comments
+   that the players need a world to interact in, and
+   creates a world built from blocks. The Game Master
+   then teaches the players the first game mechanics
+   and then sends them off to the first level/world.

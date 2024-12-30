@@ -1,0 +1,69 @@
+
+-- General notes --
+
+- (The game in a nutshell)
+  The game is a 2 player co-op puzzle game,
+  where the puzzles stem from different ways
+  of interacting in a world built from blocks.
+
+- (Single player)
+  The game can also be played in single player mode
+  where the player can split into two characters
+  at will. The split characters can be joined back
+  together (only when standing next to each other).
+
+- (Game world)
+  The game's world has an object grid. Objects in the
+  object grid are bound to the grid and have no
+  other physics, except collisions. Conversely, the
+  world also has objects that are not bound to the 
+  grid. These objects are manipulated via physics
+  interactions, which may be caused by grid-bound
+  objects, the player or by other non-grid objects.
+
+- (Game Master)
+  The game should have a "Game Master" character
+  that guides the player throughout the whole game.
+  The Game Master controls the entire world and
+  can do anything in it, and to build it to
+  be anything. This is a premise that should be made
+  clear visually to the player, by always having the
+  Game Master build everything in front of the eyes 
+  of the player. The Game Master provides goals,
+  motivation and companionship for the player.
+  The Game Master also provides the player with
+  choices that impact the flow of the game and the
+  style of the puzzles and levels. As the players
+  make choices, the puzzles are designed according to the
+  combination of choices they have made thus far.
+  The Game Master also teaches the player about new
+  game mechanics. Ultimately, the game is about the
+  relationship between the players and the Game Master.
+  The worlds, levels and goals created by the
+  Game Master are simply vehicles for interacting
+  with the Game Master.
+
+- (Story)
+  There needs to be an overarching story about the
+  relationship between the players and the Game Master,
+  even if a subtle one.
+
+- (Choices)
+  The player must be allowed to go back and try out
+  different branches of choices.
+
+
+-- Game Master's choice tree --
+
+- (Questions)
+
+1. Logic or Nature?
+2. Randomness or Predictability?
+3. Friends or Enemies?
+
+- (Tree)
+
+- Root
+ - Logic or Nature?
+  - Logic
+  - Nature
