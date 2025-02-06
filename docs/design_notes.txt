@@ -51,12 +51,18 @@
 - (Story)
   There needs to be an overarching story about the
   relationship between the players and the Game Master,
-  even if a subtle one.
+  even if a subtle one. Or maybe 
 
 - (Choices)
   The player must be allowed to go back and try out
   different branches of choices.
 
+- (Alternative to the above)
+  Perhaps it would be better if the game puts
+  the players into a world without explanation, and
+  they then have to, through puzzles, find our the
+  mystery of their existence, of the origin
+  of the world and why they are there.
 
 -- Game Master's choice tree --
 
