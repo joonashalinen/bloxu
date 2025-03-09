@@ -60,7 +60,7 @@
 - (Alternative to the above)
   Perhaps it would be better if the game puts
   the players into a world without explanation, and
-  they then have to, through puzzles, find our the
+  they then have to, through puzzles, find out the
   mystery of their existence, of the origin
   of the world and why they are there.
 
